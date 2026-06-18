@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 写书助手</title>
+<style>
+:root {
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+  --primary-bg: #eef2ff;
+  --success: #22c55e;
+  --success-bg: #f0fdf4;
+  --warning: #f59e0b;
+  --warning-bg: #fffbeb;
+  --danger: #ef4444;
+  --danger-bg: #fef2f2;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border: #e2e8f0;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.04);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --transition: all .2s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ===== Header ===== */
+.header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+}
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-logo {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,.2);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.header-logo:hover { background: rgba(255,255,255,.35); }
+.header-title { font-size: 18px; font-weight: 700; }
+.header-book-name {
+  font-size: 14px;
+  opacity: .85;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.header-right { display: flex; align-items: center; gap: 12px; }
+.header-btn {
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.25);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  transition: var(--transition);
+  display: flex; align-items: center; gap: 6px;
+}
+.header-btn:hover { background: rgba(255,255,255,.25); }
+
+/* Progress bar */
+.progress-section {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12px 24px 0;
+}
+.progress-bar-wrap {
+  background: var(--border);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+  border-radius: 999px;
+  transition: width .5s ease;
+  width: 0%;
+}
+.progress-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* ===== Layout ===== */
+.app-layout {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 20px;
+  min-height: calc(100vh - 100px);
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+  position: sticky;
+  top: 90px;
+  align-self: start;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+}
+.sidebar-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+.sidebar-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.chapter-nav-list { list-style: none; }
+.chapter-nav-item {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.chapter-nav-item:hover { background: var(--primary-bg); color: var(--primary); }
+.chapter-nav-item.active { background: var(--primary-bg); color: var(--primary); font-weight: 600; }
+.chapter-nav-item.completed { color: var(--success); }
+.chapter-nav-item .ch-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.chapter-nav-item.completed .ch-num { background: var(--success); color: #fff; }
+.chapter-nav-item.active .ch-num { background: var(--primary); color: #fff; }
+.chapter-nav-item .ch-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.chapter-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 20px 0;
+}
+
+/* ===== Main Content ===== */
+.main-content { min-width: 0; }
+
+/* Card */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin-bottom: 20px;
+  transition: var(--transition);
+}
+.card:hover { box-shadow: var(--shadow-md); }
+.card-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.card-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+/* Form */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.form-label .required { color: var(--danger); margin-left: 2px; }
+.form-input, .form-textarea, .form-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--card);
+  transition: var(--transition);
+  font-family: inherit;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--text-muted); }
+.form-textarea { resize: vertical; min-height: 100px; }
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(.97); }
+.btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover:not(:disabled) { background: #16a34a; }
+.btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+.btn-outline:hover:not(:disabled) { background: var(--primary-bg); }
+.btn-ghost { background: transparent; color: var(--text-secondary); border: 1.5px solid var(--border); }
+.btn-ghost:hover:not(:disabled) { background: var(--bg); border-color: var(--text-muted); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover:not(:disabled) { background: #dc2626; }
+.btn-sm { padding: 6px 14px; font-size: 13px; }
+.btn-lg { padding: 12px 28px; font-size: 16px; }
+.btn-block { width: 100%; }
+.btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Loading spinner */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s;
+}
+.loading-overlay.active { opacity: 1; pointer-events: auto; }
+.loading-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 32px 40px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  max-width: 400px;
+}
+.loading-spinner-lg {
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin: 0 auto 16px;
+}
+.loading-text { font-size: 15px; color: var(--text); font-weight: 500; }
+.loading-sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+
+/* ===== Step 1: Input ===== */
+.step-input .hero-icon { font-size: 48px; text-align: center; margin-bottom: 16px; }
+.step-input .hero-text { text-align: center; font-size: 15px; color: var(--text-secondary); margin-bottom: 24px; }
+
+/* ===== Step 2: Outline & TOC ===== */
+.outline-display {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 1.8;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+}
+.outline-display .outline-paragraph {
+  text-indent: 2em;
+  margin-bottom: 12px;
+  text-align: justify;
+}
+.outline-display .outline-paragraph:last-child { margin-bottom: 0; }
+.chapter-edit-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.chapter-edit-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--primary);
+}
+.chapter-edit-header .ch-badge {
+  background: var(--primary);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+}
+.chapter-edit-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 8px;
+  transition: var(--transition);
+  font-family: inherit;
+}
+.chapter-edit-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+.chapter-edit-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  min-height: 60px;
+  resize: vertical;
+  transition: var(--transition);
+  font-family: inherit;
+}
+.chapter-edit-textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+
+/* ===== Step 3: Chapter Writing ===== */
+.chapter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.chapter-info { display: flex; flex-direction: column; gap: 4px; }
+.chapter-number { font-size: 13px; color: var(--primary); font-weight: 600; }
+.chapter-title-display { font-size: 20px; font-weight: 700; }
+.chapter-word-target { font-size: 12px; color: var(--text-muted); }
+.chapter-content-area {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 24px;
+  min-height: 200px;
+  font-size: 17px;
+  line-height: 2;
+  margin-bottom: 20px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+.chapter-content-area.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.chapter-content-area .content-paragraph {
+  text-indent: 2em;
+  margin-bottom: 16px;
+  text-align: justify;
+}
+.chapter-content-area .content-paragraph:last-child { margin-bottom: 0; }
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+.copy-btn:hover { background: var(--primary-bg); color: var(--primary); border-color: var(--primary-light); }
+.copy-btn.copied { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+.word-count-bar {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.word-count-bar .wc-fill { flex: 1; height: 4px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.word-count-bar .wc-fill-inner { height: 100%; background: var(--success); border-radius: 999px; transition: width .3s; }
+
+/* ===== Modals ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  width: 90%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 28px;
+}
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 4px;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--text); }
+.settings-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+}
+.settings-tab {
+  flex: 1;
+  padding: 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+}
+.settings-tab.active { background: var(--card); color: var(--primary); box-shadow: var(--shadow); }
+.settings-panel { display: none; }
+.settings-panel.active { display: block; }
+
+/* ===== Book List Modal ===== */
+.book-list-modal {
+  max-width: 640px;
+}
+.book-list-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.book-list-empty-icon { font-size: 40px; margin-bottom: 12px; }
+.book-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  transition: var(--transition);
+  background: var(--card);
+}
+.book-list-item:hover { border-color: var(--primary-light); box-shadow: var(--shadow); }
+.book-list-info { flex: 1; min-width: 0; }
+.book-list-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.book-list-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.book-list-status {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.book-list-status.completed { background: var(--success-bg); color: var(--success); }
+.book-list-status.in-progress { background: var(--warning-bg); color: var(--warning); }
+.book-list-status.outline { background: var(--primary-bg); color: var(--primary); }
+.book-list-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.book-list-actions .btn { padding: 5px 12px; font-size: 12px; }
+.book-list-progress-mini {
+  width: 60px; height: 4px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.book-list-progress-mini-fill {
+  height: 100%;
+  background: var(--success);
+  border-radius: 999px;
+  transition: width .3s;
+}
+
+/* ===== Toast ===== */
+.toast-container {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  background: var(--card);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  padding: 12px 20px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: toastIn .3s ease;
+  max-width: 360px;
+  border-left: 4px solid var(--primary);
+}
+.toast.success { border-left-color: var(--success); }
+.toast.error { border-left-color: var(--danger); }
+.toast.warning { border-left-color: var(--warning); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== Chapter view modal ===== */
+.view-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 250;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+}
+.view-modal-overlay.active { opacity: 1; pointer-events: auto; }
+.view-modal {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  width: 90%;
+  max-width: 720px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 32px;
+}
+.view-modal-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.view-modal-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.view-modal-content { font-size: 17px; line-height: 2; }
+.view-modal-content .content-paragraph {
+  text-indent: 2em;
+  margin-bottom: 16px;
+  text-align: justify;
+}
+.view-modal-content .content-paragraph:last-child { margin-bottom: 0; }
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .app-layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; max-height: none; order: 2; }
+  .main-content { order: 1; }
+  .form-row { grid-template-columns: 1fr; }
+  .header-inner { flex-direction: column; align-items: flex-start; }
+  .header-book-name { max-width: 100%; }
+}
+@media (max-width: 600px) {
+  .header { padding: 12px 16px; }
+  .app-layout { padding: 12px 16px; }
+  .card { padding: 16px; }
+  .modal { padding: 20px; }
+  .btn-lg { padding: 10px 20px; font-size: 14px; }
+  .book-list-item { flex-wrap: wrap; }
+  .book-list-actions { width: 100%; justify-content: flex-end; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Misc */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+.tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+.tag-primary { background: var(--primary-bg); color: var(--primary); }
+.tag-success { background: var(--success-bg); color: var(--success); }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="header-logo" id="headerLogo" onclick="handleLogoClick()" title="我的书架">📖</div>
+      <div>
+        <div class="header-title">AI 写书助手</div>
+        <div class="header-book-name" id="headerBookName">开始创作你的书籍</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="header-btn" onclick="exportBook()">📥 导出书籍</button>
+      <button class="header-btn" onclick="openSettings()">⚙️ 设置</button>
+    </div>
+  </div>
+</div>
+
+<!-- Progress -->
+<div class="progress-section" id="progressSection" style="display:none;">
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressBarFill"></div>
+  </div>
+  <div class="progress-text" id="progressText">0 / 0 章已完成</div>
+</div>
+
+<!-- Layout -->
+<div class="app-layout">
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+    <!-- Step 1: Input -->
+    <div id="step1" class="step-input">
+      <div class="card">
+        <div class="hero-icon">✍️</div>
+        <div class="card-title text-center">开始创作</div>
+        <div class="hero-text">输入书籍信息，AI 将帮你生成完整的书籍内容</div>
+        <div class="form-group">
+          <label class="form-label">书名 <span class="required">*</span></label>
+          <input type="text" class="form-input" id="bookName" placeholder="请输入书名，例如：《星际迷途》">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">章节数量</label>
+            <input type="number" class="form-input" id="chapterCount" placeholder="10" value="10" min="1" max="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label">每章目标字数</label>
+            <input type="number" class="form-input" id="wordsPerChapter" placeholder="3000" value="3000" min="500" max="50000" step="500">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">主题描述 <span class="tag tag-primary">选填</span></label>
+          <textarea class="form-textarea" id="themeDesc" placeholder="描述你想要的故事主题、风格、背景设定等。例如：&#10;一部科幻小说，讲述人类在2150年首次接触外星文明的故事。风格偏硬科幻，注重科学细节和人物心理描写。"></textarea>
+          <div class="form-hint">越详细的描述，AI 生成的内容越符合你的期望</div>
+        </div>
+        <button class="btn btn-primary btn-lg btn-block mt-16" id="btnGenerateOutline" onclick="generateOutline()">
+          🚀 开始生成大纲
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 2: Outline -->
+    <div id="step2" class="hidden">
+      <div class="card">
+        <div class="card-title">📋 大纲生成</div>
+        <div class="card-subtitle">AI 已根据你的描述生成了书籍大纲，你可以编辑修改</div>
+        <div class="outline-display" id="outlineDisplay">正在生成大纲...</div>
+        <div class="btn-group mt-16">
+          <button class="btn btn-primary" id="btnGenTOC" onclick="generateTOC()">📑 生成章节目录</button>
+          <button class="btn btn-ghost" onclick="regenerateOutline()">🔄 重新生成大纲</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2.5: TOC Edit -->
+    <div id="step2_5" class="hidden">
+      <div class="card">
+        <div class="card-title">📑 章节目录</div>
+        <div class="card-subtitle">编辑每章的标题和简介，确认后开始逐章写作</div>
+        <div id="tocEditList"></div>
+        <hr class="divider">
+        <div class="btn-group">
+          <button class="btn btn-success btn-lg" id="btnStartWriting" onclick="startWriting()">✅ 确认目录，开始写作</button>
+          <button class="btn btn-ghost" onclick="regenerateTOC()">🔄 重新生成目录</button>
+          <button class="btn btn-ghost" onclick="goToStep('step2')">↩️ 返回大纲</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Chapter Writing -->
+    <div id="step3" class="hidden">
+      <div class="card">
+        <div class="chapter-header">
+          <div class="chapter-info">
+            <div class="chapter-number" id="chNumber">第 1 章</div>
+            <div class="chapter-title-display" id="chTitleDisplay">章节标题</div>
+            <div class="chapter-word-target" id="chWordTarget">目标字数：3000</div>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-outline btn-sm" onclick="openWordCountSetting()">📝 设置字数</button>
+          </div>
+        </div>
+
+        <div class="form-group" id="feedbackGroup">
+          <label class="form-label">修改意见 <span class="tag tag-primary">选填</span></label>
+          <textarea class="form-textarea" id="chapterFeedback" placeholder="输入修改意见，例如：&#10;- 多加一些人物对话&#10;- 场景描写更详细一些&#10;- 增加悬念和冲突" style="min-height:80px;"></textarea>
+        </div>
+
+        <div class="word-count-bar" id="wordCountBar" style="display:none;">
+          <span id="wordCountText">0 字</span>
+          <div class="wc-fill"><div class="wc-fill-inner" id="wcFillInner" style="width:0%"></div></div>
+          <span id="wordCountTarget">/ 3000 字</span>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;" id="chapterCopyWrap">
+          <button class="copy-btn" id="chapterCopyBtn" onclick="copyChapterContent()" style="display:none;">📋 复制本章</button>
+        </div>
+
+        <div class="chapter-content-area empty" id="chapterContentArea">点击下方按钮生成本章内容</div>
+
+        <div class="btn-group mt-16">
+          <button class="btn btn-primary btn-lg" id="btnGenChapter" onclick="generateChapter()">✨ 生成本章内容</button>
+          <button class="btn btn-success btn-lg hidden" id="btnConfirmChapter" onclick="confirmChapter()">✅ 确认本章，继续下一章</button>
+          <button class="btn btn-ghost hidden" id="btnRegenChapter" onclick="regenerateChapter()">🔄 重新生成</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Completed View -->
+    <div id="step4" class="hidden">
+      <div class="card text-center" style="padding:48px 24px;">
+        <div style="font-size:56px;margin-bottom:16px;">🎉</div>
+        <div class="card-title">书籍写作完成！</div>
+        <div class="card-subtitle" style="margin-top:8px;">恭喜！所有章节已全部完成</div>
+        <div class="btn-group mt-20" style="justify-content:center;">
+          <button class="btn btn-primary btn-lg" onclick="exportBook()">📥 导出完整书籍</button>
+          <button class="btn btn-outline btn-lg" onclick="copyFullBook()">📋 复制全书</button>
+          <button class="btn btn-ghost btn-lg" onclick="goHome()">🔄 返回首页</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-card">
+      <div class="sidebar-title">📚 章节导航</div>
+      <ul class="chapter-nav-list" id="chapterNavList">
+        <li class="chapter-empty">暂无章节</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-title">
+      ⚙️ 模型设置
+      <button class="modal-close" onclick="closeSettings()">&times;</button>
+    </div>
+    <div class="settings-tabs">
+      <button class="settings-tab active" onclick="switchSettingsTab('deepseek')">DeepSeek</button>
+      <button class="settings-tab" onclick="switchSettingsTab('siliconflow')">硅基流动</button>
+      <button class="settings-tab" onclick="switchSettingsTab('custom')">自定义</button>
+    </div>
+    <div class="settings-panel active" id="panel-deepseek">
+      <div class="form-group">
+        <label class="form-label">API Key</label>
+        <input type="password" class="form-input" id="dsApiKey" placeholder="sk-...">
+        <div class="form-hint">从 <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a> 获取</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">模型</label>
+        <select class="form-select" id="dsModel">
+          <option value="deepseek-chat">deepseek-chat</option>
+          <option value="deepseek-reasoner">deepseek-reasoner</option>
+          <option value="deepseek-writer">deepseek-writer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">自定义子模型</label>
+        <input type="text" class="form-input" id="dsCustomModel" placeholder="留空使用上方选择的模型">
+      </div>
+      <div class="form-group">
+        <label class="form-label">API Base URL</label>
+        <input type="text" class="form-input" id="dsBaseUrl" placeholder="https://api.deepseek.com">
+        <div class="form-hint">默认：https://api.deepseek.com</div>
+      </div>
+    </div>
+    <div class="settings-panel" id="panel-siliconflow">
+      <div class="form-group">
+        <label class="form-label">API Key</label>
+        <input type="password" class="form-input" id="sfApiKey" placeholder="sk-...">
+        <div class="form-hint">从 <a href="https://cloud.siliconflow.cn" target="_blank">cloud.siliconflow.cn</a> 获取</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">模型</label>
+        <select class="form-select" id="sfModel">
+          <option value="Qwen/Qwen2.5-72B-Instruct">Qwen/Qwen2.5-72B-Instruct</option>
+          <option value="Qwen/Qwen2.5-32B-Instruct">Qwen/Qwen2.5-32B-Instruct</option>
+          <option value="deepseek-ai/DeepSeek-V3">deepseek-ai/DeepSeek-V3</option>
+          <option value="deepseek-ai/DeepSeek-R1">deepseek-ai/DeepSeek-R1</option>
+          <option value="THUDM/glm-4-9b-chat">THUDM/glm-4-9b-chat</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">自定义子模型</label>
+        <input type="text" class="form-input" id="sfCustomModel" placeholder="留空使用上方选择的模型">
+      </div>
+      <div class="form-group">
+        <label class="form-label">API Base URL</label>
+        <input type="text" class="form-input" id="sfBaseUrl" placeholder="https://api.siliconflow.cn/v1">
+        <div class="form-hint">默认：https://api.siliconflow.cn/v1</div>
+      </div>
+    </div>
+    <div class="settings-panel" id="panel-custom">
+      <div class="form-group">
+        <label class="form-label">API Base URL</label>
+        <input type="text" class="form-input" id="customBaseUrl" placeholder="https://api.example.com/v1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">API Key</label>
+        <input type="password" class="form-input" id="customApiKey" placeholder="sk-...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">模型名称</label>
+        <input type="text" class="form-input" id="customModel" placeholder="gpt-4 / claude-3 等">
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="form-group">
+      <label class="form-label">当前使用的平台</label>
+      <select class="form-select" id="activePlatform">
+        <option value="deepseek">DeepSeek</option>
+        <option value="siliconflow">硅基流动</option>
+        <option value="custom">自定义</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">书本内容字号：<span id="fontSizeValue">17px</span></label>
+      <input type="range" id="contentFontSize" min="14" max="24" value="17" style="width:100%;accent-color:var(--primary);" oninput="previewFontSize(this.value)">
+      <div class="form-hint" style="display:flex;justify-content:space-between;"><span>14px</span><span>24px</span></div>
+    </div>
+    <div class="btn-group mt-16">
+      <button class="btn btn-primary" onclick="saveSettings()">💾 保存设置</button>
+      <button class="btn btn-ghost" onclick="closeSettings()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- Book List Modal -->
+<div class="modal-overlay" id="bookListModal">
+  <div class="modal book-list-modal">
+    <div class="modal-title">
+      📖 我的书架
+      <button class="modal-close" onclick="closeBookList()">&times;</button>
+    </div>
+    <div id="bookListContent"></div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-card">
+    <div class="loading-spinner-lg"></div>
+    <div class="loading-text" id="loadingText">AI 正在思考中...</div>
+    <div class="loading-sub" id="loadingSub">请耐心等待，这可能需要一些时间</div>
+  </div>
+</div>
+
+<!-- Chapter View Modal -->
+<div class="view-modal-overlay" id="viewModal">
+  <div class="view-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div class="view-modal-title" id="viewModalTitle">章节标题</div>
+      <button class="modal-close" onclick="closeViewModal()">&times;</button>
+    </div>
+    <div class="view-modal-sub" id="viewModalSub">第 1 章</div>
+    <div class="view-modal-content" id="viewModalContent">章节内容</div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ===== Multi-Book Storage =====
+const STORAGE_KEY_BOOKS = 'ai_book_writer_books';
+const STORAGE_KEY_ACTIVE = 'ai_book_writer_active_book';
+const STORAGE_KEY_SETTINGS = 'ai_book_writer_settings';
+
+let allBooks = []; // [{ id, bookName, themeDesc, chapterCount, wordsPerChapter, outline, chapters, currentChapter, step, createdAt, updatedAt }]
+let activeBookId = null;
+let state = createEmptyState();
+
+function createEmptyState() {
+  return {
+    step: 'step1',
+    bookName: '',
+    themeDesc: '',
+    chapterCount: 10,
+    wordsPerChapter: 3000,
+    outline: '',
+    chapters: [],
+    currentChapter: 0,
+  };
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+// ===== Settings =====
+let settings = {
+  activePlatform: 'deepseek',
+  contentFontSize: 17,
+  deepseek: { apiKey: '', model: 'deepseek-chat', customModel: '', baseUrl: 'https://api.deepseek.com' },
+  siliconflow: { apiKey: '', model: 'Qwen/Qwen2.5-72B-Instruct', customModel: '', baseUrl: 'https://api.siliconflow.cn/v1' },
+  custom: { apiKey: '', model: '', baseUrl: '' },
+};
+
+// ===== Init =====
+function init() {
+  loadSettings();
+  applySettingsToUI();
+  applyFontSize();
+  loadAllBooks();
+
+  // Migrate old single-book data if exists
+  const oldState = localStorage.getItem('ai_book_writer_state');
+  if (oldState && allBooks.length === 0) {
+    try {
+      const parsed = JSON.parse(oldState);
+      if (parsed.bookName) {
+        const book = {
+          id: generateId(),
+          ...createEmptyState(),
+          ...parsed,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        allBooks.push(book);
+        activeBookId = book.id;
+        saveAllBooks();
+        localStorage.removeItem('ai_book_writer_state');
+      }
+    } catch(e) {}
+  }
+
+  if (activeBookId) {
+    const book = allBooks.find(b => b.id === activeBookId);
+    if (book) {
+      state = { ...createEmptyState(), ...book };
+      restoreFromState();
+      return;
+    }
+  }
+  showStep('step1');
+}
+
+// ===== Book Storage =====
+function loadAllBooks() {
+  try {
+    allBooks = JSON.parse(localStorage.getItem(STORAGE_KEY_BOOKS) || '[]');
+    activeBookId = localStorage.getItem(STORAGE_KEY_ACTIVE) || null;
+  } catch(e) {
+    allBooks = [];
+    activeBookId = null;
+  }
+}
+
+function saveAllBooks() {
+  localStorage.setItem(STORAGE_KEY_BOOKS, JSON.stringify(allBooks));
+  if (activeBookId) {
+    localStorage.setItem(STORAGE_KEY_ACTIVE, activeBookId);
+  } else {
+    localStorage.removeItem(STORAGE_KEY_ACTIVE);
+  }
+}
+
+function saveCurrentBook() {
+  if (!activeBookId) return;
+  const idx = allBooks.findIndex(b => b.id === activeBookId);
+  if (idx === -1) return;
+  allBooks[idx] = { ...allBooks[idx], ...state, updatedAt: Date.now() };
+  saveAllBooks();
+}
+
+function createNewBook() {
+  const book = {
+    id: generateId(),
+    ...state,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  allBooks.unshift(book);
+  activeBookId = book.id;
+  saveAllBooks();
+}
+
+function switchToBook(bookId) {
+  const book = allBooks.find(b => b.id === bookId);
+  if (!book) return;
+  activeBookId = bookId;
+  state = { ...createEmptyState(), ...book };
+  saveAllBooks();
+  closeBookList();
+  restoreFromState();
+}
+
+function deleteBook(bookId) {
+  const idx = allBooks.findIndex(b => b.id === bookId);
+  if (idx === -1) return;
+  const book = allBooks[idx];
+  if (!confirm(`确定删除《${book.bookName}》吗？此操作不可恢复。`)) return;
+  allBooks.splice(idx, 1);
+  if (activeBookId === bookId) {
+    activeBookId = allBooks.length > 0 ? allBooks[0].id : null;
+    if (activeBookId) {
+      state = { ...createEmptyState(), ...allBooks[0] };
+    } else {
+      state = createEmptyState();
+    }
+  }
+  saveAllBooks();
+  renderBookList();
+  if (activeBookId) {
+    restoreFromState();
+  } else {
+    showStep('step1');
+  }
+}
+
+// ===== Settings =====
+function saveSettings() {
+  settings.activePlatform = document.getElementById('activePlatform').value;
+  settings.contentFontSize = parseInt(document.getElementById('contentFontSize').value) || 17;
+  settings.deepseek.apiKey = document.getElementById('dsApiKey').value;
+  settings.deepseek.model = document.getElementById('dsModel').value;
+  settings.deepseek.customModel = document.getElementById('dsCustomModel').value;
+  settings.deepseek.baseUrl = document.getElementById('dsBaseUrl').value || 'https://api.deepseek.com';
+  settings.siliconflow.apiKey = document.getElementById('sfApiKey').value;
+  settings.siliconflow.model = document.getElementById('sfModel').value;
+  settings.siliconflow.customModel = document.getElementById('sfCustomModel').value;
+  settings.siliconflow.baseUrl = document.getElementById('sfBaseUrl').value || 'https://api.siliconflow.cn/v1';
+  settings.custom.apiKey = document.getElementById('customApiKey').value;
+  settings.custom.model = document.getElementById('customModel').value;
+  settings.custom.baseUrl = document.getElementById('customBaseUrl').value;
+  localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+  applyFontSize();
+  closeSettings();
+  showToast('设置已保存', 'success');
+}
+
+function loadSettings() {
+  try {
+    settings = { ...settings, ...JSON.parse(localStorage.getItem(STORAGE_KEY_SETTINGS)) };
+  } catch(e) {}
+}
+
+function applySettingsToUI() {
+  document.getElementById('activePlatform').value = settings.activePlatform;
+  const fs = settings.contentFontSize || 17;
+  document.getElementById('contentFontSize').value = fs;
+  document.getElementById('fontSizeValue').textContent = fs + 'px';
+  document.getElementById('dsApiKey').value = settings.deepseek.apiKey;
+  document.getElementById('dsModel').value = settings.deepseek.model;
+  document.getElementById('dsCustomModel').value = settings.deepseek.customModel;
+  document.getElementById('dsBaseUrl').value = settings.deepseek.baseUrl;
+  document.getElementById('sfApiKey').value = settings.siliconflow.apiKey;
+  document.getElementById('sfModel').value = settings.siliconflow.model;
+  document.getElementById('sfCustomModel').value = settings.siliconflow.customModel;
+  document.getElementById('sfBaseUrl').value = settings.siliconflow.baseUrl;
+  document.getElementById('customApiKey').value = settings.custom.apiKey;
+  document.getElementById('customModel').value = settings.custom.model;
+  document.getElementById('customBaseUrl').value = settings.custom.baseUrl;
+}
+
+function applyFontSize() {
+  const size = settings.contentFontSize || 17;
+  document.querySelectorAll('.chapter-content-area, .view-modal-content').forEach(el => {
+    el.style.fontSize = size + 'px';
+  });
+}
+
+function previewFontSize(val) {
+  document.getElementById('fontSizeValue').textContent = val + 'px';
+  document.querySelectorAll('.chapter-content-area, .view-modal-content').forEach(el => {
+    el.style.fontSize = val + 'px';
+  });
+}
+
+// ===== UI Helpers =====
+function showStep(stepId) {
+  ['step1','step2','step2_5','step3','step4'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+  document.getElementById(stepId).classList.remove('hidden');
+  state.step = stepId;
+  saveCurrentBook();
+
+  const ps = document.getElementById('progressSection');
+  const logo = document.getElementById('headerLogo');
+  if (stepId === 'step1') {
+    ps.style.display = 'none';
+    document.getElementById('headerBookName').textContent = '开始创作你的书籍';
+    logo.title = '我的书架';
+  } else {
+    ps.style.display = 'block';
+    document.getElementById('headerBookName').textContent = state.bookName;
+    logo.title = '返回首页';
+    updateProgress();
+  }
+}
+
+function goToStep(stepId) {
+  state.step = stepId;
+  showStep(stepId);
+}
+
+function handleLogoClick() {
+  if (state.step === 'step1') {
+    // On homepage -> open book list
+    openBookList();
+  } else {
+    // Not on homepage -> go home
+    goHome();
+  }
+}
+
+function goHome() {
+  if (state.step === 'step1') return;
+  if (confirm('返回首页？当前进度会自动保存，你可以随时回来继续。')) {
+    // Detach current book so homepage starts fresh
+    activeBookId = null;
+    saveAllBooks();
+    state = createEmptyState();
+    document.getElementById('bookName').value = '';
+    document.getElementById('themeDesc').value = '';
+    document.getElementById('chapterCount').value = '10';
+    document.getElementById('wordsPerChapter').value = '3000';
+    showStep('step1');
+    updateSidebar();
+  }
+}
+
+function updateProgress() {
+  const total = state.chapters.length;
+  const completed = state.chapters.filter(c => c.confirmed).length;
+  const pct = total > 0 ? (completed / total * 100) : 0;
+  document.getElementById('progressBarFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${completed} / ${total} 章已完成`;
+}
+
+function updateSidebar() {
+  const list = document.getElementById('chapterNavList');
+  if (state.chapters.length === 0) {
+    list.innerHTML = '<li class="chapter-empty">暂无章节</li>';
+    return;
+  }
+  let html = '';
+  state.chapters.forEach((ch, i) => {
+    const cls = ch.confirmed ? 'completed' : (i === state.currentChapter && state.step === 'step3' ? 'active' : '');
+    html += `<li class="chapter-nav-item ${cls}" onclick="viewChapter(${i})">
+      <span class="ch-num">${ch.confirmed ? '✓' : (i + 1)}</span>
+      <span class="ch-title">${escHtml(ch.title)}</span>
+    </li>`;
+  });
+  list.innerHTML = html;
+}
+
+function escHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+// ===== Markdown & Text Processing =====
+function stripMarkdown(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*\*(.+?)\*\*\*/g, '$1')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/___(.+?)___/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    .replace(/_(.+?)_/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^>\s*/gm, '')
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/^---+$/gm, '')
+    .replace(/^\*\*\*+$/gm, '')
+    .replace(/^___+$/gm, '')
+    .replace(/^[-*+]\s+/gm, '')
+    .replace(/^\d+\.\s+/gm, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\[([^\]]+)\]\[[^\]]*\]/g, '$1')
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function formatParagraphs(text) {
+  if (!text) return '';
+  const plain = stripMarkdown(text);
+  const paragraphs = plain.split(/\n{2,}|\n(?=[\u4e00-\u9fff])/);
+  return paragraphs
+    .map(p => p.trim())
+    .filter(p => p.length > 0)
+    .map(p => `<p class="content-paragraph">${escHtml(p)}</p>`)
+    .join('');
+}
+
+function formatOutlineParagraphs(text) {
+  if (!text) return '';
+  const plain = stripMarkdown(text);
+  const paragraphs = plain.split(/\n{2,}|\n(?=[\u4e00-\u9fff])/);
+  return paragraphs
+    .map(p => p.trim())
+    .filter(p => p.length > 0)
+    .map(p => `<p class="outline-paragraph">${escHtml(p)}</p>`)
+    .join('');
+}
+
+function getPlainText(text) {
+  return stripMarkdown(text);
+}
+
+function showToast(msg, type = '') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  const icons = { success: '✅', error: '❌', warning: '⚠️' };
+  toast.innerHTML = `${icons[type] || '💡'} ${escHtml(msg)}`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity .3s'; }, 2500);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+function showLoading(text, sub) {
+  document.getElementById('loadingText').textContent = text || 'AI 正在思考中...';
+  document.getElementById('loadingSub').textContent = sub || '请耐心等待';
+  document.getElementById('loadingOverlay').classList.add('active');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('active');
+}
+
+// ===== Book List Modal =====
+function openBookList() {
+  renderBookList();
+  document.getElementById('bookListModal').classList.add('active');
+}
+
+function closeBookList() {
+  document.getElementById('bookListModal').classList.remove('active');
+}
+
+function renderBookList() {
+  const container = document.getElementById('bookListContent');
+  if (allBooks.length === 0) {
+    container.innerHTML = `<div class="book-list-empty">
+      <div class="book-list-empty-icon">📚</div>
+      <div>书架空空如也</div>
+      <div style="margin-top:8px;font-size:12px;">点击下方按钮开始创作你的第一本书</div>
+    </div>`;
+    return;
+  }
+
+  let html = '';
+  allBooks.forEach(book => {
+    const total = book.chapters.length;
+    const completed = book.chapters.filter(c => c.confirmed).length;
+    const pct = total > 0 ? Math.round(completed / total * 100) : 0;
+    const isCompleted = total > 0 && completed === total;
+    const hasOutline = !!book.outline;
+    const hasChapters = total > 0;
+
+    let statusLabel, statusClass;
+    if (isCompleted) { statusLabel = '已完成'; statusClass = 'completed'; }
+    else if (hasChapters) { statusLabel = `写作中 ${pct}%`; statusClass = 'in-progress'; }
+    else if (hasOutline) { statusLabel = '已生成大纲'; statusClass = 'outline'; }
+    else { statusLabel = '未开始'; statusClass = 'outline'; }
+
+    const isActive = book.id === activeBookId;
+    const timeStr = new Date(book.updatedAt).toLocaleString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    html += `<div class="book-list-item" style="${isActive ? 'border-color:var(--primary);background:var(--primary-bg);' : ''}">
+      <div class="book-list-info">
+        <div class="book-list-name">${isActive ? '📌 ' : ''}${escHtml(book.bookName)}</div>
+        <div class="book-list-meta">
+          <span class="book-list-status ${statusClass}">${statusLabel}</span>
+          <span>${total > 0 ? completed + '/' + total + '章' : '无章节'}</span>
+          <span>${timeStr}</span>
+        </div>
+      </div>
+      ${total > 0 ? `<div class="book-list-progress-mini"><div class="book-list-progress-mini-fill" style="width:${pct}%"></div></div>` : ''}
+      <div class="book-list-actions">
+        ${isActive ? '<span style="font-size:12px;color:var(--primary);font-weight:500;">当前</span>' : `<button class="btn btn-primary btn-sm" onclick="switchToBook('${book.id}')">继续</button>`}
+        <button class="btn btn-danger btn-sm" onclick="deleteBook('${book.id}')">删除</button>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ===== Settings Modal =====
+function openSettings() {
+  applySettingsToUI();
+  document.getElementById('settingsModal').classList.add('active');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('active');
+}
+
+function switchSettingsTab(tab) {
+  document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// ===== View Chapter Modal =====
+function viewChapter(index) {
+  const ch = state.chapters[index];
+  if (!ch) return;
+  if (ch.confirmed && ch.content) {
+    document.getElementById('viewModalTitle').textContent = ch.title;
+    document.getElementById('viewModalSub').textContent = `第 ${index + 1} 章 · ${ch.content.length} 字`;
+    document.getElementById('viewModalContent').innerHTML = formatParagraphs(ch.content);
+    document.getElementById('viewModal').classList.add('active');
+  } else if (state.step === 'step3' || state.step === 'step4') {
+    state.currentChapter = index;
+    showChapterWriting();
+  }
+}
+
+function closeViewModal() {
+  document.getElementById('viewModal').classList.remove('active');
+}
+
+// ===== Word Count Setting =====
+function openWordCountSetting() {
+  const ch = state.chapters[state.currentChapter];
+  if (!ch) return;
+  const val = prompt(`设置第 ${state.currentChapter + 1} 章的目标字数：`, ch.wordTarget || state.wordsPerChapter);
+  if (val !== null) {
+    const num = parseInt(val);
+    if (num >= 100) {
+      ch.wordTarget = num;
+      saveCurrentBook();
+      document.getElementById('chWordTarget').textContent = `目标字数：${num}`;
+      updateWordCount();
+    }
+  }
+}
+
+// ===== API Call =====
+function getActiveConfig() {
+  const platform = settings.activePlatform;
+  const cfg = settings[platform];
+  const model = cfg.customModel || cfg.model;
+  return { baseUrl: cfg.baseUrl, apiKey: cfg.apiKey, model };
+}
+
+async function callAPI(messages, onChunk) {
+  const cfg = getActiveConfig();
+  if (!cfg.apiKey) {
+    showToast('请先在设置中配置 API Key', 'error');
+    throw new Error('No API key');
+  }
+
+  const url = cfg.baseUrl.replace(/\/+$/, '') + '/chat/completions';
+  const body = {
+    model: cfg.model,
+    messages,
+    stream: true,
+    temperature: 0.7,
+    max_tokens: 8192,
+  };
+
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + cfg.apiKey,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error(`API 错误 (${resp.status}): ${errText}`);
+  }
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let fullContent = '';
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || !trimmed.startsWith('data:')) continue;
+      const data = trimmed.slice(5).trim();
+      if (data === '[DONE]') break;
+      try {
+        const json = JSON.parse(data);
+        const delta = json.choices?.[0]?.delta?.content || '';
+        if (delta) {
+          fullContent += delta;
+          if (onChunk) onChunk(fullContent);
+        }
+      } catch(e) {}
+    }
+  }
+  return fullContent;
+}
+
+// ===== Step 1 → Generate Outline =====
+async function generateOutline() {
+  const bookName = document.getElementById('bookName').value.trim();
+  if (!bookName) {
+    showToast('请输入书名', 'warning');
+    document.getElementById('bookName').focus();
+    return;
+  }
+
+  state.bookName = bookName;
+  state.themeDesc = document.getElementById('themeDesc').value.trim();
+  state.chapterCount = parseInt(document.getElementById('chapterCount').value) || 10;
+  state.wordsPerChapter = parseInt(document.getElementById('wordsPerChapter').value) || 3000;
+
+  // Always create a new book entry when starting from homepage
+  createNewBook();
+
+  showStep('step2');
+  showLoading('正在生成大纲...', 'AI 正在根据你的描述创作书籍大纲');
+
+  try {
+    const messages = [
+      { role: 'system', content: '你是一位经验丰富的作家和编辑，擅长构思书籍大纲。请根据用户的要求，生成一份详细的书籍大纲。大纲应包含：书籍整体架构、主要情节线索、核心主题、人物设定等。请用中文输出，格式清晰。' },
+      { role: 'user', content: `书名：《${state.bookName}》\n章节数量：${state.chapterCount} 章\n每章目标字数：约 ${state.wordsPerChapter} 字\n${state.themeDesc ? '主题描述：' + state.themeDesc : ''}\n\n请为这本书生成一份详细的大纲。` }
+    ];
+
+    const result = await callAPI(messages, (text) => {
+      document.getElementById('outlineDisplay').innerHTML = formatOutlineParagraphs(text);
+    });
+    state.outline = result;
+    saveCurrentBook();
+    hideLoading();
+    showToast('大纲生成完成', 'success');
+  } catch(e) {
+    hideLoading();
+    showToast('生成失败：' + e.message, 'error');
+    document.getElementById('outlineDisplay').innerHTML = '<p style="color:var(--danger);">生成失败，请检查设置后重试。</p><p>' + escHtml(e.message) + '</p>';
+  }
+}
+
+async function regenerateOutline() {
+  showLoading('正在重新生成大纲...', 'AI 正在重新创作');
+  try {
+    const messages = [
+      { role: 'system', content: '你是一位经验丰富的作家和编辑，擅长构思书籍大纲。请根据用户的要求，重新生成一份不同的、详细的书籍大纲。' },
+      { role: 'user', content: `书名：《${state.bookName}》\n章节数量：${state.chapterCount} 章\n每章目标字数：约 ${state.wordsPerChapter} 字\n${state.themeDesc ? '主题描述：' + state.themeDesc : ''}\n\n请为这本书重新生成一份不同的详细大纲。` }
+    ];
+    const result = await callAPI(messages, (text) => {
+      document.getElementById('outlineDisplay').innerHTML = formatOutlineParagraphs(text);
+    });
+    state.outline = result;
+    saveCurrentBook();
+    hideLoading();
+    showToast('大纲已重新生成', 'success');
+  } catch(e) {
+    hideLoading();
+    showToast('生成失败：' + e.message, 'error');
+  }
+}
+
+// ===== Step 2 → Generate TOC =====
+async function generateTOC() {
+  showLoading('正在生成章节目录...', 'AI 正在为每章创建标题和简介');
+  try {
+    const messages = [
+      { role: 'system', content: `你是一位专业作家。请根据书籍大纲，生成 ${state.chapterCount} 个章节的目录。每个章节需要包含标题和简短的内容介绍（50-100字）。
+
+请严格按照以下 JSON 格式输出，不要输出任何其他内容：
+[
+  {"title": "章节标题", "summary": "章节简介"},
+  ...
+]` },
+      { role: 'user', content: `书名：《${state.bookName}》\n大纲：\n${state.outline}\n\n请生成 ${state.chapterCount} 个章节的目录。` }
+    ];
+
+    const result = await callAPI(messages);
+    let chapters = [];
+    try {
+      const jsonMatch = result.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        chapters = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found');
+      }
+    } catch(e) {
+      const lines = result.split('\n').filter(l => l.trim());
+      chapters = lines.slice(0, state.chapterCount).map((line, i) => ({
+        title: line.replace(/^[\d\.\s、-]+/, '').trim() || `第 ${i + 1} 章`,
+        summary: ''
+      }));
+    }
+
+    state.chapters = chapters.map(ch => ({
+      title: ch.title || `第 ${chapters.indexOf(ch) + 1} 章`,
+      summary: ch.summary || '',
+      content: '',
+      wordTarget: state.wordsPerChapter,
+      confirmed: false,
+    }));
+    saveCurrentBook();
+    hideLoading();
+    showTOCEdit();
+    showToast('目录生成完成', 'success');
+  } catch(e) {
+    hideLoading();
+    showToast('生成失败：' + e.message, 'error');
+  }
+}
+
+async function regenerateTOC() {
+  await generateTOC();
+}
+
+function showTOCEdit() {
+  showStep('step2_5');
+  const list = document.getElementById('tocEditList');
+  let html = '';
+  state.chapters.forEach((ch, i) => {
+    html += `<div class="chapter-edit-item">
+      <div class="chapter-edit-header">
+        <span class="ch-badge">第 ${i + 1} 章</span>
+      </div>
+      <input type="text" class="chapter-edit-input" id="tocTitle_${i}" value="${escHtml(ch.title)}" placeholder="章节标题">
+      <textarea class="chapter-edit-textarea" id="tocSummary_${i}" placeholder="章节简介（选填）">${escHtml(ch.summary)}</textarea>
+    </div>`;
+  });
+  list.innerHTML = html;
+  updateSidebar();
+}
+
+// ===== Step 2.5 → Start Writing =====
+function startWriting() {
+  state.chapters.forEach((ch, i) => {
+    ch.title = document.getElementById(`tocTitle_${i}`).value.trim() || `第 ${i + 1} 章`;
+    ch.summary = document.getElementById(`tocSummary_${i}`).value.trim();
+  });
+  saveCurrentBook();
+
+  const firstUnconfirmed = state.chapters.findIndex(c => !c.confirmed);
+  if (firstUnconfirmed === -1) {
+    showStep('step4');
+    return;
+  }
+  state.currentChapter = firstUnconfirmed;
+  showChapterWriting();
+}
+
+// ===== Step 3: Chapter Writing =====
+function showChapterWriting() {
+  showStep('step3');
+  const ch = state.chapters[state.currentChapter];
+  document.getElementById('chNumber').textContent = `第 ${state.currentChapter + 1} 章 / 共 ${state.chapters.length} 章`;
+  document.getElementById('chTitleDisplay').textContent = ch.title;
+  document.getElementById('chWordTarget').textContent = `目标字数：${ch.wordTarget || state.wordsPerChapter}`;
+  document.getElementById('chapterFeedback').value = '';
+
+  const contentArea = document.getElementById('chapterContentArea');
+  const copyBtn = document.getElementById('chapterCopyBtn');
+  if (ch.content) {
+    contentArea.innerHTML = formatParagraphs(ch.content);
+    contentArea.classList.remove('empty');
+    document.getElementById('btnConfirmChapter').classList.remove('hidden');
+    document.getElementById('btnRegenChapter').classList.remove('hidden');
+    document.getElementById('wordCountBar').style.display = 'flex';
+    copyBtn.style.display = 'inline-flex';
+    updateWordCount();
+  } else {
+    contentArea.textContent = '点击下方按钮生成本章内容';
+    contentArea.classList.add('empty');
+    document.getElementById('btnConfirmChapter').classList.add('hidden');
+    document.getElementById('btnRegenChapter').classList.add('hidden');
+    document.getElementById('wordCountBar').style.display = 'none';
+    copyBtn.style.display = 'none';
+  }
+
+  document.getElementById('btnGenChapter').classList.remove('hidden');
+  updateSidebar();
+}
+
+function updateWordCount() {
+  const ch = state.chapters[state.currentChapter];
+  if (!ch) return;
+  const len = ch.content.length;
+  const target = ch.wordTarget || state.wordsPerChapter;
+  const pct = Math.min(100, (len / target * 100));
+  document.getElementById('wordCountText').textContent = len + ' 字';
+  document.getElementById('wordCountTarget').textContent = '/ ' + target + ' 字';
+  document.getElementById('wcFillInner').style.width = pct + '%';
+}
+
+async function generateChapter() {
+  const ch = state.chapters[state.currentChapter];
+  const feedback = document.getElementById('chapterFeedback').value.trim();
+  const target = ch.wordTarget || state.wordsPerChapter;
+
+  document.getElementById('btnGenChapter').disabled = true;
+  document.getElementById('btnGenChapter').innerHTML = '<span class="spinner"></span> 生成中...';
+  showLoading(`正在生成第 ${state.currentChapter + 1} 章...`, 'AI 正在创作精彩内容');
+
+  const contentArea = document.getElementById('chapterContentArea');
+  contentArea.classList.remove('empty');
+  contentArea.textContent = '';
+
+  try {
+    let prevContext = '';
+    const prevChapters = state.chapters.slice(0, state.currentChapter).filter(c => c.confirmed && c.content);
+    if (prevChapters.length > 0) {
+      const lastChapter = prevChapters[prevChapters.length - 1];
+      const lastContent = lastChapter.content.slice(-500);
+      prevContext = `\n\n上一章（${lastChapter.title}）结尾内容：\n${lastContent}`;
+    }
+
+    const messages = [
+      { role: 'system', content: `你是一位才华横溢的小说作家。请根据以下信息，撰写书籍的一个章节。
+
+要求：
+1. 字数控制在 ${target} 字左右
+2. 文笔流畅，情节生动
+3. 保持与前文的连贯性
+4. 注意人物性格的一致性
+5. 适当使用对话、场景描写等手法
+
+请直接输出章节正文内容，不要输出章节标题。` },
+      { role: 'user', content: `书名：《${state.bookName}》\n当前章节：第 ${state.currentChapter + 1} 章 - ${ch.title}\n章节简介：${ch.summary || '无'}${prevContext}${feedback ? '\n\n用户修改意见：' + feedback : ''}\n\n请撰写本章的完整内容。` }
+    ];
+
+    const result = await callAPI(messages, (text) => {
+      contentArea.innerHTML = formatParagraphs(text);
+      ch.content = text;
+      updateWordCount();
+    });
+
+    ch.content = result;
+    saveCurrentBook();
+    hideLoading();
+    document.getElementById('btnConfirmChapter').classList.remove('hidden');
+    document.getElementById('btnRegenChapter').classList.remove('hidden');
+    document.getElementById('wordCountBar').style.display = 'flex';
+    document.getElementById('chapterCopyBtn').style.display = 'inline-flex';
+    updateWordCount();
+    showToast('章节内容已生成', 'success');
+  } catch(e) {
+    hideLoading();
+    showToast('生成失败：' + e.message, 'error');
+  } finally {
+    document.getElementById('btnGenChapter').disabled = false;
+    document.getElementById('btnGenChapter').innerHTML = '✨ 生成本章内容';
+  }
+}
+
+async function regenerateChapter() {
+  await generateChapter();
+}
+
+function confirmChapter() {
+  const ch = state.chapters[state.currentChapter];
+  if (!ch.content) {
+    showToast('请先生成章节内容', 'warning');
+    return;
+  }
+  ch.confirmed = true;
+  saveCurrentBook();
+  updateProgress();
+  updateSidebar();
+
+  const nextUnconfirmed = state.chapters.findIndex(c => !c.confirmed);
+  if (nextUnconfirmed === -1) {
+    showStep('step4');
+    showToast('🎉 所有章节已完成！', 'success');
+  } else {
+    state.currentChapter = nextUnconfirmed;
+    showChapterWriting();
+    showToast(`第 ${state.currentChapter} 章已确认，进入第 ${state.currentChapter + 1} 章`, 'success');
+  }
+}
+
+// ===== Export =====
+function exportBook() {
+  if (!state.bookName || state.chapters.length === 0) {
+    showToast('暂无可导出的内容', 'warning');
+    return;
+  }
+
+  let text = `《${state.bookName}》\n\n`;
+  if (state.outline) {
+    text += `【大纲】\n${getPlainText(state.outline)}\n\n`;
+  }
+  text += `【目录】\n`;
+  state.chapters.forEach((ch, i) => {
+    text += `第 ${i + 1} 章：${ch.title}\n`;
+  });
+  text += '\n';
+
+  state.chapters.forEach((ch, i) => {
+    if (ch.content) {
+      text += `${'='.repeat(40)}\n`;
+      text += `第 ${i + 1} 章：${ch.title}\n`;
+      text += `${'='.repeat(40)}\n\n`;
+      text += getPlainText(ch.content);
+      text += '\n\n';
+    }
+  });
+
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${state.bookName}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('书籍已导出', 'success');
+}
+
+// ===== Copy Functions =====
+async function copyChapterContent() {
+  const ch = state.chapters[state.currentChapter];
+  if (!ch || !ch.content) return;
+  const plain = getPlainText(ch.content);
+  try {
+    await navigator.clipboard.writeText(plain);
+    const btn = document.getElementById('chapterCopyBtn');
+    btn.textContent = '✅ 已复制';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 复制本章'; btn.classList.remove('copied'); }, 2000);
+    showToast('本章内容已复制到剪贴板', 'success');
+  } catch(e) {
+    const ta = document.createElement('textarea');
+    ta.value = plain;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('本章内容已复制到剪贴板', 'success');
+  }
+}
+
+async function copyFullBook() {
+  if (!state.bookName || state.chapters.length === 0) {
+    showToast('暂无可复制的内容', 'warning');
+    return;
+  }
+
+  let text = `《${state.bookName}》\n\n`;
+  state.chapters.forEach((ch, i) => {
+    if (ch.content) {
+      text += `第 ${i + 1} 章：${ch.title}\n`;
+      text += getPlainText(ch.content);
+      text += '\n\n';
+    }
+  });
+
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('全书内容已复制到剪贴板', 'success');
+  } catch(e) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('全书内容已复制到剪贴板', 'success');
+  }
+}
+
+// ===== Reset =====
+function resetAll() {
+  if (!confirm('确定要开始新书吗？当前所有数据将被清除。')) return;
+  activeBookId = null;
+  state = createEmptyState();
+  document.getElementById('bookName').value = '';
+  document.getElementById('themeDesc').value = '';
+  document.getElementById('chapterCount').value = '10';
+  document.getElementById('wordsPerChapter').value = '3000';
+  showStep('step1');
+  updateSidebar();
+  showToast('已重置，可以开始新书创作', 'success');
+}
+
+// ===== Restore =====
+function restoreFromState() {
+  document.getElementById('bookName').value = state.bookName;
+  document.getElementById('themeDesc').value = state.themeDesc;
+  document.getElementById('chapterCount').value = state.chapterCount;
+  document.getElementById('wordsPerChapter').value = state.wordsPerChapter;
+
+  if (state.step === 'step2' && state.outline) {
+    showStep('step2');
+    document.getElementById('outlineDisplay').innerHTML = formatOutlineParagraphs(state.outline);
+  } else if (state.step === 'step2_5' && state.chapters.length > 0) {
+    showTOCEdit();
+  } else if (state.step === 'step3' && state.chapters.length > 0) {
+    showChapterWriting();
+  } else if (state.step === 'step4') {
+    showStep('step4');
+  } else {
+    showStep('step1');
+  }
+  updateSidebar();
+}
+
+// ===== Close modals on overlay click =====
+document.getElementById('settingsModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSettings();
+});
+document.getElementById('viewModal').addEventListener('click', function(e) {
+  if (e.target === this) closeViewModal();
+});
+document.getElementById('bookListModal').addEventListener('click', function(e) {
+  if (e.target === this) closeBookList();
+});
+
+// ===== Keyboard shortcuts =====
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeSettings();
+    closeViewModal();
+    closeBookList();
+  }
+});
+
+// ===== Start =====
+init();
+</script>
+</body>
+</html>
