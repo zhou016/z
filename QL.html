@@ -297,7 +297,8 @@ let appState = {
   providers: JSON.parse(JSON.stringify(DEFAULT_PROVIDERS)),
   activeProvider: 'deepseek',
   fetchedModels: {},
-  bubbleFontSize: 17
+  bubbleFontSize: 17,
+  enableTimeInjection: true
 };
 
 let freeModeTimer = null;
@@ -740,6 +741,14 @@ function buildContext() {
   const g = currentGroup();
   const recentMsgs = g.messages.slice(-20);
   let context = `群名：${g.name}\n群设定：${g.groupSetting}\n\n`;
+  // 注入当前北京时间（如果启用）
+  if (appState.enableTimeInjection) {
+    const now = new Date();
+    const bjTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
+    const pad = n => n.toString().padStart(2, '0');
+    const bjStr = `${bjTime.getFullYear()}年${pad(bjTime.getMonth()+1)}月${pad(bjTime.getDate())}日 ${['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][bjTime.getDay()]} ${pad(bjTime.getHours())}:${pad(bjTime.getMinutes())}:${pad(bjTime.getSeconds())}`;
+    context += `当前北京时间：${bjStr}\n\n`;
+  }
   context += `群成员：\n`;
   context += `- ${g.userName}（用户）\n`;
   g.members.forEach(m => {
@@ -1112,6 +1121,7 @@ function renderSettingsModal() {
   if (sel) sel.value = appState.activeProvider;
   const slider = document.getElementById('fontSizeSlider');
   if (slider) { slider.value = appState.bubbleFontSize || 17; document.getElementById('fontSizeVal').textContent = (appState.bubbleFontSize || 17) + 'px'; }
+  updateTimeInjectionToggle();
 }
 
 function saveSettings() {
@@ -1202,6 +1212,18 @@ function openModal(id) {
 function closeModal(id) {
   const overlay = document.getElementById(id);
   if (overlay) overlay.style.display = 'none';
+}
+
+// ============ TIME INJECTION TOGGLE ============
+function toggleTimeInjection() {
+  appState.enableTimeInjection = !appState.enableTimeInjection;
+  const track = document.getElementById('timeInjectionToggle');
+  track.classList.toggle('active', appState.enableTimeInjection);
+}
+
+function updateTimeInjectionToggle() {
+  const track = document.getElementById('timeInjectionToggle');
+  if (track) track.classList.toggle('active', appState.enableTimeInjection);
 }
 
 // ============ BUBBLE FONT SIZE ============
@@ -1322,6 +1344,16 @@ document.addEventListener('click', function(e) {
         </div>
         <div style="margin-top:20px;">
           <button class="btn btn-danger btn-sm" onclick="clearChat()">🗑️ 清空聊天记录</button>
+        </div>
+        <div class="form-group" style="margin-top:20px;">
+          <label>让AI知晓当前时间（北京时区）</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;">
+            <div class="free-toggle" onclick="toggleTimeInjection()" style="cursor:pointer;">
+              <span style="font-size:13px;color:var(--text);">启用</span>
+              <div class="toggle-track" id="timeInjectionToggle"><div class="toggle-thumb"></div></div>
+            </div>
+            <span class="hint" style="margin:0;">开启后，AI在回复时会知道当前的北京时间（含日期和星期）</span>
+          </div>
         </div>
         <div class="form-group" style="margin-top:20px;">
           <label>对话气泡字号：<span id="fontSizeVal" style="color:var(--accent);font-weight:600;">17px</span></label>
