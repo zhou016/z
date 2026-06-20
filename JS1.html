@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI角色聊天平台</title>
+    <style>
+        :root {
+            --bg: #f5f6fa;
+            --sidebar-bg: #ffffff;
+            --chat-bg: #ffffff;
+            --bubble-user: #d2e3fc;
+            --bubble-ai: #f1f3f4;
+            --text: #202124;
+            --text-secondary: #5f6368;
+            --border: #dadce0;
+            --accent: #1a73e8;
+            --accent-hover: #1765cc;
+            --danger: #c5221f;
+            --danger-hover: #b41c1b;
+            --input-bg: #f1f3f4;
+            --font-size: 17px;
+            --bubble-font-size: 17px;
+            --header-height: 56px;
+            --sidebar-width: 280px;
+            --transition: 0.2s ease;
+            --bubble-padding-v: 8px;
+            --bubble-padding-h: 12px;
+            --bubble-line-height: 1.45;
+        }
+
+        body.dark {
+            --bg: #1a1a2e;
+            --sidebar-bg: #16162a;
+            --chat-bg: #1e1e35;
+            --bubble-user: #2b5a8c;
+            --bubble-ai: #2a2a45;
+            --text: #e0e0e0;
+            --text-secondary: #a0a0b8;
+            --border: #2a2a40;
+            --accent: #4a90d9;
+            --accent-hover: #5aa0e9;
+            --danger: #c0392b;
+            --danger-hover: #e74c3c;
+            --input-bg: #252540;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ========== 侧边栏 ========== */
+        .sidebar {
+            width: var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            z-index: 10;
+            transition: transform var(--transition);
+        }
+        .sidebar-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .sidebar-header h2 {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .sidebar-header button {
+            background: var(--accent);
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition);
+        }
+        .sidebar-header button:hover {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+        .sidebar-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+            scroll-behavior: smooth;
+        }
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+        .role-group {
+            margin-bottom: 6px;
+        }
+        .role-group-header {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            padding: 8px 10px 4px;
+            font-weight: 600;
+        }
+        .role-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all var(--transition);
+            margin-bottom: 2px;
+            position: relative;
+        }
+        .role-item:hover {
+            background: var(--input-bg);
+        }
+        .role-item.active {
+            background: var(--bubble-ai);
+            border: 1px solid var(--accent);
+        }
+        .role-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            background: var(--input-bg);
+        }
+        .role-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .role-name {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .role-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .role-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity var(--transition);
+        }
+        .role-item:hover .role-actions {
+            opacity: 1;
+        }
+        .role-actions button {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            transition: all var(--transition);
+        }
+        .role-actions button:hover {
+            color: var(--text);
+            background: var(--border);
+        }
+        .session-list {
+            margin-left: 12px;
+            border-left: 2px solid var(--border);
+            padding-left: 8px;
+        }
+        .session-item {
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+        .session-item:hover {
+            background: var(--input-bg);
+            color: var(--text);
+        }
+        .session-item.active {
+            background: var(--bubble-ai);
+            color: var(--text);
+            font-weight: 500;
+        }
+        .session-del {
+            opacity: 0;
+            cursor: pointer;
+            color: #e74c3c;
+            font-size: 14px;
+            transition: opacity var(--transition);
+            padding: 2px 5px;
+        }
+        .session-item:hover .session-del {
+            opacity: 1;
+        }
+
+        /* ========== 主聊天区 ========== */
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-width: 0;
+            background: var(--chat-bg);
+        }
+        .chat-header {
+            height: var(--header-height);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .chat-header .title {
+            font-weight: 600;
+            font-size: 15px;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-header button {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 7px 13px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all var(--transition);
+            white-space: nowrap;
+        }
+        .chat-header button:hover {
+            background: var(--border);
+        }
+        .chat-header button.accent {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .chat-header button.accent:hover {
+            background: var(--accent-hover);
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            scroll-behavior: smooth;
+        }
+        .chat-messages::-webkit-scrollbar {
+            width: 5px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+        .msg-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            animation: fadeInUp 0.25s ease;
+            margin-bottom: 6px;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .msg-row.user {
+            flex-direction: row-reverse;
+        }
+        .msg-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+            background: var(--input-bg);
+            margin-top: 2px;
+        }
+        .msg-bubble {
+            max-width: 72%;
+            padding: var(--bubble-padding-v) var(--bubble-padding-h);
+            border-radius: 14px;
+            font-size: var(--bubble-font-size);
+            line-height: var(--bubble-line-height);
+            word-break: break-word;
+            position: relative;
+            white-space: pre-wrap;
+            color: var(--text);
+            overflow-wrap: break-word;
+        }
+        .msg-row.user .msg-bubble {
+            background: var(--bubble-user);
+            border-bottom-right-radius: 4px;
+        }
+        .msg-row.ai .msg-bubble {
+            background: var(--bubble-ai);
+            border-bottom-left-radius: 4px;
+        }
+        .msg-row.system .msg-bubble {
+            background: var(--input-bg);
+            border: 1px dashed var(--border);
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 12px;
+            max-width: 90%;
+            text-align: center;
+            border-radius: 10px;
+        }
+        /* 按钮组：放在气泡下方，但不撑开气泡 */
+        .msg-bubble .bubble-actions {
+            position: absolute;
+            bottom: -22px;
+            right: 4px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity var(--transition);
+            z-index: 2;
+            white-space: nowrap;
+        }
+        .msg-row.user .msg-bubble .bubble-actions {
+            right: auto;
+            left: 4px;
+        }
+        .msg-bubble:hover .bubble-actions {
+            opacity: 1;
+        }
+        .msg-copy-btn, .msg-backtrack-btn {
+            font-size: 10px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all var(--transition);
+            line-height: 1.3;
+        }
+        .msg-copy-btn:hover, .msg-backtrack-btn:hover {
+            color: var(--text);
+            background: var(--border);
+        }
+        .msg-backtrack-btn {
+            color: #f0a060;
+        }
+        .msg-backtrack-btn:hover {
+            color: #fff;
+            background: #5a4030;
+        }
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 4px 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .typing-dots {
+            display: inline-flex;
+            gap: 3px;
+        }
+        .typing-dots span {
+            width: 5px;
+            height: 5px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: blink 1.4s infinite;
+        }
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes blink {
+            0%,
+            80%,
+            100% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+            40% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        /* 无头像满屏模式 */
+        .chat-messages.full-width .msg-bubble {
+            max-width: 95%;
+            border-radius: 8px;
+        }
+        .chat-messages.full-width .msg-avatar {
+            display: none;
+        }
+        .chat-messages.full-width .msg-row {
+            gap: 0;
+        }
+        .chat-messages.full-width .msg-row.user .msg-bubble {
+            border-bottom-right-radius: 8px;
+        }
+        .chat-messages.full-width .msg-row.ai .msg-bubble {
+            border-bottom-left-radius: 8px;
+        }
+
+        /* ========== 输入区 ========== */
+        .chat-input-area {
+            border-top: 1px solid var(--border);
+            padding: 10px 14px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+            flex-shrink: 0;
+            background: var(--bg);
+        }
+        .chat-input-area textarea {
+            flex: 1;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-size: 15px;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+            line-height: 1.5;
+            min-height: 42px;
+            max-height: 130px;
+            transition: border-color var(--transition);
+            overflow-y: auto;
+        }
+        .chat-input-area textarea:focus {
+            border-color: var(--accent);
+        }
+        .chat-input-area textarea::-webkit-scrollbar {
+            width: 3px;
+        }
+        .chat-input-area textarea::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+        .send-btn {
+            background: var(--accent);
+            border: none;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all var(--transition);
+            white-space: nowrap;
+            flex-shrink: 0;
+            height: 42px;
+        }
+        .send-btn:hover {
+            background: var(--accent-hover);
+        }
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .stop-btn {
+            background: var(--danger);
+            border: none;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all var(--transition);
+            white-space: nowrap;
+            flex-shrink: 0;
+            height: 42px;
+            display: none;
+        }
+        .stop-btn:hover {
+            background: var(--danger-hover);
+        }
+
+        /* ========== 弹窗 ========== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        .modal {
+            background: var(--chat-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 24px;
+            width: 90%;
+            max-width: 560px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            color: var(--text);
+        }
+        .modal::-webkit-scrollbar {
+            width: 4px;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+        .modal h3 {
+            margin-bottom: 14px;
+            font-size: 17px;
+            letter-spacing: 0.3px;
+        }
+        .modal label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            margin-top: 10px;
+            letter-spacing: 0.5px;
+        }
+        .modal input,
+        .modal textarea,
+        .modal select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 9px 12px;
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color var(--transition);
+        }
+        .modal input:focus,
+        .modal textarea:focus,
+        .modal select:focus {
+            border-color: var(--accent);
+        }
+        .modal textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .modal .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+        .modal .btn-row button {
+            padding: 9px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            border: none;
+            transition: all var(--transition);
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+        .btn-secondary {
+            background: var(--input-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: var(--danger-hover);
+        }
+        .modal .range-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal .range-row input[type="range"] {
+            flex: 1;
+        }
+        .modal .range-row span {
+            font-size: 13px;
+            min-width: 40px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* ========== 群聊标签 ========== */
+        .group-badge {
+            display: inline-block;
+            background: #4a9060;
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            margin-left: 6px;
+            font-weight: 600;
+        }
+        .group-member-tag {
+            display: inline-block;
+            background: var(--input-bg);
+            color: var(--text);
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin: 2px;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        .group-member-tag.muted {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+        .group-member-tag:hover {
+            background: var(--border);
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+                width: 270px;
+                min-width: 270px;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .mobile-menu-btn {
+                display: flex !important;
+            }
+            .msg-bubble {
+                max-width: 85% !important;
+            }
+            .chat-messages.full-width .msg-bubble {
+                max-width: 97% !important;
+            }
+            .modal {
+                width: 95%;
+                max-width: 95%;
+                padding: 14px 16px;
+            }
+        }
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        @media (min-width: 769px) {
+            .mobile-menu-btn {
+                display: none !important;
+            }
+        }
+
+        /* 亲密度指示器 */
+        .intimacy-bar {
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-top: 4px;
+            overflow: hidden;
+            width: 100%;
+        }
+        .intimacy-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s ease, background 0.5s ease;
+        }
+        .intimacy-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== 侧边栏 ==================== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>🤖 角色</h2>
+            <button title="新建角色" id="btnNewRole">+</button>
+        </div>
+        <div class="sidebar-scroll" id="sidebarScroll">
+            <div class="role-group">
+                <div class="role-group-header">📌 预设角色</div>
+                <div id="presetRoles"></div>
+            </div>
+            <div class="role-group">
+                <div class="role-group-header">✏️ 自定义角色</div>
+                <div id="customRoles"></div>
+            </div>
+            <div class="role-group">
+                <div class="role-group-header">👥 群聊</div>
+                <div id="groupChats"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ==================== 主聊天区 ==================== -->
+    <div class="main-area" id="mainArea">
+        <div class="chat-header">
+            <button class="mobile-menu-btn" id="btnToggleSidebar">☰</button>
+            <span class="title" id="chatTitle">选择角色开始对话</span>
+            <span id="intimacyDisplay" style="font-size:11px;color:#f0a060;display:none;"></span>
+            <button id="btnSettings" title="设置">⚙️</button>
+            <button id="btnClearChat" title="清空当前会话">🗑️ 清空</button>
+            <button id="btnToggleView" title="切换视图模式">🖼️</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-area">
+            <textarea id="chatInput" rows="1" placeholder="输入消息…（Enter换行，点击发送）"></textarea>
+            <button class="send-btn" id="btnSend">发送</button>
+            <button class="stop-btn" id="btnStop">⏹ 停止</button>
+        </div>
+    </div>
+
+    <!-- ==================== 弹窗容器 ==================== -->
+    <div id="modalContainer"></div>
+    <div id="toastContainer" style="position:fixed;top:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:6px;"></div>
+
+    <script>
+        (function() {
+            // ==================== 数据管理 ====================
+            const STORAGE_KEY = 'ai_chat_platform_data_v2';
+            const DEFAULT_PRESET_ROLES = [
+                { id: 'preset_mentor', name: '职场导师', avatar: '👔', setting: '你是一位经验丰富的职场导师，拥有20年企业管理经验。你善于给予职业规划建议、职场沟通技巧和领导力指导。回答简洁务实，语气温和而坚定。', isPreset: true,
+                    intimacy: 50, intimacyEnabled: false },
+                { id: 'preset_coder', name: '编程专家', avatar: '💻', setting: '你是一位资深全栈工程师，精通多种编程语言和框架。你擅长用简洁清晰的方式解释技术概念，提供代码优化建议。回答专业但易懂，乐于帮助解决编程难题。',
+                    isPreset: true, intimacy: 50, intimacyEnabled: false },
+                { id: 'preset_writer', name: '文案大师', avatar: '✍️', setting: '你是一位资深文案策划，擅长撰写各类高质量文案，包括广告文案、品牌故事、社交媒体内容等。你的文字富有感染力和创意，能精准抓住读者心理。', isPreset: true,
+                    intimacy: 50, intimacyEnabled: false },
+                { id: 'preset_psych', name: '心理顾问', avatar: '🧠', setting: '你是一位专业的心理咨询师，善于倾听和引导。你用温暖而专业的语气帮助用户梳理情绪、分析问题，提供心理学视角的见解。', isPreset: true, intimacy: 50,
+                    intimacyEnabled: false },
+                { id: 'preset_friend', name: '知心好友', avatar: '🌟', setting: '你是一个温暖贴心的朋友，性格开朗幽默，善于倾听。你像认识多年的老友一样自然交谈，偶尔开些无伤大雅的玩笑，让人感到轻松自在。', isPreset: true,
+                    intimacy: 50, intimacyEnabled: false },
+            ];
+
+            function loadData() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (raw) {
+                        const data = JSON.parse(raw);
+                        if (data.roles && data.sessions && data.settings) return data;
+                    }
+                } catch (e) {}
+                return initializeDefaultData();
+            }
+
+            function initializeDefaultData() {
+                const roles = [...DEFAULT_PRESET_ROLES.map(r => ({ ...r }))];
+                const sessions = {};
+                roles.forEach(r => {
+                    sessions[r.id] = [{ id: generateId(), name: '默认会话', messages: [], createdAt: Date.now() }];
+                });
+                return {
+                    roles,
+                    sessions,
+                    customRoles: [],
+                    groupChats: [],
+                    settings: {
+                        activeRoleId: roles[0].id,
+                        activeSessionIndex: 0,
+                        activeGroupId: null,
+                        fontSize: 17,
+                        contextTokens: 60000,
+                        contextMessages: 50,
+                        timeAware: true,
+                        viewMode: 'default',
+                        apiPlatform: 'deepseek',
+                        apiKey: '',
+                        apiBase: 'https://api.deepseek.com/v1',
+                        model: 'deepseek-chat',
+                        customPlatforms: [],
+                        customApiBase: '',
+                        customApiKey: '',
+                        customModel: '',
+                        theme: 'light',
+                    },
+                };
+            }
+
+            function saveData() {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                } catch (e) {
+                    showToast('⚠️ 存储空间不足，请清理旧数据');
+                }
+            }
+
+            function generateId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
+
+            let state = loadData();
+
+            // 确保所有预设角色都有会话
+            DEFAULT_PRESET_ROLES.forEach(pr => {
+                if (!state.sessions[pr.id]) {
+                    state.sessions[pr.id] = [{ id: generateId(), name: '默认会话', messages: [], createdAt: Date.now() }];
+                }
+            });
+
+            // ==================== 全局状态 ====================
+            let currentRoleId = state.settings.activeRoleId || DEFAULT_PRESET_ROLES[0].id;
+            let currentSessionIndex = state.settings.activeSessionIndex || 0;
+            let currentGroupId = state.settings.activeGroupId || null;
+            let isGroupMode = !!currentGroupId;
+            let abortController = null;
+            let isGenerating = false;
+            let fontSize = state.settings.fontSize || 17;
+            let viewMode = state.settings.viewMode || 'default';
+            let contextMessages = state.settings.contextMessages || 50;
+            let contextTokens = state.settings.contextTokens || 60000;
+            let timeAware = state.settings.timeAware !== false;
+            let currentTheme = state.settings.theme || 'light';
+
+            function getAllRoles() {
+                return [...state.roles.filter(r => r.isPreset), ...(state.customRoles || []), ...(state.groupChats ||
+                    [])];
+            }
+
+            function getCurrentRole() {
+                if (isGroupMode) {
+                    return (state.groupChats || []).find(g => g.id === currentGroupId) || null;
+                }
+                return getAllRoles().find(r => r.id === currentRoleId) || null;
+            }
+
+            function getCurrentSession() {
+                if (isGroupMode && currentGroupId) {
+                    if (!state.sessions[currentGroupId]) state.sessions[currentGroupId] = [{ id: generateId(),
+                        name: '群聊会话', messages: [], createdAt: Date.now() }];
+                    if (currentSessionIndex >= state.sessions[currentGroupId].length) currentSessionIndex = 0;
+                    return state.sessions[currentGroupId][currentSessionIndex] || state.sessions[currentGroupId][0];
+                }
+                if (!state.sessions[currentRoleId]) state.sessions[currentRoleId] = [{ id: generateId(), name: '默认会话',
+                    messages: [], createdAt: Date.now() }];
+                if (currentSessionIndex >= state.sessions[currentRoleId].length) currentSessionIndex = 0;
+                return state.sessions[currentRoleId][currentSessionIndex] || state.sessions[currentRoleId][0];
+            }
+
+            function getCurrentMessages() {
+                const session = getCurrentSession();
+                return session ? session.messages : [];
+            }
+
+            // ==================== Toast ====================
+            function showToast(msg, duration = 2000) {
+                const container = document.getElementById('toastContainer');
+                const el = document.createElement('div');
+                el.textContent = msg;
+                el.style.cssText =
+                    'background:var(--input-bg);color:var(--text);padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,0.2);animation:fadeInUp 0.3s ease;max-width:300px;';
+                container.appendChild(el);
+                setTimeout(() => { el.style.opacity = '0';
+                    el.style.transition = 'opacity 0.3s';
+                    setTimeout(() => el.remove(), 300); }, duration);
+            }
+
+            // ==================== 渲染侧边栏 ====================
+            function renderSidebar() {
+                const presetContainer = document.getElementById('presetRoles');
+                const customContainer = document.getElementById('customRoles');
+                const groupContainer = document.getElementById('groupChats');
+
+                const presetRoles = state.roles.filter(r => r.isPreset);
+                const customRoles = state.customRoles || [];
+                const groupChats = state.groupChats || [];
+
+                presetContainer.innerHTML = presetRoles.map(r => renderRoleItem(r)).join('');
+                customContainer.innerHTML = customRoles.length ? customRoles.map(r => renderRoleItem(r)).join('') :
+                    '<div style="font-size:11px;color:var(--text-secondary);padding:8px 10px;">暂无自定义角色</div>';
+                groupContainer.innerHTML = groupChats.length ? groupChats.map(g => renderGroupItem(g)).join('') :
+                    '<div style="font-size:11px;color:var(--text-secondary);padding:8px 10px;">暂无群聊 <button style="background:#4a9060;border:none;color:#fff;padding:3px 8px;border-radius:4px;cursor:pointer;font-size:10px;margin-left:4px;" onclick="window._createGroupChat()">+新建</button></div>';
+            }
+
+            function renderRoleItem(role) {
+                const isActive = !isGroupMode && currentRoleId === role.id;
+                const sessions = state.sessions[role.id] || [];
+                const activeSessIdx = isActive ? currentSessionIndex : (sessions.length > 0 ? 0 : -1);
+                const intimacy = role.intimacyEnabled ? `
+            <div class="intimacy-bar"><div class="intimacy-fill" style="width:${role.intimacy||50}%;background:${getIntimacyColor(role.intimacy||50)};"></div></div>
+            <div class="intimacy-label">亲密度: ${role.intimacy||50}/100</div>` : '';
+                return `
+            <div class="role-item ${isActive?'active':''}" data-role-id="${role.id}" onclick="window._selectRole('${role.id}')">
+              <div class="role-avatar">${role.avatar||'🤖'}</div>
+              <div class="role-info">
+                <div class="role-name">${escHtml(role.name)}${role.isPreset?' <span style="font-size:9px;color:var(--text-secondary);">预设</span>':''}</div>
+                <div class="role-desc">${escHtml((role.setting||'').substring(0,30))}…</div>
+                ${intimacy}
+              </div>
+              <div class="role-actions">
+                <button onclick="event.stopPropagation();window._editRole('${role.id}')" title="编辑">✎</button>
+                ${!role.isPreset?`<button onclick="event.stopPropagation();window._deleteRole('${role.id}')" title="删除" style="color:#e74c3c;">×</button>`:''}
+              </div>
+            </div>
+            <div class="session-list">
+              ${sessions.map((s,i)=>`
+                <div class="session-item ${isActive&&i===activeSessIdx?'active':''}" onclick="event.stopPropagation();window._selectSession('${role.id}',${i})">
+                  <span>💬 ${escHtml(s.name||'会话'+(i+1))} (${(s.messages||[]).length}条)</span>
+                  <span class="session-del" onclick="event.stopPropagation();window._deleteSession('${role.id}',${i})">×</span>
+                </div>
+              `).join('')}
+              <div style="font-size:10px;color:var(--text-secondary);padding:2px 10px;cursor:pointer;" onclick="event.stopPropagation();window._newSession('${role.id}')">+ 新建会话</div>
+            </div>`;
+            }
+
+            function renderGroupItem(group) {
+                const isActive = isGroupMode && currentGroupId === group.id;
+                const sessions = state.sessions[group.id] || [];
+                return `
+            <div class="role-item ${isActive?'active':''}" data-role-id="${group.id}" onclick="window._selectGroup('${group.id}')">
+              <div class="role-avatar">👥</div>
+              <div class="role-info">
+                <div class="role-name">${escHtml(group.name)}<span class="group-badge">群聊</span></div>
+                <div class="role-desc">${(group.members||[]).map(m=>m.name).join('、')}</div>
+              </div>
+              <div class="role-actions">
+                <button onclick="event.stopPropagation();window._editGroup('${group.id}')" title="编辑">✎</button>
+                <button onclick="event.stopPropagation();window._deleteGroup('${group.id}')" title="删除" style="color:#e74c3c;">×</button>
+              </div>
+            </div>`;
+            }
+
+            function escHtml(s) { const d = document.createElement('div');
+                d.textContent = s || ''; return d.innerHTML; }
+
+            // ==================== 消息DOM操作（优化：流式更新直接操作DOM） ====================
+            const messagesContainer = document.getElementById('chatMessages');
+
+            function createMessageRow(msg, index) {
+                const row = document.createElement('div');
+                row.className = 'msg-row';
+                if (msg.role === 'user') row.classList.add('user');
+                else if (msg.role === 'system') row.classList.add('system');
+                else row.classList.add('ai');
+                row.dataset.msgIndex = index;
+
+                if (msg.role === 'system') {
+                    row.innerHTML = `<div class="msg-bubble">${escHtml(msg.content)}</div>`;
+                    return row;
+                }
+
+                const avatar = document.createElement('div');
+                avatar.className = 'msg-avatar';
+                avatar.textContent = msg.role === 'user' ? '👤' : (msg.senderAvatar || '🤖');
+
+                const bubble = document.createElement('div');
+                bubble.className = 'msg-bubble';
+                const senderName = msg.senderName || '';
+                bubble.innerHTML = senderName ? `<strong>${escHtml(senderName)}</strong>: ${escHtml(msg.content||'')}` : escHtml(msg.content||'');
+
+                const actions = document.createElement('div');
+                actions.className = 'bubble-actions';
+                actions.innerHTML = `
+              <button class="msg-copy-btn">复制</button>
+              <button class="msg-backtrack-btn">回溯</button>`;
+                actions.querySelector('.msg-copy-btn').onclick = (e) => { e.stopPropagation();
+                    window._copyMsg(index); };
+                actions.querySelector('.msg-backtrack-btn').onclick = (e) => { e.stopPropagation();
+                    window._backtrack(index); };
+                bubble.appendChild(actions);
+
+                row.appendChild(avatar);
+                row.appendChild(bubble);
+                return row;
+            }
+
+            function appendMessageToDOM(msg, index) {
+                const row = createMessageRow(msg, index);
+                messagesContainer.appendChild(row);
+                return row;
+            }
+
+            function updateMessageBubble(row, content) {
+                const bubble = row.querySelector('.msg-bubble');
+                if (!bubble) return;
+                // 保留 sender name 的 strong 标签
+                const strong = bubble.querySelector('strong');
+                if (strong) {
+                    bubble.innerHTML = `<strong>${strong.textContent}</strong>: ${escHtml(content||'')}`;
+                } else {
+                    bubble.innerHTML = escHtml(content||'');
+                }
+                // 重新添加操作按钮
+                const actions = document.createElement('div');
+                actions.className = 'bubble-actions';
+                const index = parseInt(row.dataset.msgIndex, 10);
+                actions.innerHTML = `
+              <button class="msg-copy-btn">复制</button>
+              <button class="msg-backtrack-btn">回溯</button>`;
+                actions.querySelector('.msg-copy-btn').onclick = (e) => { e.stopPropagation();
+                    window._copyMsg(index); };
+                actions.querySelector('.msg-backtrack-btn').onclick = (e) => { e.stopPropagation();
+                    window._backtrack(index); };
+                bubble.appendChild(actions);
+            }
+
+            function renderAllMessages() {
+                const messages = getCurrentMessages();
+                messagesContainer.innerHTML = '';
+                messages.forEach((msg, idx) => {
+                    appendMessageToDOM(msg, idx);
+                });
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                updateIntimacyDisplay();
+            }
+
+            function scrollToBottom() {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            // ==================== 渲染聊天消息（改用优化方法） ====================
+            function renderMessages() {
+                // 完全重绘（非流式时调用）
+                renderAllMessages();
+                const role = getCurrentRole();
+                const roleAvatar = role ? (role.avatar || '🤖') : '🤖';
+                // 更新视图模式类名
+                messagesContainer.className = 'chat-messages' + (viewMode === 'fullwidth' ? ' full-width' : '');
+            }
+
+            function updateIntimacyDisplay() {
+                const display = document.getElementById('intimacyDisplay');
+                const role = getCurrentRole();
+                if (role && !role.isGroup && role.intimacyEnabled) {
+                    display.style.display = 'inline';
+                    display.textContent = `💕亲密度: ${role.intimacy||50}/100`;
+                } else {
+                    display.style.display = 'none';
+                }
+            }
+
+            function getIntimacyColor(val) {
+                if (val < 25) return '#e74c3c';
+                if (val < 50) return '#f39c12';
+                if (val < 75) return '#f1c40f';
+                return '#2ecc71';
+            }
+
+            // ==================== 更新聊天标题 ====================
+            function updateChatTitle() {
+                const titleEl = document.getElementById('chatTitle');
+                const role = getCurrentRole();
+                if (role) {
+                    const session = getCurrentSession();
+                    titleEl.textContent = `${role.avatar||'🤖'} ${role.name} - ${session?session.name:'会话'}`;
+                } else {
+                    titleEl.textContent = '选择角色开始对话';
+                }
+                messagesContainer.className = 'chat-messages' + (viewMode === 'fullwidth' ? ' full-width' : '');
+                document.documentElement.style.setProperty('--bubble-font-size', fontSize + 'px');
+            }
+
+            function refreshAll() {
+                renderSidebar();
+                renderMessages();
+                updateChatTitle();
+                saveData();
+            }
+
+            // ==================== 主题切换（设置在弹窗内） ====================
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    document.body.classList.add('dark');
+                } else {
+                    document.body.classList.remove('dark');
+                }
+                currentTheme = theme;
+                state.settings.theme = theme;
+                saveData();
+            }
+
+            // ==================== 选择角色/会话 ====================
+            window._selectRole = function(roleId) {
+                isGroupMode = false;
+                currentGroupId = null;
+                currentRoleId = roleId;
+                currentSessionIndex = 0;
+                state.settings.activeRoleId = roleId;
+                state.settings.activeSessionIndex = 0;
+                state.settings.activeGroupId = null;
+                if (!state.sessions[roleId] || state.sessions[roleId].length === 0) {
+                    state.sessions[roleId] = [{ id: generateId(), name: '默认会话', messages: [], createdAt: Date
+                        .now() }];
+                }
+                refreshAll();
+            };
+
+            window._selectSession = function(roleId, idx) {
+                isGroupMode = false;
+                currentGroupId = null;
+                currentRoleId = roleId;
+                currentSessionIndex = idx;
+                state.settings.activeRoleId = roleId;
+                state.settings.activeSessionIndex = idx;
+                state.settings.activeGroupId = null;
+                refreshAll();
+            };
+
+            window._selectGroup = function(groupId) {
+                isGroupMode = true;
+                currentGroupId = groupId;
+                currentRoleId = groupId;
+                currentSessionIndex = 0;
+                state.settings.activeGroupId = groupId;
+                state.settings.activeRoleId = groupId;
+                state.settings.activeSessionIndex = 0;
+                if (!state.sessions[groupId] || state.sessions[groupId].length === 0) {
+                    state.sessions[groupId] = [{ id: generateId(), name: '群聊会话', messages: [], createdAt: Date.now() }];
+                }
+                refreshAll();
+            };
+
+            window._newSession = function(roleId) {
+                if (!state.sessions[roleId]) state.sessions[roleId] = [];
+                state.sessions[roleId].push({ id: generateId(), name: '会话' + (state.sessions[roleId].length + 1),
+                    messages: [], createdAt: Date.now() });
+                currentSessionIndex = state.sessions[roleId].length - 1;
+                currentRoleId = roleId;
+                isGroupMode = false;
+                currentGroupId = null;
+                state.settings.activeRoleId = roleId;
+                state.settings.activeSessionIndex = currentSessionIndex;
+                state.settings.activeGroupId = null;
+                refreshAll();
+            };
+
+            window._deleteSession = function(roleId, idx) {
+                if (!state.sessions[roleId]) return;
+                if (state.sessions[roleId].length <= 1) { showToast('至少保留一个会话'); return; }
+                state.sessions[roleId].splice(idx, 1);
+                if (currentRoleId === roleId && currentSessionIndex >= state.sessions[roleId].length)
+                    currentSessionIndex = state.sessions[roleId].length - 1;
+                state.settings.activeSessionIndex = currentSessionIndex;
+                refreshAll();
+            };
+
+            window._copyMsg = function(idx) {
+                const msgs = getCurrentMessages();
+                if (msgs[idx]) {
+                    navigator.clipboard.writeText(msgs[idx].content).then(() => showToast('✅ 已复制')).catch(() =>
+                        showToast('复制失败'));
+                }
+            };
+
+            window._backtrack = function(idx) {
+                const session = getCurrentSession();
+                if (!session) return;
+                const msgs = session.messages;
+                if (idx >= 0 && idx < msgs.length - 1) {
+                    session.messages = msgs.slice(0, idx + 1);
+                    refreshAll();
+                    showToast('✅ 已回溯到该节点，可继续对话');
+                } else if (idx === msgs.length - 1) {
+                    showToast('已在最新节点');
+                }
+            };
+
+            // ==================== 编辑/删除角色 ====================
+            window._editRole = function(roleId) {
+                const allRoles = getAllRoles();
+                const role = allRoles.find(r => r.id === roleId);
+                if (!role) return;
+                if (role.isGroup) { window._editGroup(roleId); return; }
+                showRoleModal(role);
+            };
+
+            window._deleteRole = function(roleId) {
+                const role = (state.customRoles || []).find(r => r.id === roleId);
+                if (!role) return;
+                if (!confirm(`确定删除角色"${role.name}"及其所有会话吗？`)) return;
+                state.customRoles = (state.customRoles || []).filter(r => r.id !== roleId);
+                delete state.sessions[roleId];
+                if (currentRoleId === roleId) {
+                    currentRoleId = DEFAULT_PRESET_ROLES[0].id;
+                    currentSessionIndex = 0;
+                }
+                refreshAll();
+                showToast('已删除');
+            };
+
+            function showRoleModal(role) {
+                const isNew = !role;
+                const modalHtml = `
+            <div class="modal-overlay" id="roleModal">
+              <div class="modal">
+                <h3>${isNew?'新建角色':'编辑角色'}</h3>
+                <label>角色名称</label>
+                <input id="roleName" value="${isNew?'':escHtml(role.name)}" placeholder="输入角色名称">
+                <label>头像Emoji</label>
+                <input id="roleAvatar" value="${isNew?'🤖':escHtml(role.avatar||'🤖')}" placeholder="如：🤖👔💻">
+                <label>角色设定</label>
+                <textarea id="roleSetting" rows="4" placeholder="描述角色的性格、语气、专业领域等…">${isNew?'':escHtml(role.setting||'')}</textarea>
+                <label>亲密度系统</label>
+                <select id="roleIntimacyEnabled">
+                  <option value="0" ${!isNew&&!role.intimacyEnabled?'selected':''}>关闭</option>
+                  <option value="1" ${!isNew&&role.intimacyEnabled?'selected':''}>开启</option>
+                </select>
+                <label>初始亲密度 (1-100)</label>
+                <input type="range" id="roleIntimacy" min="1" max="100" value="${isNew?50:role.intimacy||50}" oninput="document.getElementById('intimacyVal').textContent=this.value">
+                <span id="intimacyVal">${isNew?50:role.intimacy||50}</span>
+                <div class="btn-row">
+                  <button class="btn-secondary" onclick="document.getElementById('roleModal').remove()">取消</button>
+                  <button class="btn-primary" id="btnSaveRole">保存</button>
+                </div>
+              </div>
+            </div>`;
+                document.getElementById('modalContainer').innerHTML = modalHtml;
+                document.getElementById('btnSaveRole').onclick = function() {
+                    const name = document.getElementById('roleName').value.trim();
+                    const avatar = document.getElementById('roleAvatar').value.trim();
+                    const setting = document.getElementById('roleSetting').value.trim();
+                    const intimacyEnabled = document.getElementById('roleIntimacyEnabled').value === '1';
+                    const intimacy = parseInt(document.getElementById('roleIntimacy').value) || 50;
+                    if (!name) { showToast('请输入角色名称'); return; }
+                    if (!setting) { showToast('请输入角色设定'); return; }
+                    if (isNew) {
+                        const newRole = { id: generateId(), name, avatar: avatar || '🤖', setting, isPreset: false,
+                            intimacy, intimacyEnabled };
+                        if (!state.customRoles) state.customRoles = [];
+                        state.customRoles.push(newRole);
+                        state.sessions[newRole.id] = [{ id: generateId(), name: '默认会话', messages: [],
+                            createdAt: Date.now() }];
+                        currentRoleId = newRole.id;
+                        currentSessionIndex = 0;
+                    } else {
+                        role.name = name;
+                        role.avatar = avatar || '🤖';
+                        role.setting = setting;
+                        role.intimacyEnabled = intimacyEnabled;
+                        role.intimacy = intimacy;
+                    }
+                    document.getElementById('roleModal').remove();
+                    refreshAll();
+                    showToast(isNew ? '角色已创建' : '角色已更新');
+                };
+            }
+
+            window._createGroupChat = function() { showGroupModal(null); };
+
+            window._editGroup = function(groupId) {
+                const group = (state.groupChats || []).find(g => g.id === groupId);
+                if (group) showGroupModal(group);
+            };
+
+            window._deleteGroup = function(groupId) {
+                if (!confirm('确定删除此群聊吗？')) return;
+                state.groupChats = (state.groupChats || []).filter(g => g.id !== groupId);
+                delete state.sessions[groupId];
+                if (currentGroupId === groupId) {
+                    isGroupMode = false;
+                    currentGroupId = null;
+                    currentRoleId = DEFAULT_PRESET_ROLES[0].id;
+                    currentSessionIndex = 0;
+                }
+                refreshAll();
+                showToast('群聊已删除');
+            };
+
+            function showGroupModal(group) {
+                const isNew = !group;
+                const allRoles = getAllRoles().filter(r => !r.isGroup);
+                const members = group ? (group.members || []) : [];
+                const memberIds = members.map(m => m.roleId);
+                const rolesHtml = allRoles.map(r => `
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);margin:4px 0;">
+              <input type="checkbox" value="${r.id}" ${memberIds.includes(r.id)?'checked':''} class="groupMemberCheck">
+              ${r.avatar||'🤖'} ${escHtml(r.name)}
+            </label>`).join('');
+
+                const modalHtml = `
+            <div class="modal-overlay" id="groupModal">
+              <div class="modal">
+                <h3>${isNew?'新建群聊':'编辑群聊'}</h3>
+                <label>群聊名称</label>
+                <input id="groupName" value="${isNew?'':escHtml(group.name)}" placeholder="输入群聊名称">
+                <label>您的自定义身份（群聊中AI将以此称呼您）</label>
+                <input id="groupUserIdentity" value="${isNew?'':escHtml(group.userIdentity||'')}" placeholder="如：项目经理小王、学生小李">
+                <label>群聊模式</label>
+                <select id="groupMode">
+                  <option value="participate" ${!isNew&&group.mode==='participate'?'selected':''}>参与模式（用户可插话）</option>
+                  <option value="watch" ${!isNew&&group.mode==='watch'?'selected':''}>观看模式（角色互聊）</option>
+                </select>
+                <label>选择参与角色（至少2个）</label>
+                <div style="max-height:200px;overflow-y:auto;background:var(--input-bg);border-radius:8px;padding:8px;">${rolesHtml}</div>
+                <label>群聊背景/主题</label>
+                <input id="groupTopic" value="${isNew?'':escHtml(group.topic||'')}" placeholder="如：讨论项目方案、闲聊">
+                <div class="btn-row">
+                  <button class="btn-secondary" onclick="document.getElementById('groupModal').remove()">取消</button>
+                  <button class="btn-primary" id="btnSaveGroup">保存</button>
+                </div>
+              </div>
+            </div>`;
+                document.getElementById('modalContainer').innerHTML = modalHtml;
+                document.getElementById('btnSaveGroup').onclick = function() {
+                    const name = document.getElementById('groupName').value.trim();
+                    const userIdentity = document.getElementById('groupUserIdentity').value.trim();
+                    const mode = document.getElementById('groupMode').value;
+                    const topic = document.getElementById('groupTopic').value.trim();
+                    const checks = document.querySelectorAll('.groupMemberCheck:checked');
+                    const selectedIds = Array.from(checks).map(c => c.value);
+                    if (!name) { showToast('请输入群聊名称'); return; }
+                    if (selectedIds.length < 2) { showToast('请至少选择2个角色'); return; }
+                    const selectedRoles = allRoles.filter(r => selectedIds.includes(r.id));
+                    const groupMembers = selectedRoles.map(r => ({ roleId: r.id, name: r.name, avatar: r
+                            .avatar || '🤖', setting: r.setting, muted: false, order: selectedRoles.indexOf(
+                                r) }));
+                    if (isNew) {
+                        const newGroup = { id: generateId(), name, userIdentity, mode, topic, members: groupMembers,
+                            isGroup: true, avatar: '👥' };
+                        if (!state.groupChats) state.groupChats = [];
+                        state.groupChats.push(newGroup);
+                        state.sessions[newGroup.id] = [{ id: generateId(), name: '群聊会话', messages: [],
+                            createdAt: Date.now() }];
+                        currentGroupId = newGroup.id;
+                        isGroupMode = true;
+                        currentRoleId = newGroup.id;
+                        currentSessionIndex = 0;
+                    } else {
+                        group.name = name;
+                        group.userIdentity = userIdentity;
+                        group.mode = mode;
+                        group.topic = topic;
+                        group.members = groupMembers;
+                    }
+                    document.getElementById('groupModal').remove();
+                    refreshAll();
+                    showToast(isNew ? '群聊已创建' : '群聊已更新');
+                };
+            }
+
+            // ==================== 设置弹窗（包含主题选择） ====================
+            function showSettingsModal() {
+                const platforms = [
+                    { id: 'deepseek', name: 'DeepSeek', base: 'https://api.deepseek.com/v1',
+                        defaultModel: 'deepseek-chat' },
+                    { id: 'siliconflow', name: '硅基流动', base: 'https://api.siliconflow.cn/v1',
+                        defaultModel: 'deepseek-ai/DeepSeek-V3' },
+                    { id: 'dmxapi', name: 'DMXAPI', base: '', defaultModel: '' },
+                ];
+                const currentPlatform = state.settings.apiPlatform || 'deepseek';
+                const platformOptions = platforms.map(p =>
+                    `<option value="${p.id}" ${currentPlatform===p.id?'selected':''}>${p.name}</option>`
+                ).join('') + ((state.settings.customPlatforms || []).map((cp, i) =>
+                    `<option value="custom_${i}" ${currentPlatform==='custom_'+i?'selected':''}>${escHtml(cp.name||'自定义'+(i+1))}</option>`
+                ).join(''));
+
+                const modalHtml = `
+            <div class="modal-overlay" id="settingsModal">
+              <div class="modal" style="max-width:600px;">
+                <h3>⚙️ 全局设置</h3>
+                <label>主题</label>
+                <select id="setTheme">
+                  <option value="light" ${currentTheme==='light'?'selected':''}>日间</option>
+                  <option value="dark" ${currentTheme==='dark'?'selected':''}>夜间</option>
+                </select>
+                <label>AI平台</label>
+                <select id="setPlatform" onchange="window._onPlatformChange()">${platformOptions}</select>
+                <label>API地址</label>
+                <input id="setApiBase" value="${escHtml(state.settings.apiBase||'')}" placeholder="https://api.xxx.com/v1">
+                <label>API Key（仅本地存储）</label>
+                <input type="password" id="setApiKey" value="${escHtml(state.settings.apiKey||'')}" placeholder="sk-...">
+                <label>模型名称</label>
+                <input id="setModel" value="${escHtml(state.settings.model||'')}" placeholder="如：deepseek-chat">
+                <hr style="border-color:var(--border);margin:10px 0;">
+                <label>字体大小: <span id="fontSizeVal">${fontSize}px</span></label>
+                <input type="range" id="setFontSize" min="14" max="24" value="${fontSize}" oninput="document.getElementById('fontSizeVal').textContent=this.value+'px'">
+                <label>上下文记忆条数: <span id="ctxMsgVal">${contextMessages}</span>条</label>
+                <input type="range" id="setCtxMessages" min="50" max="500" step="10" value="${contextMessages}" oninput="document.getElementById('ctxMsgVal').textContent=this.value">
+                <label>Token限制: <span id="ctxTokenVal">${contextTokens}</span></label>
+                <input type="range" id="setCtxTokens" min="10000" max="200000" step="1000" value="${contextTokens}" oninput="document.getElementById('ctxTokenVal').textContent=this.value">
+                <label>视图模式</label>
+                <select id="setViewMode">
+                  <option value="default" ${viewMode==='default'?'selected':''}>默认（带头像气泡）</option>
+                  <option value="fullwidth" ${viewMode==='fullwidth'?'selected':''}>满屏气泡（无头像）</option>
+                </select>
+                <label>
+                  <input type="checkbox" id="setTimeAware" ${timeAware?'checked':''}> AI感知北京时间
+                </label>
+                <div style="margin-top:8px;">
+                  <button class="btn-secondary" style="font-size:11px;padding:5px 10px;" onclick="window._addCustomPlatform()">+ 添加自定义平台</button>
+                  <span style="font-size:10px;color:var(--text-secondary);margin-left:6px;">（最多3个自定义平台）</span>
+                </div>
+                <div class="btn-row">
+                  <button class="btn-secondary" onclick="document.getElementById('settingsModal').remove()">取消</button>
+                  <button class="btn-primary" id="btnSaveSettings">保存设置</button>
+                </div>
+              </div>
+            </div>`;
+                document.getElementById('modalContainer').innerHTML = modalHtml;
+                document.getElementById('btnSaveSettings').onclick = function() {
+                    const newTheme = document.getElementById('setTheme').value;
+                    const platformVal = document.getElementById('setPlatform').value;
+                    state.settings.apiPlatform = platformVal;
+                    state.settings.apiBase = document.getElementById('setApiBase').value.trim();
+                    state.settings.apiKey = document.getElementById('setApiKey').value.trim();
+                    state.settings.model = document.getElementById('setModel').value.trim();
+                    fontSize = parseInt(document.getElementById('setFontSize').value);
+                    contextMessages = parseInt(document.getElementById('setCtxMessages').value);
+                    contextTokens = parseInt(document.getElementById('setCtxTokens').value);
+                    viewMode = document.getElementById('setViewMode').value;
+                    timeAware = document.getElementById('setTimeAware').checked;
+                    state.settings.fontSize = fontSize;
+                    state.settings.contextMessages = contextMessages;
+                    state.settings.contextTokens = contextTokens;
+                    state.settings.viewMode = viewMode;
+                    state.settings.timeAware = timeAware;
+                    state.settings.theme = newTheme;
+                    document.getElementById('settingsModal').remove();
+                    applyTheme(newTheme);
+                    updateChatTitle();
+                    renderMessages();
+                    saveData();
+                    showToast('✅ 设置已保存');
+                };
+                window._onPlatformChange = function() {
+                    const val = document.getElementById('setPlatform').value;
+                    const plat = platforms.find(p => p.id === val);
+                    if (plat) {
+                        document.getElementById('setApiBase').value = plat.base;
+                        document.getElementById('setModel').value = plat.defaultModel;
+                    } else if (val.startsWith('custom_')) {
+                        const idx = parseInt(val.replace('custom_', ''));
+                        const cp = (state.settings.customPlatforms || [])[idx];
+                        if (cp) {
+                            document.getElementById('setApiBase').value = cp.base || '';
+                            document.getElementById('setModel').value = cp.model || '';
+                        }
+                    }
+                };
+            }
+
+            window._addCustomPlatform = function() {
+                if ((state.settings.customPlatforms || []).length >= 3) { showToast('最多3个自定义平台'); return; }
+                const name = prompt('请输入自定义平台名称：');
+                if (!name) return;
+                const base = prompt('请输入API地址（如 https://api.xxx.com/v1）：');
+                if (!base) return;
+                if (!state.settings.customPlatforms) state.settings.customPlatforms = [];
+                state.settings.customPlatforms.push({ name, base, model: '' });
+                showToast('自定义平台已添加，请刷新设置面板');
+                document.getElementById('settingsModal')?.remove();
+                setTimeout(() => showSettingsModal(), 100);
+            };
+
+            // ==================== API调用 ====================
+            function getApiConfig() {
+                const platform = state.settings.apiPlatform;
+                let base = state.settings.apiBase;
+                let key = state.settings.apiKey;
+                let model = state.settings.model;
+                if (platform === 'deepseek') {
+                    base = base || 'https://api.deepseek.com/v1';
+                    model = model || 'deepseek-chat';
+                } else if (platform === 'siliconflow') {
+                    base = base || 'https://api.siliconflow.cn/v1';
+                    model = model || 'deepseek-ai/DeepSeek-V3';
+                }
+                return { base, key, model };
+            }
+
+            function buildSystemPrompt(role) {
+                let prompt = role.setting || '';
+                if (timeAware) {
+                    const now = new Date();
+                    const bjTime = now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+                    prompt += `\n\n当前北京时间：${bjTime}。请在对话中自然地感知此时间信息。`;
+                }
+                if (isGroupMode && role.userIdentity) {
+                    prompt +=
+                        `\n\n参与群聊的用户身份：${role.userIdentity}。请在对话中自然地使用此身份称呼用户。群聊背景主题：${role.topic||'自由交流'}。`;
+                }
+                if (role.intimacyEnabled && !isGroupMode) {
+                    const intimacy = role.intimacy || 50;
+                    let toneMod = '';
+                    if (intimacy < 25) toneMod = '语气冷淡疏远，保持距离感';
+                    else if (intimacy < 50) toneMod = '语气礼貌但不太热情';
+                    else if (intimacy < 75) toneMod = '语气友好温暖，乐于交流';
+                    else toneMod = '语气亲密热情，像老朋友一样';
+                    prompt += `\n\n当前亲密度：${intimacy}/100。${toneMod}。`;
+                }
+                return prompt;
+            }
+
+            function getContextMessages() {
+                const messages = getCurrentMessages();
+                const limited = messages.slice(-contextMessages);
+                return limited.map(m => {
+                    if (m.role === 'user') return { role: 'user', content: m.content };
+                    if (m.role === 'assistant' || m.role === 'ai') return { role: 'assistant', content: m
+                        .content };
+                    return null;
+                }).filter(Boolean);
+            }
+
+            async function callAI(messages, onChunk, onDone, onError) {
+                const { base, key, model } = getApiConfig();
+                if (!base) { onError('请先配置API地址'); return; }
+                if (!key) { onError('请先配置API Key'); return; }
+                if (!model) { onError('请先配置模型名称'); return; }
+
+                const url = base.replace(/\/$/, '') + '/chat/completions';
+                abortController = new AbortController();
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${key}`,
+                        },
+                        body: JSON.stringify({
+                            model: model,
+                            messages: messages,
+                            stream: true,
+                            max_tokens: Math.min(contextTokens, 60000),
+                        }),
+                        signal: abortController.signal,
+                    });
+
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(`API错误 ${response.status}: ${errText.substring(0,200)}`);
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+                    let fullContent = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
+                        for (const line of lines) {
+                            const trimmed = line.trim();
+                            if (!trimmed || !trimmed.startsWith('data: ')) continue;
+                            const dataStr = trimmed.slice(6);
+                            if (dataStr === '[DONE]') {
+                                onDone(fullContent);
+                                return;
+                            }
+                            try {
+                                const parsed = JSON.parse(dataStr);
+                                const delta = parsed.choices?.[0]?.delta?.content;
+                                if (delta) {
+                                    fullContent += delta;
+                                    onChunk(delta, fullContent);
+                                }
+                            } catch (e) {}
+                        }
+                    }
+                    onDone(fullContent);
+                } catch (e) {
+                    if (e.name === 'AbortError') {
+                        onDone(null, true);
+                    } else {
+                        onError(e.message);
+                    }
+                }
+            }
+
+            function stopGeneration() {
+                if (abortController) {
+                    abortController.abort();
+                    abortController = null;
+                }
+                isGenerating = false;
+                updateSendStopButtons();
+            }
+
+            function updateSendStopButtons() {
+                const sendBtn = document.getElementById('btnSend');
+                const stopBtn = document.getElementById('btnStop');
+                if (isGenerating) {
+                    sendBtn.style.display = 'none';
+                    stopBtn.style.display = 'inline-block';
+                } else {
+                    sendBtn.style.display = 'inline-block';
+                    stopBtn.style.display = 'none';
+                }
+            }
+
+            // ==================== 发送消息（优化流式更新） ====================
+            async function sendMessage() {
+                if (isGenerating) return;
+                const input = document.getElementById('chatInput');
+                const content = input.value.trim();
+                if (!content) return;
+
+                const role = getCurrentRole();
+                if (!role) { showToast('请先选择角色'); return; }
+
+                const session = getCurrentSession();
+                if (!session) return;
+
+                // 添加用户消息
+                const userMsg = { role: 'user', content, timestamp: Date.now() };
+                session.messages.push(userMsg);
+                appendMessageToDOM(userMsg, session.messages.length - 1);
+                input.value = '';
+                input.style.height = '42px';
+                scrollToBottom();
+
+                isGenerating = true;
+                updateSendStopButtons();
+
+                // 构建请求消息
+                const systemPrompt = buildSystemPrompt(role);
+                const contextMsgs = getContextMessages();
+                const apiMessages = [
+                    { role: 'system', content: systemPrompt },
+                    ...contextMsgs,
+                ];
+
+                // 显示打字指示器
+                const typingRow = document.createElement('div');
+                typingRow.className = 'msg-row ai';
+                typingRow.innerHTML =
+                    `<div class="msg-avatar">${role.avatar||'🤖'}</div><div class="msg-bubble"><span class="typing-indicator">正在输入<span class="typing-dots"><span></span><span></span><span></span></span></span></div>`;
+                messagesContainer.appendChild(typingRow);
+                scrollToBottom();
+
+                // 创建AI消息占位
+                const aiMsg = { role: 'assistant', content: '', timestamp: Date.now(), senderName: role.name, senderAvatar: role
+                        .avatar || '🤖' };
+                session.messages.push(aiMsg);
+                const aiMsgIndex = session.messages.length - 1;
+
+                // 创建实际的AI消息DOM节点（替换打字指示器）
+                const aiRow = createMessageRow(aiMsg, aiMsgIndex);
+                // 暂时隐藏，等有内容再替换
+                aiRow.style.display = 'none';
+                messagesContainer.appendChild(aiRow);
+
+                callAI(apiMessages,
+                    (delta, fullContent) => {
+                        // 首次收到内容时移除打字指示器，显示AI气泡
+                        if (typingRow.parentNode) {
+                            typingRow.remove();
+                            aiRow.style.display = '';
+                        }
+                        session.messages[aiMsgIndex].content = fullContent;
+                        updateMessageBubble(aiRow, fullContent);
+                        scrollToBottom();
+                    },
+                    (fullContent, wasAborted) => {
+                        if (typingRow.parentNode) typingRow.remove();
+                        aiRow.style.display = '';
+                        if (wasAborted && !session.messages[aiMsgIndex].content) {
+                            session.messages[aiMsgIndex].content = '（已停止生成）';
+                        }
+                        if (!session.messages[aiMsgIndex].content && !wasAborted) {
+                            session.messages[aiMsgIndex].content = '（无响应）';
+                        }
+                        updateMessageBubble(aiRow, session.messages[aiMsgIndex].content);
+                        isGenerating = false;
+                        updateSendStopButtons();
+                        updateIntimacy();
+                        saveData();
+                        scrollToBottom();
+                    },
+                    (error) => {
+                        if (typingRow.parentNode) typingRow.remove();
+                        aiRow.style.display = '';
+                        session.messages[aiMsgIndex].content = '❌ 错误：' + error;
+                        updateMessageBubble(aiRow, session.messages[aiMsgIndex].content);
+                        isGenerating = false;
+                        updateSendStopButtons();
+                        saveData();
+                        scrollToBottom();
+                    }
+                );
+            }
+
+            function updateIntimacy() {
+                const role = getCurrentRole();
+                if (!role || role.isGroup || !role.intimacyEnabled) return;
+                const msgs = getCurrentMessages();
+                const lastUserMsg = [...msgs].reverse().find(m => m.role === 'user');
+                if (!lastUserMsg) return;
+                const content = lastUserMsg.content.toLowerCase();
+                const positiveWords = ['谢谢', '感谢', '太棒了', '好厉害', '喜欢你', '厉害', '赞', '优秀', '佩服', '爱', '开心', '哈哈',
+                    '😊', '👍', '真棒', '感激', 'nice', 'great', 'awesome'
+                ];
+                const negativeWords = ['滚', '烦', '讨厌', '差劲', '没用', '傻', '笨', '垃圾', '恶心', '无聊', '失望', '😡', '👎',
+                    'fuck', 'shit', 'stupid'
+                ];
+                let hasPositive = positiveWords.some(w => content.includes(w));
+                let hasNegative = negativeWords.some(w => content.includes(w));
+                let change = 0;
+                if (hasNegative) { change = -(1 + Math.floor(Math.random() * 2)); } else if (hasPositive && Math.random() <
+                    0.3) { change = 1 + Math.floor(Math.random() * 2); } else if (Math.random() < 0.08) { change = Math
+                        .random() < 0.5 ? -1 : 1; }
+                if (change !== 0) {
+                    role.intimacy = Math.max(1, Math.min(100, (role.intimacy || 50) + change));
+                    renderMessages();
+                }
+            }
+
+            // ==================== 群聊发送（同样优化） ====================
+            async function sendGroupMessage() {
+                if (isGenerating) return;
+                const input = document.getElementById('chatInput');
+                const content = input.value.trim();
+                if (!content) return;
+
+                const group = getCurrentRole();
+                if (!group || !group.isGroup) return;
+                const session = getCurrentSession();
+                if (!session) return;
+
+                const userIdentity = group.userIdentity || '用户';
+                const userMsg = { role: 'user', content, timestamp: Date.now(), senderName: userIdentity };
+                session.messages.push(userMsg);
+                appendMessageToDOM(userMsg, session.messages.length - 1);
+                input.value = '';
+                input.style.height = '42px';
+                scrollToBottom();
+                isGenerating = true;
+                updateSendStopButtons();
+
+                const activeMembers = group.members.filter(m => !m.muted).sort((a, b) => (a.order || 0) - (b.order || 0));
+                if (activeMembers.length === 0) { showToast('没有可发言的成员');
+                    isGenerating = false;
+                    updateSendStopButtons(); return; }
+
+                for (const member of activeMembers) {
+                    if (!isGenerating) break;
+                    const systemPrompt = member.setting + `\n\n你正在群聊"${group.name}"中发言。群聊主题：${group.topic||'自由交流'}。发言用户身份：${userIdentity}。请根据上下文自然发言，简短有力。`;
+                    const contextMsgs = getContextMessages();
+                    const apiMessages = [
+                        { role: 'system', content: systemPrompt },
+                        ...contextMsgs,
+                    ];
+
+                    const typingRow = document.createElement('div');
+                    typingRow.className = 'msg-row ai';
+                    typingRow.innerHTML =
+                        `<div class="msg-avatar">${member.avatar||'🤖'}</div><div class="msg-bubble"><span class="typing-indicator">${escHtml(member.name)}正在输入<span class="typing-dots"><span></span><span></span><span></span></span></span></div>`;
+                    messagesContainer.appendChild(typingRow);
+                    scrollToBottom();
+
+                    const aiMsg = { role: 'assistant', content: '', timestamp: Date.now(), senderName: member.name,
+                        senderAvatar: member.avatar || '🤖' };
+                    session.messages.push(aiMsg);
+                    const aiMsgIndex = session.messages.length - 1;
+
+                    const aiRow = createMessageRow(aiMsg, aiMsgIndex);
+                    aiRow.style.display = 'none';
+                    messagesContainer.appendChild(aiRow);
+
+                    await new Promise((resolve) => {
+                        callAI(apiMessages,
+                            (delta, fullContent) => {
+                                if (typingRow.parentNode) {
+                                    typingRow.remove();
+                                    aiRow.style.display = '';
+                                }
+                                session.messages[aiMsgIndex].content = fullContent;
+                                updateMessageBubble(aiRow, fullContent);
+                                scrollToBottom();
+                            },
+                            (fullContent, wasAborted) => {
+                                if (typingRow.parentNode) typingRow.remove();
+                                aiRow.style.display = '';
+                                if (!session.messages[aiMsgIndex].content && !wasAborted)
+                                    session.messages[aiMsgIndex].content = '（沉默）';
+                                if (wasAborted && !session.messages[aiMsgIndex].content)
+                                    session.messages[aiMsgIndex].content = '（已停止）';
+                                updateMessageBubble(aiRow, session.messages[aiMsgIndex].content);
+                                saveData();
+                                scrollToBottom();
+                                resolve();
+                            },
+                            (error) => {
+                                if (typingRow.parentNode) typingRow.remove();
+                                aiRow.style.display = '';
+                                session.messages[aiMsgIndex].content = '❌ ' + error;
+                                updateMessageBubble(aiRow, session.messages[aiMsgIndex].content);
+                                saveData();
+                                scrollToBottom();
+                                resolve();
+                            }
+                        );
+                    });
+                    if (!isGenerating) break;
+                    await new Promise(r => setTimeout(r, 600));
+                }
+                isGenerating = false;
+                updateSendStopButtons();
+                saveData();
+            }
+
+            // ==================== 事件绑定 ====================
+            document.getElementById('btnSend').addEventListener('click', () => {
+                if (isGroupMode) sendGroupMessage();
+                else sendMessage();
+            });
+
+            document.getElementById('btnStop').addEventListener('click', stopGeneration);
+
+            const chatInput = document.getElementById('chatInput');
+            chatInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = this.value;
+                    const cursorPos = this.selectionStart;
+                    this.value = val.substring(0, cursorPos) + '\n' + val.substring(cursorPos);
+                    this.selectionStart = this.selectionEnd = cursorPos + 1;
+                    autoResizeTextarea();
+                }
+            });
+
+            chatInput.addEventListener('input', autoResizeTextarea);
+
+            function autoResizeTextarea() {
+                const ta = chatInput;
+                ta.style.height = '42px';
+                const scrollH = ta.scrollHeight;
+                const maxH = 130;
+                if (scrollH > maxH) {
+                    ta.style.height = maxH + 'px';
+                    ta.style.overflowY = 'auto';
+                } else if (scrollH > 42) {
+                    ta.style.height = scrollH + 'px';
+                    ta.style.overflowY = 'hidden';
+                } else {
+                    ta.style.height = '42px';
+                    ta.style.overflowY = 'hidden';
+                }
+            }
+
+            chatInput.addEventListener('focus', function() {
+                const msgs = getCurrentMessages();
+                if (msgs.length > 0 && !this.value) {
+                    const lastMsg = msgs[msgs.length - 1];
+                    if (lastMsg.role === 'assistant' || lastMsg.role === 'ai') {
+                        this.placeholder = '上次回复: ' + lastMsg.content.substring(0, 60) + '…';
+                    }
+                }
+            });
+            chatInput.addEventListener('blur', function() {
+                this.placeholder = '输入消息…（Enter换行，点击发送）';
+            });
+
+            document.getElementById('btnNewRole').addEventListener('click', () => showRoleModal(null));
+            document.getElementById('btnSettings').addEventListener('click', showSettingsModal);
+            document.getElementById('btnClearChat').addEventListener('click', () => {
+                if (!confirm('确定清空当前会话的所有聊天记录和记忆吗？角色和模型设置不受影响。')) return;
+                const session = getCurrentSession();
+                if (session) session.messages = [];
+                refreshAll();
+                showToast('✅ 已清空');
+            });
+            document.getElementById('btnToggleView').addEventListener('click', () => {
+                viewMode = viewMode === 'fullwidth' ? 'default' : 'fullwidth';
+                state.settings.viewMode = viewMode;
+                updateChatTitle();
+                renderMessages();
+                saveData();
+                showToast(viewMode === 'fullwidth' ? '已切换为满屏气泡模式' : '已切换为默认模式');
+            });
+            document.getElementById('btnToggleSidebar').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('open');
+            });
+
+            // 点击聊天区关闭侧边栏（移动端）
+            document.getElementById('mainArea').addEventListener('click', function(e) {
+                if (window.innerWidth <= 768 && !e.target.closest('.mobile-menu-btn')) {
+                    document.getElementById('sidebar').classList.remove('open');
+                }
+            });
+
+            // ==================== 初始化 ====================
+            function init() {
+                fontSize = state.settings.fontSize || 17;
+                viewMode = state.settings.viewMode || 'default';
+                contextMessages = state.settings.contextMessages || 50;
+                contextTokens = state.settings.contextTokens || 60000;
+                timeAware = state.settings.timeAware !== false;
+                currentTheme = state.settings.theme || 'light';
+                currentRoleId = state.settings.activeRoleId || DEFAULT_PRESET_ROLES[0].id;
+                currentSessionIndex = state.settings.activeSessionIndex || 0;
+                currentGroupId = state.settings.activeGroupId || null;
+                isGroupMode = !!currentGroupId;
+
+                if (!state.customRoles) state.customRoles = [];
+                if (!state.groupChats) state.groupChats = [];
+                if (!state.settings.customPlatforms) state.settings.customPlatforms = [];
+
+                applyTheme(currentTheme);
+
+                document.documentElement.style.setProperty('--bubble-font-size', fontSize + 'px');
+                updateSendStopButtons();
+                refreshAll();
+                updateChatTitle();
+                saveData();
+            }
+
+            // 暴露全局
+            window._createGroupChat = window._createGroupChat;
+            window._editGroup = window._editGroup;
+            window._deleteGroup = window._deleteGroup;
+            window._addCustomPlatform = window._addCustomPlatform;
+
+            init();
+            console.log('✅ AI角色聊天平台已就绪（界面优化，流式无闪动）');
+        })();
+    </script>
+</body>
+</html>
