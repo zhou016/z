@@ -646,8 +646,6 @@ function openConversation(convId) {
   // Focus input and show last message
   const input = document.getElementById('msgInput');
   input.value = '';
-  input.focus();
-
   input.placeholder = '';
 
   updateSendButton();
@@ -705,7 +703,7 @@ function renderMessages(conv) {
       </div>`;
     }
 
-    const content = formatMessageContent(msg.content);
+    const content = formatMessageContent(msg.content, !isUser);
     html += `<div class="msg-row ${isUser ? 'user' : ''}" data-msg-idx="${idx}">
       <div class="msg-avatar ${isUser ? 'user-av' : 'ai'}" style="background:${color}">${icon}</div>
       <div>
@@ -714,6 +712,8 @@ function renderMessages(conv) {
         <div class="msg-actions">
           <button class="msg-action-btn" onclick="copyMessage('${conv.id}', ${idx})">📋 复制</button>
           ${!isUser ? `<button class="msg-action-btn" onclick="branchFrom('${conv.id}', ${idx})">↩ 分支</button>` : ''}
+          ${!isUser ? `<button class="msg-action-btn" onclick="regenerateMessage('${conv.id}', ${idx})" title="重新生成">🔄</button>` : ''}
+          ${isUser ? `<button class="msg-action-btn" onclick="editMessage('${conv.id}', ${idx})" title="编辑">✏️</button>` : ''}
         </div>
       </div>
     </div>`;
@@ -725,7 +725,11 @@ function renderMessages(conv) {
   container.scrollTop = container.scrollHeight;
 }
 
-function formatMessageContent(text) {
+function formatMessageContent(text, isAI) {
+  // AI消息：先过滤Markdown，再处理@提及
+  if (isAI) {
+    text = stripMarkdown(text);
+  }
   // Highlight @mentions
   text = escapeHtml(text);
   text = text.replace(/@([^\s@]+)/g, '<span class="at-mention">@$1</span>');
@@ -1237,7 +1241,7 @@ function updateStreamingMessage(conv, content) {
   if (lastRow) {
     const bubble = lastRow.querySelector('.msg-bubble');
     if (bubble) {
-      bubble.innerHTML = formatMessageContent(content);
+      bubble.innerHTML = formatMessageContent(content, true);
     }
   }
   container.scrollTop = container.scrollHeight;
@@ -1338,6 +1342,70 @@ function branchTo(convId, idx) {
   saveState();
   renderMessages(conv);
   showToast('已回溯到该节点');
+}
+
+function regenerateMessage(convId, idx) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv || isGenerating) return;
+  const msg = conv.messages[idx];
+  if (!msg || msg.role !== 'assistant') return;
+
+  // 删除这条AI消息及之后的所有消息
+  conv.messages = conv.messages.slice(0, idx);
+  conv.updatedAt = Date.now();
+  saveState();
+  renderMessages(conv);
+
+  // 重新生成AI回复
+  generateResponse(conv);
+  showToast('正在重新生成...');
+}
+
+function editMessage(convId, idx) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv) return;
+  const msg = conv.messages[idx];
+  if (!msg || msg.role !== 'user') return;
+
+  // 弹出编辑弹窗
+  const html = `
+    <div class="modal-title">编辑消息</div>
+    <div class="form-group">
+      <textarea class="form-input form-textarea" id="editMsgContent" rows="5">${escapeHtml(msg.content)}</textarea>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="saveEditMessage('${convId}', ${idx})">保存并重新生成</button>
+      <button class="btn btn-outline" style="flex:1;" onclick="closeModal()">取消</button>
+    </div>
+  `;
+  showModal(html);
+  // 自动聚焦编辑框
+  setTimeout(() => {
+    const ta = document.getElementById('editMsgContent');
+    if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  }, 100);
+}
+
+function saveEditMessage(convId, idx) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv) return;
+  const newContent = document.getElementById('editMsgContent').value.trim();
+  if (!newContent) { alert('消息内容不能为空'); return; }
+
+  // 更新用户消息内容
+  conv.messages[idx].content = newContent;
+  conv.messages[idx].timestamp = Date.now();
+
+  // 删除这条消息之后的所有消息（包括AI回复）
+  conv.messages = conv.messages.slice(0, idx + 1);
+  conv.updatedAt = Date.now();
+  saveState();
+  closeModal();
+  renderMessages(conv);
+
+  // 重新生成AI回复
+  generateResponse(conv);
+  showToast('消息已更新，正在重新生成...');
 }
 
 function adjustIntimacyManual(convId, delta) {
