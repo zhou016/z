@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AI群聊</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f0f0;--chat-bg:#f5f5f5;--header-bg:#2e2e2e;--header-color:#fff;
+  --user-bubble:#95ec69;--ai-bubble:#fff;--input-bg:#fff;--border:#e0e0e0;
+  --text:#333;--text-light:#888;--accent:#07c160;--danger:#fa5151;
+  --sidebar-bg:#fff;--modal-bg:rgba(0,0,0,.5);--card-shadow:0 2px 12px rgba(0,0,0,.1);
+  --tag-bg:#e8f5e9;--tag-text:#2e7d32;--muted-bg:#f5f5f5;--muted-color:#999;
+  --group-list-bg:#fff;--group-list-w:200px;
+}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
+#app{display:flex;flex-direction:column;height:100vh;max-width:1400px;margin:0 auto;position:relative;overflow:hidden;}
+
+/* Header */
+.header{background:var(--header-bg);color:var(--header-color);display:flex;align-items:center;padding:10px 16px;gap:12px;z-index:10;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.15);}
+.header-btn{background:none;border:none;color:var(--header-color);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:4px;transition:background .2s;}
+.header-btn:hover{background:rgba(255,255,255,.15);}
+.header-title{flex:1;text-align:center;font-size:16px;font-weight:500;cursor:pointer;padding:4px 8px;border-radius:4px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.header-title:hover{background:rgba(255,255,255,.15);}
+.header-title input{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;text-align:center;font-size:16px;font-weight:500;padding:2px 8px;border-radius:4px;width:100%;max-width:300px;outline:none;}
+.header-title input:focus{border-color:var(--accent);}
+.free-toggle{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;user-select:none;}
+.free-toggle .toggle-track{width:36px;height:20px;border-radius:10px;background:#555;position:relative;transition:background .3s;}
+.free-toggle .toggle-track.active{background:var(--accent);}
+.free-toggle .toggle-thumb{width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .3s;}
+.free-toggle .toggle-track.active .toggle-thumb{left:18px;}
+
+/* Main layout */
+.main{display:flex;flex:1;overflow:hidden;position:relative;}
+
+/* Group list (leftmost panel) */
+.group-list{width:var(--group-list-w);background:var(--group-list-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .3s,opacity .3s;flex-shrink:0;overflow:hidden;}
+.group-list.collapsed{width:0;border-right:none;opacity:0;}
+.group-list-header{padding:12px 14px;font-weight:600;font-size:15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.group-list-items{flex:1;overflow-y:auto;padding:6px;}
+.group-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s;position:relative;}
+.group-item:hover{background:var(--muted-bg);}
+.group-item.active{background:rgba(7,193,96,.1);}
+.group-item.active .group-item-name{color:var(--accent);font-weight:500;}
+.group-item-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--muted-bg);flex-shrink:0;}
+.group-item-info{flex:1;min-width:0;}
+.group-item-name{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.group-item-count{font-size:11px;color:var(--text-light);margin-top:1px;}
+.group-item-del{opacity:0;transition:opacity .15s;background:none;border:none;font-size:14px;cursor:pointer;padding:2px 4px;border-radius:3px;color:var(--danger);}
+.group-item:hover .group-item-del{opacity:1;}
+.group-item-del:hover{background:#fce4ec;}
+.add-group-btn{margin:6px;padding:8px;border:2px dashed var(--border);border-radius:8px;background:none;cursor:pointer;font-size:13px;color:var(--text-light);transition:all .2s;text-align:center;width:calc(100% - 12px);}
+.add-group-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(7,193,96,.04);}
+
+/* Sidebar (members) */
+.sidebar{width:260px;background:var(--sidebar-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .3s,opacity .3s;flex-shrink:0;overflow:hidden;}
+.sidebar.collapsed{width:0;border-right:none;opacity:0;}
+.sidebar-header{padding:12px 16px;font-weight:600;font-size:15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sidebar-toggle{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-light);padding:2px 6px;border-radius:4px;}
+.sidebar-toggle:hover{background:var(--muted-bg);}
+.member-list{flex:1;overflow-y:auto;padding:10px;}
+.member-item{display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:10px;transition:all .2s;position:relative;margin-bottom:6px;background:#fafafa;border:1px solid transparent;}
+.member-item:hover{background:#fff;border-color:var(--border);box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.member-avatar{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--muted-bg);flex-shrink:0;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.member-info{flex:1;min-width:0;padding-top:1px;}
+.member-name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);}
+.member-tag{font-size:12px;color:var(--tag-text);background:var(--tag-bg);padding:3px 8px;border-radius:4px;display:block;margin-top:5px;line-height:1.4;word-break:break-word;}
+.member-tag.muted{background:#fce4ec;color:var(--danger);}
+.member-actions{display:flex;gap:3px;opacity:0;transition:opacity .2s;position:absolute;top:8px;right:8px;background:rgba(255,255,255,.9);border-radius:6px;padding:2px;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.member-item:hover .member-actions{opacity:1;}
+.member-actions button{background:none;border:none;font-size:13px;cursor:pointer;padding:3px 5px;border-radius:4px;transition:background .15s;width:24px;height:24px;display:flex;align-items:center;justify-content:center;}
+.member-actions button:hover{background:rgba(0,0,0,.06);}
+.member-actions button.danger:hover{background:#fce4ec;}
+.add-member-btn{margin:10px;padding:10px;border:2px dashed var(--border);border-radius:10px;background:none;cursor:pointer;font-size:14px;color:var(--text-light);transition:all .2s;text-align:center;width:calc(100% - 20px);}
+.add-member-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(7,193,96,.04);}
+
+/* Chat area */
+.chat-area{flex:1;display:flex;flex-direction:column;min-width:0;position:relative;}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;background:var(--chat-bg);display:flex;flex-direction:column;gap:12px;background-image:radial-gradient(circle at 20% 50%, rgba(7,193,96,.03) 0%, transparent 50%),radial-gradient(circle at 80% 20%, rgba(7,193,96,.02) 0%, transparent 50%);}
+.chat-messages::-webkit-scrollbar{width:6px;}
+.chat-messages::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px;}
+
+/* Messages */
+.msg-row{display:flex;gap:8px;max-width:75%;animation:msgIn .3s ease;}
+.msg-row.user{align-self:flex-end;flex-direction:row-reverse;}
+.msg-row.ai{align-self:flex-start;}
+@keyframes msgIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.msg-avatar{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--muted-bg);flex-shrink:0;line-height:1;}
+.msg-content{display:flex;flex-direction:column;gap:2px;}
+.msg-name{font-size:12px;color:var(--text-light);padding:0 4px;}
+.msg-row.user .msg-name{text-align:right;}
+.msg-bubble{padding:10px 14px;border-radius:8px;line-height:1.5;word-break:break-word;white-space:pre-wrap;font-size:var(--bubble-font,17px);position:relative;max-width:100%;transition:font-size .2s;}
+.msg-row.user .msg-bubble{background:var(--user-bubble);border-top-right-radius:2px;}
+.msg-row.ai .msg-bubble{background:var(--ai-bubble);border-top-left-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,.06);}
+.msg-time{font-size:11px;color:var(--text-light);padding:0 4px;}
+.msg-row.user .msg-time{text-align:right;}
+.msg-bubble.typing{color:var(--text-light);font-style:italic;}
+.msg-bubble .typing-dots span{animation:blink 1.4s infinite;opacity:.2;}
+.msg-bubble .typing-dots span:nth-child(2){animation-delay:.2s;}
+.msg-bubble .typing-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,100%{opacity:.2;}50%{opacity:1;}}
+
+/* Input area - NO GAP between textarea and send button */
+.input-area{padding:10px 16px;background:var(--bg);border-top:1px solid var(--border);display:flex;align-items:flex-end;flex-shrink:0;}
+.input-area textarea{flex:1;resize:none;border:1px solid var(--border);border-right:none;border-radius:8px 0 0 8px;padding:10px 14px;font-size:14px;font-family:inherit;line-height:1.5;outline:none;background:var(--input-bg);transition:border-color .2s;overflow-y:hidden;}
+.input-area textarea:focus{border-color:var(--accent);}
+.send-btn{background:linear-gradient(135deg,#07c160,#06ad56);color:#fff;border:none;border-radius:0 8px 8px 0;padding:0 18px;font-size:14px;cursor:pointer;font-weight:500;transition:all .2s;flex-shrink:0;box-shadow:none;height:auto;min-height:42px;display:flex;align-items:center;justify-content:center;}
+.send-btn:hover{background:linear-gradient(135deg,#06ad56,#059648);}
+.send-btn:active{filter:brightness(.92);}
+.send-btn:disabled{background:#ccc;cursor:not-allowed;}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--modal-bg);z-index:100;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal{background:#fff;border-radius:12px;width:90%;max-width:520px;max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2);animation:slideUp .3s ease;}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1;border-radius:12px 12px 0 0;}
+.modal-header h3{font-size:16px;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-light);padding:2px 6px;border-radius:4px;}
+.modal-close:hover{background:var(--muted-bg);}
+.modal-body{padding:20px;}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:#fff;border-radius:0 0 12px 12px;}
+
+/* Form elements */
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;color:var(--text);}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;outline:none;transition:border-color .2s;}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--accent);}
+.form-group textarea{resize:vertical;min-height:60px;}
+.form-group .hint{font-size:12px;color:var(--text-light);margin-top:4px;}
+.form-row{display:flex;gap:12px;}
+.form-row .form-group{flex:1;}
+
+/* Buttons */
+.btn{padding:8px 16px;border-radius:6px;font-size:14px;cursor:pointer;border:1px solid var(--border);background:#fff;transition:all .2s;font-family:inherit;}
+.btn:hover{background:var(--muted-bg);}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary:hover{background:#06ad56;}
+.btn-danger{background:var(--danger);color:#fff;border-color:var(--danger);}
+.btn-danger:hover{background:#e84444;}
+.btn-sm{padding:4px 10px;font-size:12px;}
+
+/* API provider cards */
+.provider-card{border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px;transition:border-color .2s;}
+.provider-card:hover{border-color:var(--accent);}
+.provider-card h4{font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.provider-card .provider-status{font-size:11px;padding:1px 6px;border-radius:3px;font-weight:500;}
+.provider-card .provider-status.connected{background:#e8f5e9;color:#2e7d32;}
+.provider-card .provider-status.disconnected{background:#fce4ec;color:var(--danger);}
+
+/* Mention dropdown */
+.mention-dropdown{position:absolute;bottom:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:var(--card-shadow);z-index:20;max-height:200px;overflow-y:auto;margin-bottom:4px;}
+.mention-item{padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s;}
+.mention-item:hover,.mention-item.active{background:var(--muted-bg);}
+.mention-item .mi-avatar{font-size:18px;}
+.mention-item .mi-name{font-size:13px;}
+
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 24px;border-radius:8px;font-size:14px;z-index:200;animation:toastIn .3s ease;box-shadow:0 4px 12px rgba(0,0,0,.2);}
+.toast.error{background:var(--danger);}
+.toast.success{background:var(--accent);}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+
+/* Responsive */
+@media(max-width:768px){
+  .group-list{position:absolute;left:0;top:0;bottom:0;z-index:50;box-shadow:4px 0 20px rgba(0,0,0,.1);}
+  .group-list.collapsed{width:0;box-shadow:none;}
+  .sidebar{position:absolute;left:0;top:0;bottom:0;z-index:50;box-shadow:4px 0 20px rgba(0,0,0,.1);}
+  .sidebar.collapsed{width:0;box-shadow:none;}
+  .msg-row{max-width:88%;}
+  .free-toggle span{display:none;}
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:#aaa;}
+
+/* Empty state */
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-light);gap:12px;padding:40px;}
+.empty-state .emoji{font-size:64px;filter:grayscale(.1);animation:float 3s ease-in-out infinite;}
+.empty-state p{font-size:14px;max-width:280px;text-align:center;line-height:1.6;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+
+/* Tab bar in settings */
+.tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.tab-bar button{flex:1;padding:10px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:14px;color:var(--text-light);transition:all .2s;font-family:inherit;}
+.tab-bar button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* Model selector */
+.model-select-wrapper{position:relative;}
+.model-select-wrapper input{width:100%;}
+.model-dropdown{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:6px;box-shadow:var(--card-shadow);z-index:10;max-height:200px;overflow-y:auto;margin-top:2px;}
+.model-dropdown .model-option{padding:8px 12px;cursor:pointer;font-size:13px;transition:background .15s;}
+.model-dropdown .model-option:hover{background:var(--muted-bg);}
+.model-dropdown .model-option.selected{background:rgba(7,193,96,.1);color:var(--accent);}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Header -->
+  <div class="header">
+    <button class="header-btn" onclick="toggleGroupList()" title="群聊列表">💬</button>
+    <button class="header-btn" onclick="toggleSidebar()" title="成员列表">👥</button>
+    <div class="header-title" id="headerTitle" onclick="editGroupName()">
+      <span id="groupName">AI群聊</span>
+    </div>
+    <button class="header-btn" onclick="triggerNextSentence()" title="下一句：强制AI续接对话">▶️</button>
+    <div class="free-toggle" onclick="toggleFreeMode()" title="自由模式：AI会主动发起话题">
+      <span>自由模式</span>
+      <div class="toggle-track" id="freeToggle"><div class="toggle-thumb"></div></div>
+    </div>
+    <button class="header-btn" onclick="openSettings()" title="设置">⚙️</button>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Group List -->
+    <div class="group-list" id="groupList">
+      <div class="group-list-header">
+        <span>群聊</span>
+        <button class="sidebar-toggle" onclick="toggleGroupList()">✕</button>
+      </div>
+      <div class="group-list-items" id="groupListItems"></div>
+      <button class="add-group-btn" onclick="openAddGroup()">➕ 新建群聊</button>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <span>群成员</span>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">✕</button>
+      </div>
+      <div class="member-list" id="memberList"></div>
+      <button class="add-member-btn" onclick="openAddMember()">➕ 添加新角色</button>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-area">
+      <div class="chat-messages" id="chatMessages">
+        <div class="empty-state" id="emptyState">
+          <div class="emoji">💬</div>
+          <p>开始聊天吧！输入消息或点击下方"下一句"让AI主动发言</p>
+        </div>
+      </div>
+      <div class="input-area">
+        <div style="position:relative;flex:1;display:flex;align-items:flex-end;">
+          <textarea id="inputBox" rows="1" placeholder="输入消息... (@提及角色)" oninput="handleInput()" onkeydown="handleKeyDown(event)" enterkeyhint="send"></textarea>
+          <div class="mention-dropdown" id="mentionDropdown" style="display:none;"></div>
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ STATE ============
+const STORAGE_KEY = 'ai_group_chat_v2';
+const DEFAULT_PRESETS = [
+  {id:'p1',name:'段子手小张',emoji:'😄',personality:'幽默玩梗，喜欢用段子、网络流行语和搞笑比喻来回应，让群聊充满欢乐气氛。',muted:false},
+  {id:'p2',name:'暖心小鹿',emoji:'🦌',personality:'温柔安慰，善于倾听和共情，总是用温暖的话语鼓励他人，像知心朋友一样关心每个人。',muted:false},
+  {id:'p3',name:'博士老李',emoji:'👨‍🔬',personality:'严谨科普，说话条理清晰，喜欢引用科学知识和数据，用通俗易懂的方式解释复杂概念。',muted:false},
+  {id:'p4',name:'毒舌小王',emoji:'😏',personality:'犀利吐槽，一针见血地指出问题，语言犀利但不失幽默，偶尔毒舌但让人心服口服。',muted:false},
+  {id:'p5',name:'诗人小雅',emoji:'🌸',personality:'文艺诗意，喜欢用优美的语言和诗词来表达，说话充满诗意和文学气息，偶尔引用经典诗句。',muted:false}
+];
+
+const DEFAULT_PROVIDERS = [
+  {id:'deepseek',name:'DeepSeek',baseUrl:'https://api.deepseek.com',apiKey:'',model:'',type:'preset'},
+  {id:'siliconflow',name:'硅基流动',baseUrl:'https://api.siliconflow.cn',apiKey:'',model:'',type:'preset'},
+  {id:'custom1',name:'自定义API 1',baseUrl:'',apiKey:'',model:'',type:'custom'},
+  {id:'custom2',name:'自定义API 2',baseUrl:'',apiKey:'',model:'',type:'custom'},
+  {id:'custom3',name:'自定义API 3',baseUrl:'',apiKey:'',model:'',type:'custom'}
+];
+
+function createDefaultGroup(id) {
+  return {
+    id: id || 'g_' + Date.now(),
+    name: 'AI群聊',
+    icon: '💬',
+    groupSetting: '这是一个AI群聊，群里的AI角色各有不同的性格和专长。请保持友好交流的氛围。',
+    userName: '我',
+    userAvatar: '🧑',
+    members: JSON.parse(JSON.stringify(DEFAULT_PRESETS)),
+    messages: [],
+    freeMode: false
+  };
+}
+
+let appState = {
+  groups: [createDefaultGroup('g_default')],
+  activeGroupId: 'g_default',
+  providers: JSON.parse(JSON.stringify(DEFAULT_PROVIDERS)),
+  activeProvider: 'deepseek',
+  fetchedModels: {},
+  bubbleFontSize: 17
+};
+
+let freeModeTimer = null;
+let mentionActive = false;
+let mentionFilter = '';
+let mentionIndex = 0;
+let isGenerating = false;
+let sendClickTimes = [];
+
+// Computed: current group
+function currentGroup() {
+  return appState.groups.find(g => g.id === appState.activeGroupId) || appState.groups[0];
+}
+
+// ============ INIT ============
+function init() {
+  loadState();
+  applyBubbleFontSize();
+  renderGroupList();
+  renderMembers();
+  renderMessages();
+  updateFreeToggle();
+  autoResize(document.getElementById('inputBox'));
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Merge providers (keep defaults if missing)
+      if (parsed.providers) {
+        DEFAULT_PROVIDERS.forEach(dp => {
+          if (!parsed.providers.find(p => p.id === dp.id)) {
+            parsed.providers.push({...dp});
+          }
+        });
+      }
+      appState = {...appState, ...parsed};
+      // Ensure at least one group
+      if (!appState.groups || appState.groups.length === 0) {
+        appState.groups = [createDefaultGroup('g_default')];
+        appState.activeGroupId = 'g_default';
+      }
+      // Ensure presets in each group
+      appState.groups.forEach(g => {
+        DEFAULT_PRESETS.forEach(p => {
+          if (!g.members.find(m => m.id === p.id)) {
+            g.members.push({...p});
+          }
+        });
+      });
+    }
+  } catch(e) { console.error('Load state error:', e); }
+}
+
+function saveState() {
+  try {
+    const toSave = {...appState};
+    delete toSave.fetchedModels;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  } catch(e) { console.error('Save state error:', e); }
+}
+
+// ============ GROUP MANAGEMENT ============
+function renderGroupList() {
+  const container = document.getElementById('groupListItems');
+  let html = '';
+  appState.groups.forEach(g => {
+    const isActive = g.id === appState.activeGroupId;
+    const memberCount = g.members.length;
+    html += `<div class="group-item ${isActive?'active':''}" onclick="switchGroup('${g.id}')">
+      <div class="group-item-icon">${esc(g.icon)}</div>
+      <div class="group-item-info">
+        <div class="group-item-name">${esc(g.name)}</div>
+        <div class="group-item-count">${memberCount} 个AI角色</div>
+      </div>
+      ${appState.groups.length>1?`<button class="group-item-del" onclick="event.stopPropagation();deleteGroup('${g.id}')">🗑️</button>`:''}
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function switchGroup(gid) {
+  if (gid === appState.activeGroupId) return;
+  // Stop free mode on old group
+  stopFreeMode();
+  appState.activeGroupId = gid;
+  const g = currentGroup();
+  renderGroupList();
+  renderMembers();
+  renderMessages();
+  updateFreeToggle();
+  document.getElementById('groupName').textContent = g.name;
+  applyBubbleFontSize();
+  saveState();
+}
+
+function openAddGroup() {
+  openModal('addGroupModal');
+}
+
+function addNewGroup() {
+  const name = document.getElementById('newGroupName').value.trim();
+  const icon = document.getElementById('newGroupIcon').value.trim() || '💬';
+  const setting = document.getElementById('newGroupSetting').value.trim();
+  if (!name) { showToast('请输入群名', 'error'); return; }
+  const newGroup = createDefaultGroup();
+  newGroup.name = name;
+  newGroup.icon = icon;
+  if (setting) newGroup.groupSetting = setting;
+  appState.groups.push(newGroup);
+  appState.activeGroupId = newGroup.id;
+  renderGroupList();
+  renderMembers();
+  renderMessages();
+  updateFreeToggle();
+  document.getElementById('groupName').textContent = newGroup.name;
+  saveState();
+  closeModal('addGroupModal');
+  document.getElementById('newGroupName').value = '';
+  document.getElementById('newGroupIcon').value = '';
+  document.getElementById('newGroupSetting').value = '';
+  showToast(`群聊 "${name}" 已创建`);
+}
+
+function deleteGroup(gid) {
+  const g = appState.groups.find(x => x.id === gid);
+  if (!g) return;
+  if (confirm(`确定要删除群聊 "${g.name}" 吗？所有聊天记录将丢失。`)) {
+    appState.groups = appState.groups.filter(x => x.id !== gid);
+    if (appState.activeGroupId === gid) {
+      appState.activeGroupId = appState.groups[0].id;
+    }
+    renderGroupList();
+    renderMembers();
+    renderMessages();
+    updateFreeToggle();
+    document.getElementById('groupName').textContent = currentGroup().name;
+    saveState();
+    showToast(`群聊 "${g.name}" 已删除`);
+  }
+}
+
+function toggleGroupList() {
+  document.getElementById('groupList').classList.toggle('collapsed');
+}
+
+// ============ RENDER MEMBERS & MESSAGES ============
+function renderMembers() {
+  const g = currentGroup();
+  const list = document.getElementById('memberList');
+  let html = '';
+  html += `<div class="member-item">
+    <div class="member-avatar" style="background:linear-gradient(135deg,#e3f2fd,#bbdefb)">${esc(g.userAvatar)}</div>
+    <div class="member-info">
+      <div class="member-name">${esc(g.userName)}（你）</div>
+      <div class="member-tag">群主</div>
+    </div>
+  </div>`;
+  const avatarBgs = [
+    'linear-gradient(135deg,#fff9c4,#fff176)',
+    'linear-gradient(135deg,#f3e5f5,#ce93d8)',
+    'linear-gradient(135deg,#e3f2fd,#90caf9)',
+    'linear-gradient(135deg,#fce4ec,#ef9a9a)',
+    'linear-gradient(135deg,#e8f5e9,#a5d6a7)'
+  ];
+  g.members.forEach((m, i) => {
+    const bg = avatarBgs[i % avatarBgs.length];
+    html += `<div class="member-item" data-id="${m.id}">
+      <div class="member-avatar" style="background:${bg}">${esc(m.emoji)}</div>
+      <div class="member-info">
+        <div class="member-name">${esc(m.name)}</div>
+        <div class="member-tag ${m.muted?'muted':''}">${m.muted?'🔇 已禁言':m.personality}</div>
+      </div>
+      <div class="member-actions">
+        <button onclick="toggleMute('${m.id}')" title="${m.muted?'解禁':'禁言'}">${m.muted?'🔊':'🔇'}</button>
+        ${i>0?`<button onclick="moveMember('${m.id}',-1)" title="上移">↑</button>`:''}
+        ${i<g.members.length-1?`<button onclick="moveMember('${m.id}',1)" title="下移">↓</button>`:''}
+        <button class="danger" onclick="kickMember('${m.id}')" title="踢出">❌</button>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+  document.getElementById('groupName').textContent = g.name;
+}
+
+function renderMessages() {
+  const g = currentGroup();
+  const container = document.getElementById('chatMessages');
+  const empty = document.getElementById('emptyState');
+  if (g.messages.length === 0) {
+    container.innerHTML = '';
+    container.appendChild(empty);
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+  let html = '';
+  g.messages.forEach(msg => {
+    const isUser = msg.role === 'user';
+    const time = formatTime(msg.time);
+    html += `<div class="msg-row ${isUser?'user':'ai'}">
+      <div class="msg-avatar">${esc(isUser ? g.userAvatar : msg.emoji)}</div>
+      <div class="msg-content">
+        <div class="msg-name">${esc(isUser ? g.userName : msg.name)}</div>
+        <div class="msg-bubble ${msg.typing?'typing':''}">${msg.typing?'<span class="typing-dots"><span>●</span><span>●</span><span>●</span></span> 思考中...':escHtml(msg.content)}</div>
+        <div class="msg-time">${time}</div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+  container.scrollTop = container.scrollHeight;
+}
+
+function addMessageToDOM(msg) {
+  const g = currentGroup();
+  const empty = document.getElementById('emptyState');
+  if (empty) empty.style.display = 'none';
+  const container = document.getElementById('chatMessages');
+  const isUser = msg.role === 'user';
+  const time = formatTime(msg.time);
+  const avatarBg = isUser ? 'background:linear-gradient(135deg,#e3f2fd,#bbdefb)' : '';
+  const div = document.createElement('div');
+  div.className = `msg-row ${isUser?'user':'ai'}`;
+  div.innerHTML = `<div class="msg-avatar" style="${avatarBg}">${esc(isUser ? g.userAvatar : msg.emoji)}</div>
+    <div class="msg-content">
+      <div class="msg-name">${esc(isUser ? g.userName : msg.name)}</div>
+      <div class="msg-bubble ${msg.typing?'typing':''}">${msg.typing?'<span class="typing-dots"><span>●</span><span>●</span><span>●</span></span> 思考中...':escHtml(msg.content)}</div>
+      <div class="msg-time">${time}</div>
+    </div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+// ============ INPUT - AUTO HEIGHT (max 5 lines) ============
+const LINE_HEIGHT = 21; // 14px font * 1.5 line-height
+const MAX_LINES = 5;
+const MIN_HEIGHT = LINE_HEIGHT + 20; // 1 line + padding
+const MAX_HEIGHT = LINE_HEIGHT * MAX_LINES + 20; // 5 lines + padding
+
+function handleInput() {
+  const ta = document.getElementById('inputBox');
+  autoResize(ta);
+  checkMention();
+}
+
+function autoResize(el) {
+  // Save scroll position
+  const scrollTop = el.scrollTop;
+  // Reset to auto to measure
+  el.style.height = 'auto';
+  // Calculate desired height
+  let newHeight = el.scrollHeight;
+  // Clamp between min and max
+  if (newHeight < MIN_HEIGHT) newHeight = MIN_HEIGHT;
+  if (newHeight > MAX_HEIGHT) newHeight = MAX_HEIGHT;
+  el.style.height = newHeight + 'px';
+  // Enable/disable scrollbar based on whether content exceeds max
+  if (el.scrollHeight > MAX_HEIGHT) {
+    el.style.overflowY = 'auto';
+  } else {
+    el.style.overflowY = 'hidden';
+  }
+}
+
+function handleKeyDown(e) {
+  // Enter key is ALWAYS for newline (no send on Enter)
+  if (e.key === 'Enter' && !e.shiftKey) {
+    // On mobile, Enter should also be newline (no preventDefault)
+    // But if mention dropdown is active, Enter selects it
+    if (mentionActive) {
+      e.preventDefault();
+      selectMention();
+      return;
+    }
+    // Otherwise let Enter insert newline naturally
+    return;
+  }
+  if (mentionActive) {
+    if (e.key === 'ArrowDown') { e.preventDefault(); mentionIndex = Math.min(mentionIndex+1, getFilteredMembers().length-1); renderMentionDropdown(); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); mentionIndex = Math.max(mentionIndex-1, 0); renderMentionDropdown(); }
+    if (e.key === 'Escape') { closeMention(); }
+  }
+}
+
+function checkMention() {
+  const ta = document.getElementById('inputBox');
+  const text = ta.value;
+  const pos = ta.selectionStart;
+  const before = text.substring(0, pos);
+  const match = before.match(/@(\S*)$/);
+  if (match) {
+    mentionActive = true;
+    mentionFilter = match[1].toLowerCase();
+    mentionIndex = 0;
+    renderMentionDropdown();
+  } else {
+    closeMention();
+  }
+}
+
+function getFilteredMembers() {
+  const g = currentGroup();
+  return g.members.filter(m => !m.muted && m.name.toLowerCase().includes(mentionFilter));
+}
+
+function renderMentionDropdown() {
+  const dd = document.getElementById('mentionDropdown');
+  const members = getFilteredMembers();
+  if (members.length === 0) { dd.style.display = 'none'; return; }
+  dd.style.display = 'block';
+  dd.innerHTML = members.map((m, i) =>
+    `<div class="mention-item ${i===mentionIndex?'active':''}" onclick="selectMentionItem('${m.id}')" onmouseenter="mentionIndex=${i};renderMentionDropdown()">
+      <span class="mi-avatar">${esc(m.emoji)}</span>
+      <span class="mi-name">${esc(m.name)}</span>
+    </div>`
+  ).join('');
+}
+
+function selectMentionItem(id) {
+  const g = currentGroup();
+  const m = g.members.find(x => x.id === id);
+  if (!m) return;
+  const ta = document.getElementById('inputBox');
+  const text = ta.value;
+  const pos = ta.selectionStart;
+  const before = text.substring(0, pos);
+  const newBefore = before.replace(/@\S*$/, `@${m.name} `);
+  ta.value = newBefore + text.substring(pos);
+  ta.focus();
+  const newPos = newBefore.length;
+  ta.setSelectionRange(newPos, newPos);
+  autoResize(ta);
+  closeMention();
+}
+
+function selectMention() {
+  const members = getFilteredMembers();
+  if (members[mentionIndex]) selectMentionItem(members[mentionIndex].id);
+}
+
+function closeMention() {
+  mentionActive = false;
+  document.getElementById('mentionDropdown').style.display = 'none';
+}
+
+// ============ SEND MESSAGE ============
+async function sendMessage() {
+  checkTripleClickRefresh();
+  const ta = document.getElementById('inputBox');
+  const text = ta.value.trim();
+  if (!text || isGenerating) return;
+  ta.value = '';
+  autoResize(ta);
+  closeMention();
+
+  const g = currentGroup();
+
+  // Parse @mentions
+  const mentionedIds = [];
+  const mentionRegex = /@([^\s@]+)/g;
+  let mMatch;
+  while ((mMatch = mentionRegex.exec(text)) !== null) {
+    const member = g.members.find(x => x.name === mMatch[1]);
+    if (member) mentionedIds.push(member.id);
+  }
+
+  // Add user message
+  const userMsg = { role: 'user', name: g.userName, content: text, time: Date.now(), emoji: g.userAvatar };
+  g.messages.push(userMsg);
+  addMessageToDOM(userMsg);
+  saveState();
+
+  // Trigger AI responses
+  await triggerAIResponses(mentionedIds);
+}
+
+async function triggerNextSentence() {
+  if (isGenerating) return;
+  const g = currentGroup();
+  const ta = document.getElementById('inputBox');
+  const text = ta.value.trim();
+  let mentionedIds = [];
+  if (text) {
+    const mentionRegex = /@([^\s@]+)/g;
+    let mMatch;
+    while ((mMatch = mentionRegex.exec(text)) !== null) {
+      const member = g.members.find(x => x.name === mMatch[1]);
+      if (member) mentionedIds.push(member.id);
+    }
+    if (!text.startsWith('@')) {
+      ta.value = '';
+      autoResize(ta);
+      const userMsg = { role: 'user', name: g.userName, content: text, time: Date.now(), emoji: g.userAvatar };
+      g.messages.push(userMsg);
+      addMessageToDOM(userMsg);
+      saveState();
+    }
+  }
+  await triggerAIResponses(mentionedIds);
+}
+
+async function triggerAIResponses(mentionedIds = []) {
+  if (isGenerating) return;
+  isGenerating = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  const g = currentGroup();
+
+  try {
+    let responders = [];
+    if (mentionedIds.length > 0) {
+      responders = g.members.filter(m => mentionedIds.includes(m.id) && !m.muted);
+    } else {
+      const available = g.members.filter(m => !m.muted);
+      const count = Math.min(Math.floor(Math.random() * 3) + 1, available.length);
+      const shuffled = [...available].sort(() => Math.random() - 0.5);
+      responders = shuffled.slice(0, count);
+    }
+
+    if (responders.length === 0) {
+      showToast('没有可响应的AI角色', 'error');
+      isGenerating = false;
+      document.getElementById('sendBtn').disabled = false;
+      return;
+    }
+
+    const context = buildContext();
+
+    for (const member of responders) {
+      await generateResponse(member, context);
+      if (responders.indexOf(member) < responders.length - 1) {
+        await sleep(800 + Math.random() * 1200);
+      }
+    }
+  } catch(e) {
+    console.error('AI response error:', e);
+    showToast('AI响应出错: ' + e.message, 'error');
+  }
+
+  isGenerating = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function buildContext() {
+  const g = currentGroup();
+  const recentMsgs = g.messages.slice(-20);
+  let context = `群名：${g.name}\n群设定：${g.groupSetting}\n\n`;
+  context += `群成员：\n`;
+  context += `- ${g.userName}（用户）\n`;
+  g.members.forEach(m => {
+    context += `- ${m.name}（${m.emoji}，${m.muted?'已禁言':m.personality}）\n`;
+  });
+  context += '\n对话记录：\n';
+  recentMsgs.forEach(msg => {
+    const sender = msg.role === 'user' ? g.userName : msg.name;
+    context += `${sender}：${msg.content}\n`;
+  });
+  return context;
+}
+
+async function generateResponse(member, context) {
+  const g = currentGroup();
+  const typingMsg = { role: 'ai', name: member.name, content: '', time: Date.now(), emoji: member.emoji, typing: true };
+  g.messages.push(typingMsg);
+  const typingEl = addMessageToDOM(typingMsg);
+
+  try {
+    const provider = getActiveProvider();
+    if (!provider || !provider.apiKey) {
+      const fallback = generateFallbackResponse(member);
+      typingMsg.content = fallback;
+      typingMsg.typing = false;
+      typingMsg.time = Date.now();
+      updateMessageInDOM(typingEl, typingMsg);
+      saveState();
+      return;
+    }
+
+    const systemPrompt = `你是"${member.name}"，${member.emoji}。你的性格特点：${member.personality}。
+你现在在一个群聊中，群名叫"${g.name}"，群设定是"${g.groupSetting}"。
+请根据你的性格特点，用自然、口语化的方式回复。回复要简洁（一般1-3句话），符合群聊氛围。
+不要用"作为xxx"之类的开头，直接说话即可。不要加引号。`;
+
+    const userPrompt = `以下是群聊的上下文信息：\n${context}\n\n现在请以"${member.name}"的身份回复最新的消息。只输出你的回复内容，不要加任何前缀。`;
+
+    const response = await callLLM(provider, systemPrompt, userPrompt);
+    typingMsg.content = response;
+    typingMsg.typing = false;
+    typingMsg.time = Date.now();
+    updateMessageInDOM(typingEl, typingMsg);
+    saveState();
+  } catch(e) {
+    console.error('Generate error:', e);
+    typingMsg.content = `[回复失败: ${e.message}]`;
+    typingMsg.typing = false;
+    typingMsg.time = Date.now();
+    updateMessageInDOM(typingEl, typingMsg);
+  }
+}
+
+function updateMessageInDOM(el, msg) {
+  if (!el) return;
+  const bubble = el.querySelector('.msg-bubble');
+  if (bubble) {
+    bubble.classList.remove('typing');
+    bubble.innerHTML = escHtml(msg.content);
+  }
+  const timeEl = el.querySelector('.msg-time');
+  if (timeEl) timeEl.textContent = formatTime(msg.time);
+}
+
+// ============ LLM API ============
+async function callLLM(provider, systemPrompt, userPrompt) {
+  const url = provider.baseUrl.replace(/\/+$/, '') + '/v1/chat/completions';
+  const model = provider.model || 'deepseek-chat';
+
+  const body = {
+    model: model,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ],
+    max_tokens: 300,
+    temperature: 0.8,
+    top_p: 0.9
+  };
+
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${provider.apiKey}`
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => 'Unknown error');
+    throw new Error(`HTTP ${resp.status}: ${errText.substring(0, 100)}`);
+  }
+
+  const data = await resp.json();
+  if (data.choices && data.choices[0] && data.choices[0].message) {
+    return data.choices[0].message.content.trim();
+  }
+  throw new Error('Invalid API response');
+}
+
+async function fetchModels(provider) {
+  if (!provider.apiKey || !provider.baseUrl) return [];
+  try {
+    const url = provider.baseUrl.replace(/\/+$/, '') + '/v1/models';
+    const resp = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${provider.apiKey}` }
+    });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    if (data.data && Array.isArray(data.data)) {
+      return data.data.map(m => m.id).sort();
+    }
+    return [];
+  } catch(e) {
+    console.error('Fetch models error:', e);
+    return [];
+  }
+}
+
+function getActiveProvider() {
+  return appState.providers.find(p => p.id === appState.activeProvider);
+}
+
+// ============ FALLBACK ============
+function generateFallbackResponse(member) {
+  const fallbacks = {
+    '段子手小张': [
+      '哈哈哈这个太有意思了！让我想起一个段子...',
+      '笑死我了，你们太有才了 😂',
+      '这波操作666，我给满分！',
+      '不是吧不是吧，这也太离谱了哈哈哈',
+      '我宣布这是今天最好笑的消息 🤣'
+    ],
+    '暖心小鹿': [
+      '没关系没关系，大家都会理解的~',
+      '你说得很对呢，我觉得大家都很棒！',
+      '别担心，一切都会好起来的 🌟',
+      '嗯嗯，我懂你的意思，加油哦~',
+      '大家都很用心呢，感受到了满满的正能量 💕'
+    ],
+    '博士老李': [
+      '从科学角度来看，这个现象其实可以这样解释...',
+      '根据相关研究数据表明，这个结论是有依据的。',
+      '让我从专业角度分析一下这个问题...',
+      '有趣的观点，不过准确来说应该是这样的...',
+      '这个问题涉及到几个关键因素，我来梳理一下。'
+    ],
+    '毒舌小王': [
+      '就这？我还以为多厉害呢 😏',
+      '虽然但是，这话说的也太天真了吧...',
+      '不是我说，这逻辑有点感人啊',
+      '一针见血地说：你开心就好 🙃',
+      '我直说了，这操作属实看不懂'
+    ],
+    '诗人小雅': [
+      '春风十里不如你，恰似故人来。',
+      '此情此景，让我想起了一句诗...',
+      '生活不止眼前的苟且，还有诗和远方 🌸',
+      '浮生若梦，为欢几何，且行且珍惜。',
+      '落花有意随流水，流水无心恋落花~'
+    ]
+  };
+  const list = fallbacks[member.name] || [
+    '嗯嗯，有道理！',
+    '说得不错呢~',
+    '我同意你的观点！',
+    '这个想法很有意思 👍'
+  ];
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// ============ MEMBER MANAGEMENT ============
+function toggleMute(id) {
+  const g = currentGroup();
+  const m = g.members.find(x => x.id === id);
+  if (m) { m.muted = !m.muted; renderMembers(); saveState(); showToast(m.muted ? `${m.name} 已禁言` : `${m.name} 已解禁`); }
+}
+
+function moveMember(id, dir) {
+  const g = currentGroup();
+  const idx = g.members.findIndex(x => x.id === id);
+  const newIdx = idx + dir;
+  if (newIdx >= 0 && newIdx < g.members.length) {
+    [g.members[idx], g.members[newIdx]] = [g.members[newIdx], g.members[idx]];
+    renderMembers(); saveState();
+  }
+}
+
+function kickMember(id) {
+  const g = currentGroup();
+  const m = g.members.find(x => x.id === id);
+  if (!m) return;
+  if (confirm(`确定要将 ${m.name} 移出群聊吗？`)) {
+    g.members = g.members.filter(x => x.id !== id);
+    renderMembers(); saveState();
+    showToast(`${m.name} 已移出群聊`);
+  }
+}
+
+function openAddMember() {
+  openModal('addMemberModal');
+}
+
+function addNewMember() {
+  const g = currentGroup();
+  const name = document.getElementById('newMemberName').value.trim();
+  const emoji = document.getElementById('newMemberEmoji').value.trim() || '🤖';
+  const personality = document.getElementById('newMemberPersonality').value.trim();
+  if (!name) { showToast('请输入角色名称', 'error'); return; }
+  if (!personality) { showToast('请输入角色设定', 'error'); return; }
+  const id = 'c_' + Date.now();
+  g.members.push({ id, name, emoji, personality, muted: false });
+  renderMembers(); renderGroupList(); saveState();
+  closeModal('addMemberModal');
+  document.getElementById('newMemberName').value = '';
+  document.getElementById('newMemberEmoji').value = '';
+  document.getElementById('newMemberPersonality').value = '';
+  showToast(`${name} 已加入群聊`);
+}
+
+// ============ GROUP NAME ============
+function editGroupName() {
+  const el = document.getElementById('headerTitle');
+  const g = currentGroup();
+  const current = g.name;
+  el.innerHTML = `<input type="text" value="${esc(current)}" onblur="saveGroupName(this)" onkeydown="if(event.key==='Enter')this.blur();" autofocus>`;
+  el.querySelector('input').focus();
+  el.querySelector('input').select();
+}
+
+function saveGroupName(input) {
+  const g = currentGroup();
+  const name = input.value.trim();
+  if (name) g.name = name;
+  document.getElementById('headerTitle').innerHTML = `<span id="groupName">${esc(g.name)}</span>`;
+  renderGroupList();
+  saveState();
+}
+
+// ============ FREE MODE ============
+function toggleFreeMode() {
+  const g = currentGroup();
+  g.freeMode = !g.freeMode;
+  updateFreeToggle();
+  saveState();
+  if (g.freeMode) {
+    startFreeMode();
+    showToast('自由模式已开启，AI将主动发起话题');
+  } else {
+    stopFreeMode();
+    showToast('自由模式已关闭');
+  }
+}
+
+function updateFreeToggle() {
+  const g = currentGroup();
+  const track = document.getElementById('freeToggle');
+  track.classList.toggle('active', g.freeMode);
+}
+
+function startFreeMode() {
+  stopFreeMode();
+  scheduleFreeMessage();
+}
+
+function scheduleFreeMessage() {
+  const g = currentGroup();
+  if (!g.freeMode) return;
+  const delay = 8000 + Math.random() * 7000;
+  freeModeTimer = setTimeout(async () => {
+    const currentG = currentGroup();
+    if (!currentG.freeMode || isGenerating || currentG.id !== g.id) {
+      scheduleFreeMessage();
+      return;
+    }
+    const available = currentG.members.filter(m => !m.muted);
+    if (available.length === 0) { scheduleFreeMessage(); return; }
+
+    const count = Math.min(Math.floor(Math.random() * 3) + 1, available.length);
+    const shuffled = [...available].sort(() => Math.random() - 0.5);
+    const responders = shuffled.slice(0, count);
+
+    const topics = [
+      '最近有什么有趣的事情想分享吗？',
+      '大家觉得今天天气怎么样？',
+      '有没有什么好看的电影推荐？',
+      '最近学到了什么新东西？',
+      '大家平时喜欢做什么消遣？',
+      '你们觉得AI未来会怎样发展？',
+      '有什么好听的歌推荐吗？',
+      '最近有什么热点新闻？',
+      '大家最难忘的一次旅行是哪里？',
+      '如果可以拥有一种超能力，你想要什么？'
+    ];
+    const topic = topics[Math.floor(Math.random() * topics.length)];
+    const context = buildContext();
+
+    for (const member of responders) {
+      const isFirst = responders.indexOf(member) === 0;
+      const typingMsg = { role: 'ai', name: member.name, content: '', time: Date.now(), emoji: member.emoji, typing: true };
+      currentG.messages.push(typingMsg);
+      const typingEl = addMessageToDOM(typingMsg);
+
+      try {
+        const provider = getActiveProvider();
+        let response;
+        if (provider && provider.apiKey) {
+          const systemPrompt = `你是"${member.name}"，${member.emoji}。你的性格特点：${member.personality}。
+你现在在一个群聊中，群名叫"${currentG.name}"，群设定是"${currentG.groupSetting}"。
+${isFirst ? `请主动发起一个新话题或分享你的想法。你可以围绕以下话题展开，也可以自由发挥：${topic}` : `请对群聊中其他人的发言做出自然的回应。`}
+回复要简洁（1-3句话），符合群聊氛围。不要用"作为xxx"之类的开头，直接说话。`;
+
+          const userPrompt = `以下是群聊的上下文信息：\n${context}\n\n现在请以"${member.name}"的身份${isFirst?'主动发起话题':'回复'}。只输出你的回复内容。`;
+          response = await callLLM(provider, systemPrompt, userPrompt);
+        } else {
+          response = generateFallbackResponse(member);
+        }
+        typingMsg.content = response;
+        typingMsg.typing = false;
+        typingMsg.time = Date.now();
+        updateMessageInDOM(typingEl, typingMsg);
+        saveState();
+      } catch(e) {
+        typingMsg.content = `[回复失败]`;
+        typingMsg.typing = false;
+        updateMessageInDOM(typingEl, typingMsg);
+      }
+
+      if (responders.indexOf(member) < responders.length - 1) {
+        await sleep(1000 + Math.random() * 1500);
+      }
+    }
+    scheduleFreeMessage();
+  }, delay);
+}
+
+function stopFreeMode() {
+  if (freeModeTimer) { clearTimeout(freeModeTimer); freeModeTimer = null; }
+}
+
+// ============ SIDEBAR ============
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+// ============ SETTINGS MODAL ============
+function openSettings() {
+  renderSettingsModal();
+  openModal('settingsModal');
+}
+
+function renderSettingsModal() {
+  const g = currentGroup();
+  appState.providers.forEach(p => {
+    const nameEl = document.getElementById(`prov_name_${p.id}`);
+    const urlEl = document.getElementById(`prov_url_${p.id}`);
+    const keyEl = document.getElementById(`prov_key_${p.id}`);
+    const modelEl = document.getElementById(`prov_model_${p.id}`);
+    if (nameEl) nameEl.value = p.name;
+    if (urlEl) urlEl.value = p.baseUrl;
+    if (keyEl) keyEl.value = p.apiKey;
+    if (modelEl) modelEl.value = p.model;
+  });
+  document.getElementById('settingGroupName').value = g.name;
+  document.getElementById('settingGroupDesc').value = g.groupSetting;
+  document.getElementById('settingUserName').value = g.userName;
+  document.getElementById('settingUserAvatar').value = g.userAvatar;
+  const sel = document.getElementById('activeProvider');
+  if (sel) sel.value = appState.activeProvider;
+  const slider = document.getElementById('fontSizeSlider');
+  if (slider) { slider.value = appState.bubbleFontSize || 17; document.getElementById('fontSizeVal').textContent = (appState.bubbleFontSize || 17) + 'px'; }
+}
+
+function saveSettings() {
+  const g = currentGroup();
+  g.name = document.getElementById('settingGroupName').value.trim() || 'AI群聊';
+  g.groupSetting = document.getElementById('settingGroupDesc').value.trim();
+  g.userName = document.getElementById('settingUserName').value.trim() || '我';
+  g.userAvatar = document.getElementById('settingUserAvatar').value.trim() || '🧑';
+  appState.activeProvider = document.getElementById('activeProvider').value;
+  appState.bubbleFontSize = parseInt(document.getElementById('fontSizeSlider').value) || 17;
+
+  appState.providers.forEach(p => {
+    const urlEl = document.getElementById(`prov_url_${p.id}`);
+    const keyEl = document.getElementById(`prov_key_${p.id}`);
+    const modelEl = document.getElementById(`prov_model_${p.id}`);
+    if (urlEl) p.baseUrl = urlEl.value.trim();
+    if (keyEl) p.apiKey = keyEl.value.trim();
+    if (modelEl) p.model = modelEl.value.trim();
+  });
+
+  renderMembers();
+  renderGroupList();
+  document.getElementById('groupName').textContent = g.name;
+  saveState();
+  closeModal('settingsModal');
+  showToast('设置已保存');
+}
+
+async function fetchModelsForProvider(providerId) {
+  const provider = appState.providers.find(p => p.id === providerId);
+  if (!provider) return;
+  const btn = document.getElementById(`fetch_btn_${providerId}`);
+  if (btn) { btn.disabled = true; btn.textContent = '获取中...'; }
+  try {
+    const models = await fetchModels(provider);
+    appState.fetchedModels[providerId] = models;
+    const modelEl = document.getElementById(`prov_model_${providerId}`);
+    if (modelEl && models.length > 0) {
+      showModelDropdown(providerId, models);
+    } else {
+      showToast('未获取到模型列表，请手动输入', 'error');
+    }
+    if (btn) { btn.disabled = false; btn.textContent = '获取模型'; }
+  } catch(e) {
+    showToast('获取模型失败: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '获取模型'; }
+  }
+}
+
+function showModelDropdown(providerId, models) {
+  const existing = document.getElementById(`model_dd_${providerId}`);
+  if (existing) existing.remove();
+
+  const wrapper = document.getElementById(`model_wrapper_${providerId}`);
+  if (!wrapper) return;
+
+  const dd = document.createElement('div');
+  dd.className = 'model-dropdown';
+  dd.id = `model_dd_${providerId}`;
+  dd.innerHTML = models.map(m =>
+    `<div class="model-option" onclick="selectModel('${providerId}','${esc(m)}')">${esc(m)}</div>`
+  ).join('');
+  wrapper.appendChild(dd);
+
+  setTimeout(() => {
+    document.addEventListener('click', function closeDD(e) {
+      if (!dd.contains(e.target) && e.target.id !== `fetch_btn_${providerId}`) {
+        dd.remove();
+        document.removeEventListener('click', closeDD);
+      }
+    });
+  }, 100);
+}
+
+function selectModel(providerId, model) {
+  const modelEl = document.getElementById(`prov_model_${providerId}`);
+  if (modelEl) modelEl.value = model;
+  const dd = document.getElementById(`model_dd_${providerId}`);
+  if (dd) dd.remove();
+}
+
+// ============ MODAL ============
+function openModal(id) {
+  const overlay = document.getElementById(id);
+  if (overlay) overlay.style.display = 'flex';
+}
+
+function closeModal(id) {
+  const overlay = document.getElementById(id);
+  if (overlay) overlay.style.display = 'none';
+}
+
+// ============ BUBBLE FONT SIZE ============
+function applyBubbleFontSize() {
+  const size = appState.bubbleFontSize || 17;
+  document.documentElement.style.setProperty('--bubble-font', size + 'px');
+}
+
+function previewFontSize(val) {
+  document.getElementById('fontSizeVal').textContent = val + 'px';
+  document.documentElement.style.setProperty('--bubble-font', val + 'px');
+}
+
+// ============ TRIPLE CLICK SEND TO REFRESH ============
+function checkTripleClickRefresh() {
+  const now = Date.now();
+  sendClickTimes.push(now);
+  // Keep only clicks within 800ms
+  sendClickTimes = sendClickTimes.filter(t => now - t < 800);
+  if (sendClickTimes.length >= 3) {
+    sendClickTimes = [];
+    saveState();
+    location.reload();
+  }
+}
+
+// ============ UTILS ============
+function esc(s) { return s || ''; }
+function escHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatTime(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const pad = n => n.toString().padStart(2,'0');
+  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if (d.toDateString() === now.toDateString()) return time;
+  return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${time}`;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showToast(msg, type = '') {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// ============ CLEAR CHAT ============
+function clearChat() {
+  const g = currentGroup();
+  if (confirm('确定要清空所有聊天记录吗？')) {
+    g.messages = [];
+    renderMessages();
+    saveState();
+    showToast('聊天记录已清空');
+  }
+}
+
+// ============ INIT ON LOAD ============
+window.addEventListener('DOMContentLoaded', init);
+
+// Close modals on overlay click
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.style.display = 'none';
+  }
+});
+</script>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>⚙️ 设置</h3>
+      <button class="modal-close" onclick="closeModal('settingsModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tab-bar">
+        <button class="active" onclick="switchTab(this,'tabGroup')">群聊设置</button>
+        <button onclick="switchTab(this,'tabAPI')">API配置</button>
+      </div>
+
+      <div class="tab-content active" id="tabGroup">
+        <div class="form-group">
+          <label>群名</label>
+          <input type="text" id="settingGroupName" placeholder="输入群名">
+        </div>
+        <div class="form-group">
+          <label>群设定</label>
+          <textarea id="settingGroupDesc" rows="3" placeholder="描述群的设定和氛围，AI会根据此设定生成回复"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>你的昵称</label>
+            <input type="text" id="settingUserName" placeholder="你的昵称">
+          </div>
+          <div class="form-group">
+            <label>你的头像</label>
+            <input type="text" id="settingUserAvatar" placeholder="emoji头像" maxlength="4">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>当前使用的API</label>
+          <select id="activeProvider">
+            <option value="deepseek">DeepSeek</option>
+            <option value="siliconflow">硅基流动</option>
+            <option value="custom1">自定义API 1</option>
+            <option value="custom2">自定义API 2</option>
+            <option value="custom3">自定义API 3</option>
+          </select>
+        </div>
+        <div style="margin-top:20px;">
+          <button class="btn btn-danger btn-sm" onclick="clearChat()">🗑️ 清空聊天记录</button>
+        </div>
+        <div class="form-group" style="margin-top:20px;">
+          <label>对话气泡字号：<span id="fontSizeVal" style="color:var(--accent);font-weight:600;">17px</span></label>
+          <div style="display:flex;align-items:center;gap:12px;margin-top:6px;">
+            <span style="font-size:12px;color:var(--text-light);">14</span>
+            <input type="range" id="fontSizeSlider" min="14" max="24" value="17" style="flex:1;accent-color:var(--accent);height:6px;" oninput="previewFontSize(this.value)">
+            <span style="font-size:12px;color:var(--text-light);">24</span>
+          </div>
+          <div class="hint">仅作用于对话气泡内的文字大小</div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tabAPI">
+        <div id="apiProviders"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('settingsModal')">取消</button>
+      <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Member Modal -->
+<div class="modal-overlay" id="addMemberModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>➕ 添加新角色</h3>
+      <button class="modal-close" onclick="closeModal('addMemberModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>角色名称</label>
+        <input type="text" id="newMemberName" placeholder="例如：哲学家小苏">
+      </div>
+      <div class="form-group">
+        <label>头像Emoji</label>
+        <input type="text" id="newMemberEmoji" placeholder="🤖" maxlength="4">
+      </div>
+      <div class="form-group">
+        <label>角色设定/性格</label>
+        <textarea id="newMemberPersonality" rows="3" placeholder="描述这个AI角色的性格特点、说话风格等"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('addMemberModal')">取消</button>
+      <button class="btn btn-primary" onclick="addNewMember()">添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Group Modal -->
+<div class="modal-overlay" id="addGroupModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>➕ 新建群聊</h3>
+      <button class="modal-close" onclick="closeModal('addGroupModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>群名</label>
+        <input type="text" id="newGroupName" placeholder="例如：深夜树洞">
+      </div>
+      <div class="form-group">
+        <label>群图标Emoji</label>
+        <input type="text" id="newGroupIcon" placeholder="💬" maxlength="4">
+      </div>
+      <div class="form-group">
+        <label>群设定</label>
+        <textarea id="newGroupSetting" rows="3" placeholder="描述这个群的氛围和设定，AI会根据此设定生成回复"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('addGroupModal')">取消</button>
+      <button class="btn btn-primary" onclick="addNewGroup()">创建</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Render API provider cards dynamically
+function renderProviderCards() {
+  const container = document.getElementById('apiProviders');
+  let html = '';
+  appState.providers.forEach(p => {
+    const isPreset = p.type === 'preset';
+    html += `<div class="provider-card">
+      <h4>
+        ${esc(p.name)}
+        <span class="provider-status ${p.apiKey?'connected':'disconnected'}">${p.apiKey?'已配置':'未配置'}</span>
+      </h4>
+      <div class="form-group">
+        <label>API地址</label>
+        <input type="text" id="prov_url_${p.id}" value="${esc(p.baseUrl)}" placeholder="${isPreset?p.baseUrl:'https://api.example.com'}" ${isPreset?'readonly style="background:#f5f5f5;"':''}>
+      </div>
+      <div class="form-group">
+        <label>API Key</label>
+        <input type="password" id="prov_key_${p.id}" value="${esc(p.apiKey)}" placeholder="sk-...">
+      </div>
+      <div class="form-group">
+        <label>模型名称</label>
+        <div class="model-select-wrapper" id="model_wrapper_${p.id}">
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="prov_model_${p.id}" value="${esc(p.model)}" placeholder="例如：deepseek-chat" style="flex:1;">
+            <button class="btn btn-sm" id="fetch_btn_${p.id}" onclick="fetchModelsForProvider('${p.id}')">获取模型</button>
+          </div>
+        </div>
+        <div class="hint">可手动输入或点击"获取模型"从API拉取可用模型列表</div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function switchTab(btn, tabId) {
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.closest('.modal-body').querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  if (tabId === 'tabAPI') renderProviderCards();
+}
+
+const _origOpenSettings = openSettings;
+openSettings = function() {
+  renderProviderCards();
+  _origOpenSettings();
+};
+</script>
+</body>
+</html>
