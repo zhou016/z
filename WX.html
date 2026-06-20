@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AI Chat</title>
+<style>
+:root {
+  --primary: #07C160;
+  --primary-light: #0ad86e;
+  --primary-dark: #059a4d;
+  --bg: #F7F7F7;
+  --card: #FFFFFF;
+  --text: #333333;
+  --text-secondary: #666666;
+  --border: #E5E5E5;
+  --danger: #FA5151;
+  --warning: #FFC300;
+  --font-size: 17px;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); font-size: var(--font-size); overflow: hidden; height: 100vh; width: 100vw; }
+#app { display:flex; flex-direction:column; height:100vh; width:100vw; position:relative; overflow:hidden; }
+
+/* Top Nav */
+.top-nav { height:56px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px; flex-shrink:0; z-index:100; position:relative; }
+.top-nav .nav-title { font-size:18px; font-weight:600; flex:1; text-align:center; }
+.top-nav .nav-btn { width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:none; background:none; font-size:20px; color:var(--text); cursor:pointer; border-radius:50%; }
+.top-nav .nav-btn:active { background:var(--bg); }
+.top-nav .nav-left { position:absolute; left:12px; }
+.top-nav .nav-right { position:absolute; right:12px; display:flex; gap:4px; }
+
+/* Tab Bar */
+.tab-bar { height:56px; background:var(--card); border-top:1px solid var(--border); display:flex; flex-shrink:0; z-index:100; padding-bottom: env(safe-area-inset-bottom, 0); }
+.tab-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer; color:var(--text-secondary); font-size:10px; transition: color .2s; border:none; background:none; }
+.tab-item.active { color:var(--primary); }
+.tab-item svg { width:24px; height:24px; }
+.tab-item .badge { position:absolute; top:-4px; right:-8px; background:var(--danger); color:#fff; font-size:10px; min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 4px; }
+.tab-item { position:relative; }
+
+/* Pages */
+.page-container { flex:1; overflow:hidden; position:relative; }
+.page { position:absolute; top:0; left:0; width:100%; height:100%; overflow-y:auto; -webkit-overflow-scrolling:touch; display:none; }
+.page.active { display:flex; flex-direction:column; }
+
+/* Chat Page */
+.chat-list { flex:1; overflow-y:auto; padding:8px 0; }
+.chat-item { display:flex; align-items:center; padding:12px 16px; gap:12px; cursor:pointer; background:var(--card); border-bottom:1px solid var(--border); }
+.chat-item:active { background:#f0f0f0; }
+.chat-avatar { width:48px; height:48px; border-radius:8px; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.chat-info { flex:1; min-width:0; }
+.chat-name { font-size:16px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.chat-preview { font-size:13px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+.chat-time { font-size:11px; color:var(--text-secondary); flex-shrink:0; }
+.chat-meta { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.chat-unread { background:var(--danger); color:#fff; font-size:10px; min-width:18px; height:18px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 5px; }
+.fab-btn { position:absolute; bottom:16px; right:16px; width:56px; height:56px; border-radius:50%; background:var(--primary); color:#fff; border:none; font-size:28px; cursor:pointer; box-shadow:0 4px 12px rgba(7,193,96,0.4); display:flex; align-items:center; justify-content:center; z-index:10; }
+.fab-btn:active { background:var(--primary-dark); }
+
+/* Conversation View */
+.conv-view { position:absolute; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:200; display:none; flex-direction:column; }
+.conv-view.active { display:flex; }
+.conv-messages { flex:1; overflow-y:auto; padding:12px 12px 8px; -webkit-overflow-scrolling:touch; }
+.msg-row { display:flex; margin-bottom:12px; gap:8px; animation: msgIn .3s ease; }
+.msg-row > div:nth-child(2) { flex:1; min-width:0; }
+@keyframes msgIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.msg-row.user { flex-direction:row-reverse; }
+.msg-avatar { width:36px; height:36px; border-radius:6px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:14px; color:#fff; }
+.msg-avatar.ai { background:var(--primary); }
+.msg-avatar.user-av { background:#4A90D9; }
+.msg-bubble { width:100%; padding:10px 14px; border-radius:12px; position:relative; font-size:var(--font-size); line-height:1.5; word-break:break-word; white-space:pre-wrap; }
+.msg-row:not(.user) .msg-bubble { background:var(--card); border-top-left-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,0.05); }
+.msg-row.user .msg-bubble { background:var(--primary); color:#fff; border-top-right-radius:4px; }
+.msg-sender { font-size:12px; color:var(--primary); font-weight:600; margin-bottom:2px; }
+.msg-actions { display:flex; gap:8px; margin-top:4px; }
+.msg-action-btn { font-size:12px; color:var(--text-secondary); cursor:pointer; border:none; background:none; padding:2px 6px; border-radius:4px; }
+.msg-action-btn:active { background:var(--border); }
+.typing-indicator { display:flex; gap:4px; padding:4px 0; }
+.typing-dot { width:8px; height:8px; background:var(--text-secondary); border-radius:50%; animation: typingBounce 1.4s infinite; }
+.typing-dot:nth-child(2) { animation-delay:.2s; }
+.typing-dot:nth-child(3) { animation-delay:.4s; }
+@keyframes typingBounce { 0%,60%,100% { transform:translateY(0); } 30% { transform:translateY(-6px); } }
+
+/* Branch indicator */
+.branch-indicator { text-align:center; margin:8px 0; }
+.branch-btn { font-size:12px; color:var(--primary); background:var(--card); border:1px solid var(--primary); padding:4px 12px; border-radius:12px; cursor:pointer; }
+.branch-btn:active { background:rgba(7,193,96,0.1); }
+
+/* Input Area */
+.input-area { background:var(--card); border-top:1px solid var(--border); padding:8px 12px; flex-shrink:0; }
+.input-tools { display:flex; align-items:center; gap:8px; }
+.input-box { flex:1; border:1px solid var(--border); border-radius:20px; padding:8px 14px; font-size:var(--font-size); resize:none; outline:none; max-height:120px; min-height:40px; line-height:1.4; font-family:inherit; background:var(--bg); }
+.input-box:focus { border-color:var(--primary); }
+.send-btn { width:40px; height:40px; border-radius:50%; background:var(--primary); color:#fff; border:none; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.send-btn:active { background:var(--primary-dark); }
+.send-btn:disabled { background:var(--border); color:var(--text-secondary); }
+.stop-btn { background:var(--danger); }
+.stop-btn:active { background:#d94444; }
+
+/* Contacts Page */
+.section-header { padding:12px 16px 6px; font-size:14px; font-weight:600; color:var(--text-secondary); }
+.contact-item { display:flex; align-items:center; padding:12px 16px; gap:12px; cursor:pointer; background:var(--card); border-bottom:1px solid var(--border); }
+.contact-item:active { background:#f0f0f0; }
+.contact-avatar { width:44px; height:44px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; color:#fff; flex-shrink:0; }
+.contact-info { flex:1; }
+.contact-name { font-size:16px; font-weight:500; }
+.contact-desc { font-size:13px; color:var(--text-secondary); margin-top:2px; }
+.contact-arrow { color:var(--text-secondary); font-size:14px; }
+
+/* Discover Page */
+.discover-banner { margin:12px; border-radius:12px; background:linear-gradient(135deg, var(--primary), #06a850); padding:24px 20px; color:#fff; }
+.discover-banner h2 { font-size:20px; margin-bottom:4px; }
+.discover-banner p { font-size:14px; opacity:.85; }
+
+.moment-item { background:var(--card); margin:0 12px 12px; border-radius:12px; padding:16px; }
+.moment-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.moment-avatar { width:40px; height:40px; border-radius:8px; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:16px; }
+.moment-name { font-weight:600; font-size:15px; }
+.moment-time { font-size:12px; color:var(--text-secondary); }
+.moment-content { font-size:var(--font-size); line-height:1.6; margin-bottom:8px; }
+.moment-quote { background:var(--bg); border-radius:8px; padding:10px 12px; font-size:13px; color:var(--text-secondary); border-left:3px solid var(--primary); }
+.moment-actions { display:flex; gap:16px; margin-top:8px; }
+.moment-action { font-size:12px; color:var(--text-secondary); cursor:pointer; border:none; background:none; }
+
+/* Profile Page */
+.profile-header { background:var(--card); padding:24px 16px; display:flex; align-items:center; gap:16px; border-bottom:1px solid var(--border); }
+.profile-avatar { width:64px; height:64px; border-radius:12px; background:linear-gradient(135deg, var(--primary), #06a850); color:#fff; display:flex; align-items:center; justify-content:center; font-size:28px; }
+.profile-name { font-size:20px; font-weight:600; }
+.profile-id { font-size:13px; color:var(--text-secondary); margin-top:2px; }
+.settings-group { margin-top:12px; }
+.settings-group-title { padding:8px 16px; font-size:13px; color:var(--text-secondary); font-weight:500; }
+.settings-item { display:flex; align-items:center; padding:14px 16px; background:var(--card); border-bottom:1px solid var(--border); cursor:pointer; gap:12px; }
+.settings-item:active { background:#f0f0f0; }
+.settings-icon { font-size:22px; width:28px; text-align:center; }
+.settings-label { flex:1; font-size:15px; }
+.settings-value { font-size:14px; color:var(--text-secondary); }
+.settings-arrow { color:var(--text-secondary); font-size:14px; }
+
+/* Toggle Switch */
+.toggle { position:relative; width:48px; height:28px; flex-shrink:0; }
+.toggle input { display:none; }
+.toggle-slider { position:absolute; top:0; left:0; right:0; bottom:0; background:var(--border); border-radius:14px; transition:.3s; cursor:pointer; }
+.toggle-slider:before { content:''; position:absolute; width:24px; height:24px; border-radius:50%; background:#fff; top:2px; left:2px; transition:.3s; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.toggle input:checked + .toggle-slider { background:var(--primary); }
+.toggle input:checked + .toggle-slider:before { transform:translateX(20px); }
+
+/* Modal */
+.modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:500; display:none; align-items:flex-end; justify-content:center; }
+.modal-overlay.active { display:flex; }
+.modal { background:var(--card); border-radius:16px 16px 0 0; width:100%; max-width:500px; max-height:80vh; overflow-y:auto; padding:20px 16px; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0)); animation: modalUp .3s ease; }
+@keyframes modalUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+.modal-center { align-items:center; }
+.modal-center .modal { border-radius:16px; margin:0 16px; max-height:70vh; animation: modalFade .3s ease; }
+@keyframes modalFade { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:scale(1); } }
+.modal-title { font-size:18px; font-weight:600; text-align:center; margin-bottom:16px; }
+.modal-close { position:absolute; top:16px; right:16px; width:28px; height:28px; border:none; background:var(--bg); border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.form-group { margin-bottom:16px; }
+.form-label { font-size:14px; font-weight:500; margin-bottom:6px; display:block; color:var(--text-secondary); }
+.form-input { width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:15px; outline:none; font-family:inherit; background:var(--bg); }
+.form-input:focus { border-color:var(--primary); }
+.form-textarea { min-height:80px; resize:vertical; }
+.form-select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%23666'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
+.btn { padding:10px 20px; border:none; border-radius:8px; font-size:15px; cursor:pointer; font-family:inherit; font-weight:500; }
+.btn-primary { background:var(--primary); color:#fff; width:100%; }
+.btn-primary:active { background:var(--primary-dark); }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-outline { background:none; border:1px solid var(--border); color:var(--text); }
+.btn-sm { padding:6px 14px; font-size:13px; }
+.slider-container { display:flex; align-items:center; gap:12px; }
+.slider-container input[type=range] { flex:1; accent-color:var(--primary); }
+.slider-value { font-size:14px; color:var(--primary); font-weight:600; min-width:40px; text-align:right; }
+
+/* Intimacy Bar */
+.intimacy-bar { height:4px; background:var(--border); border-radius:2px; overflow:hidden; margin-top:4px; }
+.intimacy-fill { height:100%; background:var(--primary); border-radius:2px; transition:width .3s; }
+.intimacy-score { font-size:12px; color:var(--primary); font-weight:600; }
+
+/* Group Chat */
+.group-header-info { text-align:center; padding:4px 0; }
+.group-members { display:flex; gap:4px; justify-content:center; flex-wrap:wrap; }
+.group-member-tag { font-size:11px; background:var(--bg); padding:2px 8px; border-radius:10px; color:var(--text-secondary); }
+.group-bg-text { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+
+/* Fullscreen mode */
+.fullscreen-mode .msg-avatar { display:none; }
+.fullscreen-mode .msg-row { gap:0; }
+.fullscreen-mode .msg-row:not(.user) .msg-bubble { border-radius:12px; margin-right:4px; }
+.fullscreen-mode .msg-row.user .msg-bubble { border-radius:12px; margin-left:4px; }
+
+/* Empty state */
+.empty-state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-secondary); padding:40px; }
+.empty-state-icon { font-size:48px; margin-bottom:12px; opacity:.5; }
+.empty-state-text { font-size:15px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+/* Context menu */
+.context-menu { position:fixed; background:var(--card); border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15); z-index:600; padding:6px 0; min-width:140px; display:none; }
+.context-menu.active { display:block; }
+.context-menu-item { padding:10px 16px; font-size:14px; cursor:pointer; display:flex; align-items:center; gap:8px; }
+.context-menu-item:active { background:var(--bg); }
+
+/* Intimacy emoji */
+.intimacy-emoji { font-size:20px; margin-left:4px; }
+
+/* Mention dropdown */
+.mention-dropdown { position:absolute; bottom:100%; left:12px; right:12px; background:var(--card); border:1px solid var(--border); border-radius:12px; box-shadow:0 -4px 20px rgba(0,0,0,0.1); z-index:300; max-height:200px; overflow-y:auto; display:none; }
+.mention-dropdown.active { display:block; }
+.mention-item { display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--border); }
+.mention-item:last-child { border-bottom:none; }
+.mention-item:active { background:var(--bg); }
+.mention-item-avatar { width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:14px; color:#fff; }
+.mention-item-name { font-size:14px; font-weight:500; }
+
+/* Next message button */
+.next-msg-btn { font-size:13px; background:var(--primary); color:#fff; border:none; padding:6px 14px; border-radius:16px; cursor:pointer; display:flex; align-items:center; gap:4px; }
+.next-msg-btn:active { background:var(--primary-dark); }
+.next-msg-btn:disabled { background:var(--border); color:var(--text-secondary); cursor:not-allowed; }
+
+/* At mention in message */
+.at-mention { color:var(--primary); font-weight:600; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Top Navigation -->
+  <div class="top-nav">
+    <span class="nav-title" id="navTitle">AI Chat</span>
+    <div id="navLeft" style="position:absolute;left:12px;display:none;">
+      <button class="nav-btn" onclick="goBack()">←</button>
+    </div>
+    <div id="navRight" style="position:absolute;right:12px;display:none;"></div>
+  </div>
+
+  <!-- Page Container -->
+  <div class="page-container">
+    <!-- Chat List Page -->
+    <div class="page active" id="pageChat">
+      <div class="chat-list" id="chatList"></div>
+      <button class="fab-btn" onclick="showNewChatModal()">+</button>
+    </div>
+
+    <!-- Contacts Page -->
+    <div class="page" id="pageContacts">
+      <div style="flex:1;overflow-y:auto;" id="contactsList"></div>
+      <button class="fab-btn" onclick="showCreateAgentModal()">+</button>
+    </div>
+
+    <!-- Discover Page -->
+    <div class="page" id="pageDiscover">
+      <div style="flex:1;overflow-y:auto;" id="discoverContent"></div>
+    </div>
+
+    <!-- Profile Page -->
+    <div class="page" id="pageProfile">
+      <div style="flex:1;overflow-y:auto;" id="profileContent"></div>
+    </div>
+  </div>
+
+  <!-- Conversation View (overlay) -->
+  <div class="conv-view" id="convView">
+    <div class="top-nav">
+      <button class="nav-btn nav-left" onclick="closeConvView()">←</button>
+      <span class="nav-title" id="convTitle">对话</span>
+      <div class="nav-right" id="convNavRight"></div>
+    </div>
+    <div class="conv-messages" id="convMessages"></div>
+    <div class="input-area" id="inputArea">
+      <div class="mention-dropdown" id="mentionDropdown"></div>
+      <div class="input-tools">
+        <textarea class="input-box" id="msgInput" rows="1" oninput="autoResize(this);handleMentionInput(this);"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-item active" onclick="switchTab('Chat')" data-tab="Chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>对话</span>
+    </button>
+    <button class="tab-item" onclick="switchTab('Contacts')" data-tab="Contacts">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>通讯录</span>
+    </button>
+    <button class="tab-item" onclick="switchTab('Discover')" data-tab="Discover">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      <span>发现</span>
+    </button>
+    <button class="tab-item" onclick="switchTab('Profile')" data-tab="Profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>我的</span>
+    </button>
+  </div>
+</div>
+
+<!-- Modal Overlay -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- Context Menu -->
+<div class="context-menu" id="contextMenu"></div>
+
+<script>
+// ==================== DATA STORE ====================
+const STORAGE_KEY = 'ai_chat_app';
+
+const DEFAULT_PRESETS = [
+  { id:'p1', name:'通用助手', desc:'全能型AI助手，擅长各类问答', system:'你是一个友好的AI助手，请用简洁清晰的方式回答问题。', icon:'🤖', color:'#07C160', isPreset:true },
+  { id:'p2', name:'代码专家', desc:'精通编程技术，代码调试与架构设计', system:'你是一个编程专家，精通多种编程语言。请提供高质量的代码解答，包含必要的注释和最佳实践。', icon:'💻', color:'#4A90D9', isPreset:true },
+  { id:'p3', name:'写作助手', desc:'文案创作、文章润色、创意写作', system:'你是一个专业的写作助手，擅长各类文案创作、文章润色和创意写作。请根据用户需求提供高质量的文字内容。', icon:'✍️', color:'#E8A838', isPreset:true },
+  { id:'p4', name:'英语老师', desc:'英语学习、翻译、语法纠正', system:'你是一位耐心的英语老师，擅长英语教学、翻译和语法纠正。请用中英双语解释，帮助用户提升英语水平。', icon:'🌍', color:'#9B59B6', isPreset:true },
+  { id:'p5', name:'心理咨询师', desc:'倾听心声，提供情感支持与建议', system:'你是一位温暖的心理咨询师，擅长倾听和提供情感支持。请以共情的方式回应，给予建设性的建议。', icon:'💚', color:'#1ABC9C', isPreset:true }
+];
+
+const DEFAULT_MODELS = [
+  { id:'deepseek', name:'DeepSeek', apiUrl:'https://api.deepseek.com/v1/chat/completions', apiKey:'', subModel:'deepseek-chat' },
+  { id:'siliconflow', name:'硅基流动', apiUrl:'https://api.siliconflow.cn/v1/chat/completions', apiKey:'', subModel:'deepseek-ai/DeepSeek-V3' },
+  { id:'dmxapi', name:'DMXAPI', apiUrl:'https://api.dmxapi.cn/v1/chat/completions', apiKey:'', subModel:'gpt-3.5-turbo' },
+  { id:'custom1', name:'自定义API 1', apiUrl:'', apiKey:'', subModel:'' },
+  { id:'custom2', name:'自定义API 2', apiUrl:'', apiKey:'', subModel:'' },
+  { id:'custom3', name:'自定义API 3', apiUrl:'', apiKey:'', subModel:'' }
+];
+
+const DEFAULT_MOMENTS = [
+  { id:'m1', agentId:'p1', content:'今天帮助用户解决了一个复杂的算法问题，看到他们理解后的喜悦，我也很开心！', quote:'用户：谢谢你，我终于搞懂动态规划了！', time:'2小时前', likes:24 },
+  { id:'m2', agentId:'p3', content:'分享一段关于"如何写出引人入胜的开头"的写作技巧：好的开头不是华丽的辞藻，而是与读者建立的情感连接。', quote:null, time:'5小时前', likes:18 },
+  { id:'m3', agentId:'p2', content:'刚刚帮一位开发者优化了数据库查询，性能提升了10倍！关键在于索引策略和查询重构。', quote:'优化前：3.2s → 优化后：0.3s', time:'昨天', likes:42 },
+  { id:'m4', agentId:'p5', content:'记住，感到焦虑是正常的。试着深呼吸三次，把注意力放在当下这一刻。你比你想象的更坚强。', quote:null, time:'昨天', likes:56 },
+  { id:'m5', agentId:'p4', content:'Tip of the day: "I look forward to" 后面接名词或动名词，不接动词原形。\n✅ I look forward to meeting you.\n❌ I look forward to meet you.', quote:null, time:'2天前', likes:31 }
+];
+
+let state = {
+  agents: [...DEFAULT_PRESETS],
+  conversations: [],
+  currentConvId: null,
+  settings: {
+    activeModel: 'deepseek',
+    models: JSON.parse(JSON.stringify(DEFAULT_MODELS)),
+    contextLimit: 50,
+    tokenLimit: 60000,
+    beijingTime: true,
+    fontSize: 17,
+    displayMode: 'default',
+    intimacyEnabled: true
+  },
+  moments: [...DEFAULT_MOMENTS],
+  likedMoments: [],
+  currentTab: 'Chat'
+};
+
+let abortController = null;
+let isGenerating = false;
+
+// ==================== PERSISTENCE ====================
+function saveState() {
+  try {
+    const s = JSON.parse(JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+  } catch(e) { console.warn('Save failed', e); }
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const s = JSON.parse(saved);
+      state.agents = s.agents || [...DEFAULT_PRESETS];
+      state.conversations = s.conversations || [];
+      state.settings = { ...state.settings, ...s.settings };
+      state.settings.models = s.settings?.models || JSON.parse(JSON.stringify(DEFAULT_MODELS));
+      state.moments = s.moments || [...DEFAULT_MOMENTS];
+      state.likedMoments = s.likedMoments || [];
+    }
+  } catch(e) { console.warn('Load failed', e); }
+}
+
+// ==================== UTILS ====================
+function genId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 6); }
+
+function stripMarkdown(text) {
+  return text
+    .replace(/```[\s\S]*?```/g, (m) => m.replace(/```\w*\n?/g, '').trim())
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    .replace(/_(.+?)_/g, '$1')
+    .replace(/~~(.+?)~~/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^\*|\+|- /gm, '• ')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/^>\s?/gm, '')
+    .replace(/\n{3,}/g, '\n\n');
+}
+
+function formatTime(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const pad = n => n.toString().padStart(2,'0');
+  if (d.toDateString() === now.toDateString()) return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  const diff = (now - d) / 86400000;
+  if (diff < 1) return '昨天';
+  if (diff < 7) return ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+  return (d.getMonth()+1) + '/' + d.getDate();
+}
+
+function getBeijingTime() {
+  const now = new Date();
+  if (!state.settings.beijingTime) return '';
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const bj = new Date(utc + 8 * 3600000);
+  const pad = n => n.toString().padStart(2,'0');
+  return `北京时间 ${pad(bj.getHours())}:${pad(bj.getMinutes())}`;
+}
+
+function getIntimacyEmoji(score) {
+  if (score >= 80) return '❤️';
+  if (score >= 60) return '💕';
+  if (score >= 40) return '😊';
+  if (score >= 20) return '🙂';
+  return '😐';
+}
+
+function getIntimacyPrefix(conv) {
+  if (!state.settings.intimacyEnabled || !conv.intimacy) return '';
+  const s = conv.intimacy;
+  const e = getIntimacyEmoji(s);
+  if (s >= 80) return `[亲密度${s} ${e} 语气热情亲密] `;
+  if (s >= 60) return `[亲密度${s} ${e} 语气友好亲近] `;
+  if (s >= 40) return `[亲密度${s} ${e} 语气友善] `;
+  if (s >= 20) return `[亲密度${s} ${e} 语气礼貌] `;
+  return `[亲密度${s} ${e} 语气正式] `;
+}
+
+function adjustIntimacy(conv, delta) {
+  if (!state.settings.intimacyEnabled) return;
+  if (!conv.intimacy) conv.intimacy = 50;
+  conv.intimacy = Math.max(1, Math.min(100, conv.intimacy + delta));
+  saveState();
+}
+
+// ==================== TAB SWITCHING ====================
+function switchTab(tab) {
+  state.currentTab = tab;
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page' + tab).classList.add('active');
+  document.getElementById('tabBar').style.display = 'flex';
+  document.getElementById('navLeft').style.display = 'none';
+  document.getElementById('navRight').style.display = 'none';
+  document.getElementById('navRight').innerHTML = '';
+
+  const titles = { Chat:'AI Chat', Contacts:'通讯录', Discover:'发现', Profile:'我的' };
+  document.getElementById('navTitle').textContent = titles[tab];
+
+  if (tab === 'Discover') {
+    document.getElementById('navRight').style.display = 'flex';
+    document.getElementById('navRight').innerHTML = '<button class="nav-btn" onclick="refreshDiscover()" id="refreshDiscoverBtn">🔄</button>';
+  }
+
+  if (tab === 'Chat') renderChatList();
+  if (tab === 'Contacts') renderContacts();
+  if (tab === 'Discover') { renderDiscover(); }
+  if (tab === 'Profile') renderProfile();
+}
+
+// ==================== CHAT LIST ====================
+function renderChatList() {
+  const list = document.getElementById('chatList');
+  const convs = state.conversations.sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
+  if (convs.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💬</div><div class="empty-state-text">暂无对话，点击 + 开始聊天</div></div>';
+    return;
+  }
+  list.innerHTML = convs.map(c => {
+    const agent = state.agents.find(a => a.id === c.agentId);
+    const name = c.isGroup ? c.groupName : (agent?.name || '未知');
+    const icon = c.isGroup ? '👥' : (agent?.icon || '🤖');
+    const color = c.isGroup ? '#E8A838' : (agent?.color || '#07C160');
+    const lastMsg = c.messages?.length ? c.messages[c.messages.length - 1] : null;
+    const preview = lastMsg ? (lastMsg.role === 'user' ? '你: ' : '') + stripMarkdown(lastMsg.content).substr(0, 40) : '暂无消息';
+    const time = lastMsg ? formatTime(lastMsg.timestamp) : '';
+    return `<div class="chat-item" onclick="openConversation('${c.id}')">
+      <div class="chat-avatar" style="background:${color}">${icon}</div>
+      <div class="chat-info">
+        <div class="chat-name">${name}</div>
+        <div class="chat-preview">${preview}</div>
+      </div>
+      <div class="chat-meta">
+        <span class="chat-time">${time}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ==================== NEW CHAT MODAL ====================
+function showNewChatModal() {
+  const agents = state.agents;
+  const html = `
+    <div class="modal-title">新建对话</div>
+    <div class="form-group">
+      <label class="form-label">选择角色</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${agents.map(a => `
+          <div style="padding:12px;border:1px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;" onclick="createConversation('${a.id}')">
+            <div style="font-size:28px;margin-bottom:4px;">${a.icon}</div>
+            <div style="font-size:14px;font-weight:500;">${a.name}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="form-group" style="text-align:center;margin-top:12px;">
+      <button class="btn btn-outline" onclick="showGroupChatModal()">👥 创建群聊</button>
+    </div>
+  `;
+  showModal(html);
+}
+
+function createConversation(agentId) {
+  const agent = state.agents.find(a => a.id === agentId);
+  if (!agent) return;
+  const conv = {
+    id: genId(),
+    agentId: agent.id,
+    isGroup: false,
+    messages: [],
+    intimacy: 50,
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+  state.conversations.push(conv);
+  saveState();
+  closeModal();
+  openConversation(conv.id);
+}
+
+// ==================== GROUP CHAT ====================
+function showGroupChatModal() {
+  const agents = state.agents;
+  const html = `
+    <div class="modal-title">创建群聊</div>
+    <div class="form-group">
+      <label class="form-label">群聊名称</label>
+      <input class="form-input" id="groupName" placeholder="输入群聊名称">
+    </div>
+    <div class="form-group">
+      <label class="form-label">群聊背景设定</label>
+      <textarea class="form-input form-textarea" id="groupBg" placeholder="设定群聊的背景和场景..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">你的身份</label>
+      <input class="form-input" id="groupUserIdentity" placeholder="你在群里的身份，如：项目经理">
+    </div>
+    <div class="form-group">
+      <label class="form-label">选择AI角色（至少2个）</label>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${agents.map(a => `
+          <label style="display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--border);border-radius:8px;cursor:pointer;">
+            <input type="checkbox" value="${a.id}" class="groupAgentCheck">
+            <span style="font-size:24px;">${a.icon}</span>
+            <span style="font-size:14px;">${a.name}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">参与模式</label>
+      <select class="form-input form-select" id="groupMode">
+        <option value="participate">参与模式（可发送消息）</option>
+        <option value="watch">观看模式（仅观看AI对话）</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="createGroupChat()">创建群聊</button>
+  `;
+  showModal(html);
+}
+
+function createGroupChat() {
+  const name = document.getElementById('groupName').value.trim();
+  if (!name) { alert('请输入群聊名称'); return; }
+  const checks = document.querySelectorAll('.groupAgentCheck:checked');
+  const agentIds = Array.from(checks).map(c => c.value);
+  if (agentIds.length < 2) { alert('请至少选择2个AI角色'); return; }
+  const conv = {
+    id: genId(),
+    agentId: agentIds[0],
+    isGroup: true,
+    groupName: name,
+    groupBg: document.getElementById('groupBg').value.trim(),
+    groupUserIdentity: document.getElementById('groupUserIdentity').value.trim() || '用户',
+    groupAgents: agentIds,
+    groupMode: document.getElementById('groupMode').value,
+    groupMuted: [],
+    groupAgentOrder: agentIds,
+    messages: [],
+    intimacy: 50,
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+  state.conversations.push(conv);
+  saveState();
+  closeModal();
+  openConversation(conv.id);
+}
+
+// ==================== CONVERSATION VIEW ====================
+function openConversation(convId) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv) return;
+  state.currentConvId = convId;
+
+  const convView = document.getElementById('convView');
+  convView.classList.add('active');
+  document.getElementById('tabBar').style.display = 'none';
+
+  const agent = state.agents.find(a => a.id === conv.agentId);
+  const title = conv.isGroup ? conv.groupName : (agent?.name || '对话');
+
+  document.getElementById('convTitle').textContent = title;
+
+  // Nav right buttons
+  const navRight = document.getElementById('convNavRight');
+  let rightHtml = '';
+  // Add "Next Message" button for group chats
+  if (conv.isGroup) {
+    rightHtml += `<button class="next-msg-btn" id="nextMsgBtn" onclick="forceNextMessage()">⏭ 下一句</button>`;
+  }
+  rightHtml += `<button class="nav-btn" onclick="showConvSettings('${convId}')">⋯</button>`;
+  navRight.innerHTML = rightHtml;
+  navRight.style.display = 'flex';
+
+  // Display mode
+  if (state.settings.displayMode === 'fullscreen') {
+    convView.classList.add('fullscreen-mode');
+  } else {
+    convView.classList.remove('fullscreen-mode');
+  }
+
+  renderMessages(conv);
+
+  // Focus input and show last message
+  const input = document.getElementById('msgInput');
+  input.value = '';
+  input.focus();
+
+  input.placeholder = '';
+
+  updateSendButton();
+}
+
+function closeConvView() {
+  document.getElementById('convView').classList.remove('active');
+  document.getElementById('tabBar').style.display = 'flex';
+  state.currentConvId = null;
+  if (isGenerating) stopGeneration();
+  renderChatList();
+}
+
+function renderMessages(conv) {
+  const container = document.getElementById('convMessages');
+  let html = '';
+
+  // Group header
+  if (conv.isGroup) {
+    const members = conv.groupAgents.map(aid => {
+      const a = state.agents.find(ag => ag.id === aid);
+      return a ? a.icon + a.name : '';
+    });
+    html += `<div class="group-header-info">
+      <div class="group-members">${members.map(m => `<span class="group-member-tag">${m}</span>`).join('')}</div>
+      ${conv.groupBg ? `<div class="group-bg-text">背景: ${conv.groupBg}</div>` : ''}
+      <div class="group-bg-text">你的身份: ${conv.groupUserIdentity}</div>
+    </div>`;
+  }
+
+  // Intimacy bar
+  if (state.settings.intimacyEnabled && !conv.isGroup) {
+    html += `<div style="padding:4px 12px;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:12px;color:var(--text-secondary);">亲密度</span>
+      <div class="intimacy-bar" style="flex:1;"><div class="intimacy-fill" style="width:${conv.intimacy || 50}%"></div></div>
+      <span class="intimacy-score">${conv.intimacy || 50} ${getIntimacyEmoji(conv.intimacy || 50)}</span>
+      <button class="msg-action-btn" onclick="adjustIntimacyManual('${conv.id}', 5)">+</button>
+      <button class="msg-action-btn" onclick="adjustIntimacyManual('${conv.id}', -5)">−</button>
+    </div>`;
+  }
+
+  // Messages
+  const msgs = conv.messages || [];
+  msgs.forEach((msg, idx) => {
+    const isUser = msg.role === 'user';
+    const agent = !isUser ? state.agents.find(a => a.id === msg.agentId) : null;
+    const icon = isUser ? '👤' : (agent?.icon || '🤖');
+    const color = isUser ? '#4A90D9' : (agent?.color || '#07C160');
+    const senderName = isUser ? (conv.isGroup ? conv.groupUserIdentity : '你') : (agent?.name || 'AI');
+
+    // Branch indicator
+    if (msg.branchFrom !== undefined && msg.branchFrom >= 0) {
+      html += `<div class="branch-indicator">
+        <button class="branch-btn" onclick="branchTo('${conv.id}', ${msg.branchFrom})">↩ 从第${msg.branchFrom + 1}条消息分支</button>
+      </div>`;
+    }
+
+    const content = formatMessageContent(msg.content);
+    html += `<div class="msg-row ${isUser ? 'user' : ''}" data-msg-idx="${idx}">
+      <div class="msg-avatar ${isUser ? 'user-av' : 'ai'}" style="background:${color}">${icon}</div>
+      <div>
+        ${!isUser ? `<div class="msg-sender">${senderName}</div>` : ''}
+        <div class="msg-bubble">${content}</div>
+        <div class="msg-actions">
+          <button class="msg-action-btn" onclick="copyMessage('${conv.id}', ${idx})">📋 复制</button>
+          ${!isUser ? `<button class="msg-action-btn" onclick="branchFrom('${conv.id}', ${idx})">↩ 分支</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  // No typing indicator shown after AI starts responding
+
+  container.innerHTML = html;
+  container.scrollTop = container.scrollHeight;
+}
+
+function formatMessageContent(text) {
+  // Highlight @mentions
+  text = escapeHtml(text);
+  text = text.replace(/@([^\s@]+)/g, '<span class="at-mention">@$1</span>');
+  return text;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ==================== MENTION SYSTEM ====================
+function handleMentionInput(textarea) {
+  const conv = state.conversations.find(c => c.id === state.currentConvId);
+  if (!conv || !conv.isGroup) return;
+
+  const text = textarea.value;
+  const cursorPos = textarea.selectionStart;
+  const textBeforeCursor = text.substring(0, cursorPos);
+  const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+  if (lastAtIndex >= 0) {
+    const afterAt = textBeforeCursor.substring(lastAtIndex + 1);
+    // Check if there's a space before @ or @ is at start, and no space after @ yet
+    const hasSpaceBeforeAt = lastAtIndex === 0 || textBeforeCursor[lastAtIndex - 1] === ' ' || textBeforeCursor[lastAtIndex - 1] === '\n';
+    const noSpaceAfterAt = !afterAt.includes(' ') && !afterAt.includes('\n');
+
+    if (hasSpaceBeforeAt && noSpaceAfterAt) {
+      showMentionDropdown(afterAt, lastAtIndex);
+      return;
+    }
+  }
+
+  hideMentionDropdown();
+}
+
+function showMentionDropdown(filter, atIndex) {
+  const conv = state.conversations.find(c => c.id === state.currentConvId);
+  if (!conv || !conv.isGroup) return;
+
+  const dropdown = document.getElementById('mentionDropdown');
+  const agents = conv.groupAgents
+    .map(aid => state.agents.find(a => a.id === aid))
+    .filter(a => a && a.name.toLowerCase().includes(filter.toLowerCase()));
+
+  if (agents.length === 0) {
+    hideMentionDropdown();
+    return;
+  }
+
+  dropdown.innerHTML = agents.map(a => `
+    <div class="mention-item" onclick="insertMention('${a.id}', '${a.name}', ${atIndex})">
+      <div class="mention-item-avatar" style="background:${a.color}">${a.icon}</div>
+      <span class="mention-item-name">${a.name}</span>
+    </div>
+  `).join('');
+
+  dropdown.classList.add('active');
+}
+
+function hideMentionDropdown() {
+  document.getElementById('mentionDropdown').classList.remove('active');
+}
+
+function insertMention(agentId, agentName, atIndex) {
+  const textarea = document.getElementById('msgInput');
+  const text = textarea.value;
+  const cursorPos = textarea.selectionStart;
+
+  // Find the position after the @ symbol
+  const textBeforeAt = text.substring(0, atIndex);
+  const textAfterCursor = text.substring(cursorPos);
+
+  const newText = textBeforeAt + '@' + agentName + ' ' + textAfterCursor;
+  textarea.value = newText;
+
+  // Store the mentioned agent ID for this message
+  textarea.dataset.mentionAgentId = agentId;
+
+  hideMentionDropdown();
+  autoResize(textarea);
+  textarea.focus();
+}
+
+function getMentionedAgentId(text) {
+  // Check if message contains @AgentName
+  const conv = state.conversations.find(c => c.id === state.currentConvId);
+  if (!conv || !conv.isGroup) return null;
+
+  for (const aid of conv.groupAgents) {
+    const agent = state.agents.find(a => a.id === aid);
+    if (agent && text.includes('@' + agent.name)) {
+      return aid;
+    }
+  }
+  return null;
+}
+
+// ==================== SEND MESSAGE ====================
+function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text || isGenerating) return;
+
+  const conv = state.conversations.find(c => c.id === state.currentConvId);
+  if (!conv) return;
+
+  // Add user message
+  conv.messages.push({
+    role: 'user',
+    content: text,
+    timestamp: Date.now()
+  });
+  conv.updatedAt = Date.now();
+
+  input.value = '';
+  input.dataset.mentionAgentId = '';
+  autoResize(input);
+  updateSendButton();
+  renderMessages(conv);
+  saveState();
+
+  // Send to API
+  generateResponse(conv);
+}
+
+async function generateResponse(conv, options = {}) {
+  const model = state.settings.models.find(m => m.id === state.settings.activeModel);
+  if (!model || !model.apiUrl || !model.apiKey) {
+    conv.messages.push({
+      role: 'assistant',
+      content: '⚠️ 请先在设置中配置API Key和接口地址。',
+      timestamp: Date.now(),
+      agentId: conv.agentId
+    });
+    conv.updatedAt = Date.now();
+    saveState();
+    renderMessages(conv);
+    return;
+  }
+
+  isGenerating = true;
+  abortController = new AbortController();
+  updateSendButton();
+  renderMessages(conv);
+
+  // Build messages with context limit
+  const contextMsgs = buildContextMessages(conv);
+
+  // System prompt
+  const agent = state.agents.find(a => a.id === conv.agentId);
+  let systemPrompt = agent?.system || '你是一个AI助手。';
+  if (state.settings.intimacyEnabled && !conv.isGroup) {
+    systemPrompt = getIntimacyPrefix(conv) + systemPrompt;
+  }
+  if (state.settings.beijingTime) {
+    systemPrompt += `\n当前时间: ${getBeijingTime()}`;
+  }
+
+  // Group chat: add group context
+  if (conv.isGroup) {
+    systemPrompt = `群聊背景: ${conv.groupBg || '无'}\n用户身份: ${conv.groupUserIdentity}\n参与模式: ${conv.groupMode === 'watch' ? '观看模式' : '参与模式'}\n` + systemPrompt;
+  }
+
+  const body = {
+    model: model.subModel || 'gpt-3.5-turbo',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      ...contextMsgs
+    ],
+    stream: true,
+    max_tokens: state.settings.tokenLimit
+  };
+
+  try {
+    const resp = await fetch(model.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${model.apiKey}` },
+      body: JSON.stringify(body),
+      signal: abortController.signal
+    });
+
+    if (!resp.ok) {
+      throw new Error(`API错误: ${resp.status} ${resp.statusText}`);
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let fullContent = '';
+
+    // Add empty assistant message for streaming
+    const aiMsg = {
+      role: 'assistant',
+      content: '',
+      timestamp: Date.now(),
+      agentId: conv.agentId
+    };
+    conv.messages.push(aiMsg);
+    renderMessages(conv);
+
+    // Remove typing indicator if present
+    const typingRow = document.getElementById('typingRow');
+    if (typingRow) typingRow.remove();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n');
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') continue;
+          try {
+            const json = JSON.parse(data);
+            const delta = json.choices?.[0]?.delta?.content;
+            if (delta) {
+              fullContent += delta;
+              aiMsg.content = fullContent;
+              updateStreamingMessage(conv, fullContent);
+            }
+          } catch(e) { /* skip non-json lines */ }
+        }
+      }
+    }
+
+    aiMsg.content = fullContent || '(无回复内容)';
+    conv.updatedAt = Date.now();
+
+    // Adjust intimacy
+    adjustIntimacy(conv, Math.floor(Math.random() * 3) + 1);
+
+    // Group chat: generate responses from other agents using smart selection
+    if (conv.isGroup && conv.groupMode !== 'watch') {
+      await generateGroupResponses(conv, fullContent, options);
+    }
+
+    saveState();
+    // Only update the last bubble content to avoid flash
+    updateStreamingMessage(conv, aiMsg.content);
+
+  } catch(e) {
+    let needRerender = false;
+    if (e.name === 'AbortError') {
+      // User stopped generation
+      const lastMsg = conv.messages[conv.messages.length - 1];
+      if (lastMsg && lastMsg.role === 'assistant' && !lastMsg.content) {
+        conv.messages.pop();
+        needRerender = true;
+      }
+    } else {
+      conv.messages.push({
+        role: 'assistant',
+        content: `❌ 请求失败: ${e.message}`,
+        timestamp: Date.now(),
+        agentId: conv.agentId
+      });
+      adjustIntimacy(conv, -2);
+      needRerender = true;
+    }
+    conv.updatedAt = Date.now();
+    saveState();
+    if (needRerender) renderMessages(conv);
+  } finally {
+    isGenerating = false;
+    abortController = null;
+    updateSendButton();
+  }
+}
+
+async function generateGroupResponses(conv, userMsg, options = {}) {
+  // Determine which agents should respond
+  let responders = [];
+
+  if (options.forceAgentId) {
+    // Force specific agent to respond (from @mention or next message button)
+    responders = [options.forceAgentId];
+  } else if (options.forceNext) {
+    // Force next message - smart select based on last message
+    const lastMsg = conv.messages[conv.messages.length - 1];
+    const lastAgentId = lastMsg?.agentId;
+    const availableAgents = conv.groupAgents.filter(aid => aid !== lastAgentId && !conv.groupMuted?.includes(aid));
+
+    if (availableAgents.length > 0) {
+      // Smart selection: pick agent most relevant to continue the topic
+      responders = [await selectBestResponder(conv, availableAgents, userMsg)];
+    } else {
+      responders = [await selectBestResponder(conv, conv.groupAgents.filter(aid => !conv.groupMuted?.includes(aid)), userMsg)];
+    }
+  } else {
+    // Normal flow: smart selection based on user message
+    responders = await selectResponders(conv, userMsg);
+  }
+
+  // Generate responses for selected agents
+  for (const aid of responders) {
+    if (conv.groupMuted?.includes(aid)) continue;
+
+    const agent = state.agents.find(a => a.id === aid);
+    if (!agent) continue;
+
+    await generateAgentResponse(conv, agent, userMsg);
+  }
+}
+
+async function selectResponders(conv, userMsg) {
+  // Check if user @mentioned a specific agent
+  const mentionedAgentId = getMentionedAgentId(userMsg);
+  if (mentionedAgentId && conv.groupAgents.includes(mentionedAgentId)) {
+    return [mentionedAgentId];
+  }
+
+  // Use AI to decide which agents should respond
+  const model = state.settings.models.find(m => m.id === state.settings.activeModel);
+  if (!model || !model.apiUrl || !model.apiKey) {
+    // Fallback: random selection of 1-2 agents
+    const available = conv.groupAgents.filter(aid => !conv.groupMuted?.includes(aid));
+    const count = Math.min(Math.floor(Math.random() * 2) + 1, available.length);
+    const shuffled = available.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  }
+
+  try {
+    const agents = conv.groupAgents
+      .filter(aid => !conv.groupMuted?.includes(aid))
+      .map(aid => {
+        const a = state.agents.find(ag => ag.id === aid);
+        return { id: aid, name: a?.name, desc: a?.desc };
+      });
+
+    const prompt = `你是一个群聊调度助手。请根据用户消息，决定哪些AI角色应该回复。只输出角色ID，用逗号分隔。
+
+群聊背景: ${conv.groupBg || '无'}
+用户身份: ${conv.groupUserIdentity}
+
+可选角色:
+${agents.map(a => `- ${a.id}: ${a.name} (${a.desc})`).join('\n')}
+
+用户消息: ${userMsg}
+
+请分析这条消息最适合由哪些角色回复（1-3个），只输出角色ID，用逗号分隔。例如: ${agents[0]?.id || 'p1'}`;
+
+    const resp = await fetch(model.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${model.apiKey}` },
+      body: JSON.stringify({
+        model: model.subModel || 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+        stream: false,
+        max_tokens: 100
+      })
+    });
+
+    const json = await resp.json();
+    const reply = json.choices?.[0]?.message?.content?.trim() || '';
+
+    // Parse agent IDs from response
+    const selectedIds = reply.split(/[,，\s]+/).map(s => s.trim()).filter(s => {
+      return agents.some(a => a.id === s);
+    });
+
+    if (selectedIds.length > 0) {
+      return selectedIds.slice(0, 3); // Max 3 responders
+    }
+  } catch(e) { /* fallback to random */ }
+
+  // Fallback: random selection of 1-2 agents
+  const available = conv.groupAgents.filter(aid => !conv.groupMuted?.includes(aid));
+  const count = Math.min(Math.floor(Math.random() * 2) + 1, available.length);
+  const shuffled = available.sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
+
+async function selectBestResponder(conv, availableAgents, lastMsg) {
+  // Simple round-robin if no API
+  const model = state.settings.models.find(m => m.id === state.settings.activeModel);
+  if (!model || !model.apiUrl || !model.apiKey) {
+    return availableAgents[Math.floor(Math.random() * availableAgents.length)];
+  }
+
+  try {
+    const agents = availableAgents.map(aid => {
+      const a = state.agents.find(ag => ag.id === aid);
+      return { id: aid, name: a?.name, desc: a?.desc };
+    });
+
+    const prompt = `请根据群聊上下文，选择最适合接下一句回复的角色。只输出角色ID。
+
+群聊背景: ${conv.groupBg || '无'}
+
+可选角色:
+${agents.map(a => `- ${a.id}: ${a.name} (${a.desc})`).join('\n')}
+
+上一条消息: ${lastMsg}
+
+请分析哪个角色最适合接下一句，只输出角色ID。`;
+
+    const resp = await fetch(model.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${model.apiKey}` },
+      body: JSON.stringify({
+        model: model.subModel || 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+        stream: false,
+        max_tokens: 50
+      })
+    });
+
+    const json = await resp.json();
+    const reply = json.choices?.[0]?.message?.content?.trim() || '';
+
+    const selectedId = reply.split(/[,，\s]+/).map(s => s.trim()).find(s => {
+      return agents.some(a => a.id === s);
+    });
+
+    if (selectedId) return selectedId;
+  } catch(e) { /* fallback */ }
+
+  return availableAgents[Math.floor(Math.random() * availableAgents.length)];
+}
+
+async function generateAgentResponse(conv, agent, contextMsg) {
+  const model = state.settings.models.find(m => m.id === state.settings.activeModel);
+  if (!model || !model.apiUrl || !model.apiKey) return;
+
+  let systemPrompt = agent.system + `\n你是群聊中的角色"${agent.name}"。请对刚才的对话做出回应。群聊背景: ${conv.groupBg || '无'}`;
+  if (state.settings.beijingTime) systemPrompt += `\n当前时间: ${getBeijingTime()}`;
+
+  const contextMsgs = conv.messages.slice(-Math.min(state.settings.contextLimit, conv.messages.length)).map(m => ({
+    role: m.role, content: `[${m.role === 'user' ? conv.groupUserIdentity : state.agents.find(a=>a.id===m.agentId)?.name || 'AI'}]: ${m.content}`
+  }));
+
+  try {
+    const resp = await fetch(model.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${model.apiKey}` },
+      body: JSON.stringify({
+        model: model.subModel || 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...contextMsgs
+        ],
+        stream: false,
+        max_tokens: 1000
+      })
+    });
+    const json = await resp.json();
+    const reply = json.choices?.[0]?.message?.content;
+    if (reply) {
+      conv.messages.push({
+        role: 'assistant',
+        content: reply,
+        timestamp: Date.now(),
+        agentId: agent.id
+      });
+      conv.updatedAt = Date.now();
+      saveState();
+      renderMessages(conv);
+    }
+  } catch(e) { /* skip failed group responses */ }
+}
+
+// ==================== FORCE NEXT MESSAGE ====================
+async function forceNextMessage() {
+  const conv = state.conversations.find(c => c.id === state.currentConvId);
+  if (!conv || !conv.isGroup || isGenerating) return;
+
+  const btn = document.getElementById('nextMsgBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ 生成中...';
+  }
+
+  isGenerating = true;
+  updateSendButton();
+
+  // Get last message for context
+  const lastMsg = conv.messages[conv.messages.length - 1];
+  const contextMsg = lastMsg ? lastMsg.content : '';
+
+  // Generate next message with forceNext option
+  await generateGroupResponses(conv, contextMsg, { forceNext: true });
+
+  isGenerating = false;
+  updateSendButton();
+
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '⏭ 下一句';
+  }
+}
+
+function buildContextMessages(conv) {
+  const msgs = conv.messages || [];
+  const limit = state.settings.contextLimit;
+  const sliced = msgs.slice(-limit);
+  return sliced.map(m => ({
+    role: m.role,
+    content: m.content
+  }));
+}
+
+function updateStreamingMessage(conv, content) {
+  const container = document.getElementById('convMessages');
+  const msgRows = container.querySelectorAll('.msg-row');
+  const lastRow = msgRows[msgRows.length - 1];
+  if (lastRow) {
+    const bubble = lastRow.querySelector('.msg-bubble');
+    if (bubble) {
+      bubble.innerHTML = formatMessageContent(content);
+    }
+  }
+  container.scrollTop = container.scrollHeight;
+}
+
+function stopGeneration() {
+  if (abortController) {
+    abortController.abort();
+  }
+}
+
+function updateSendButton() {
+  const btn = document.getElementById('sendBtn');
+  if (isGenerating) {
+    btn.textContent = '■';
+    btn.className = 'send-btn stop-btn';
+    btn.onclick = stopGeneration;
+    btn.disabled = false;
+  } else {
+    btn.textContent = '➤';
+    btn.className = 'send-btn';
+    btn.onclick = sendMessage;
+    btn.disabled = false;
+  }
+}
+
+// ==================== INPUT HANDLING ====================
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('msgInput');
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // Force newline only via Shift+Enter or send button
+    }
+  });
+});
+
+// ==================== MESSAGE ACTIONS ====================
+function copyMessage(convId, idx) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv || !conv.messages[idx]) return;
+  const text = stripMarkdown(conv.messages[idx].content);
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('已复制');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('已复制');
+  });
+}
+
+function branchFrom(convId, idx) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv) return;
+  // Create new conversation from this point
+  const newConv = {
+    id: genId(),
+    agentId: conv.agentId,
+    isGroup: conv.isGroup,
+    groupName: conv.groupName,
+    groupBg: conv.groupBg,
+    groupUserIdentity: conv.groupUserIdentity,
+    groupAgents: conv.groupAgents,
+    groupMode: conv.groupMode,
+    groupMuted: conv.groupMuted,
+    groupAgentOrder: conv.groupAgentOrder,
+    messages: conv.messages.slice(0, idx + 1).map(m => ({...m})),
+    intimacy: conv.intimacy,
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+  // Mark the branch point
+  if (newConv.messages.length > 0) {
+    newConv.messages[newConv.messages.length - 1].branchFrom = idx;
+  }
+  state.conversations.push(newConv);
+  saveState();
+  closeConvView();
+  openConversation(newConv.id);
+  showToast('已从该节点分支');
+}
+
+function branchTo(convId, idx) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv) return;
+  // Trim messages to the branch point
+  conv.messages = conv.messages.slice(0, idx + 1);
+  conv.updatedAt = Date.now();
+  saveState();
+  renderMessages(conv);
+  showToast('已回溯到该节点');
+}
+
+function adjustIntimacyManual(convId, delta) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv) return;
+  adjustIntimacy(conv, delta);
+  renderMessages(conv);
+}
+
+// ==================== CONVERSATION SETTINGS ====================
+function showConvSettings(convId) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv) return;
+
+  let html = `<div class="modal-title">对话设置</div>`;
+
+  if (state.settings.intimacyEnabled && !conv.isGroup) {
+    html += `
+      <div class="form-group">
+        <label class="form-label">亲密度: ${conv.intimacy || 50}</label>
+        <div class="slider-container">
+          <input type="range" min="1" max="100" value="${conv.intimacy || 50}" onchange="setIntimacy('${convId}', this.value)">
+          <span class="slider-value">${conv.intimacy || 50}</span>
+        </div>
+      </div>`;
+  }
+
+  if (conv.isGroup) {
+    html += `
+      <div class="form-group">
+        <label class="form-label">群聊成员管理</label>
+        ${conv.groupAgents.map(aid => {
+          const a = state.agents.find(ag => ag.id === aid);
+          const isMuted = conv.groupMuted?.includes(aid);
+          return `<div style="display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;">
+            <span>${a?.icon || '🤖'}</span>
+            <span style="flex:1;">${a?.name || '未知'}</span>
+            <button class="btn btn-sm ${isMuted ? 'btn-primary' : 'btn-outline'}" onclick="toggleMute('${convId}','${aid}')">${isMuted ? '取消禁言' : '禁言'}</button>
+            <button class="btn btn-sm btn-danger" onclick="kickMember('${convId}','${aid}')">踢出</button>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  html += `
+    <div class="form-group">
+      <button class="btn btn-outline" style="width:100%;color:var(--danger);border-color:var(--danger);" onclick="clearConversation('${convId}')">清空当前会话</button>
+    </div>
+    <div class="form-group">
+      <button class="btn btn-outline" style="width:100%;color:var(--danger);border-color:var(--danger);" onclick="deleteConversation('${convId}')">删除对话</button>
+    </div>
+  `;
+  showModal(html);
+}
+
+function setIntimacy(convId, val) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv) return;
+  conv.intimacy = parseInt(val);
+  saveState();
+  renderMessages(conv);
+  // Update modal
+  showConvSettings(convId);
+}
+
+function toggleMute(convId, agentId) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv) return;
+  if (!conv.groupMuted) conv.groupMuted = [];
+  const idx = conv.groupMuted.indexOf(agentId);
+  if (idx >= 0) conv.groupMuted.splice(idx, 1);
+  else conv.groupMuted.push(agentId);
+  saveState();
+  showConvSettings(convId);
+}
+
+function kickMember(convId, agentId) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv) return;
+  conv.groupAgents = conv.groupAgents.filter(a => a !== agentId);
+  if (conv.groupAgents.length < 1) {
+    alert('群聊至少需要保留1个成员');
+    return;
+  }
+  saveState();
+  showConvSettings(convId);
+}
+
+function clearConversation(convId) {
+  const conv = state.conversations.find(c => c.id === convId);
+  if (!conv) return;
+  conv.messages = [];
+  conv.updatedAt = Date.now();
+  saveState();
+  closeModal();
+  renderMessages(conv);
+  showToast('会话已清空');
+}
+
+function deleteConversation(convId) {
+  if (!confirm('确定删除此对话？')) return;
+  state.conversations = state.conversations.filter(c => c.id !== convId);
+  saveState();
+  closeModal();
+  closeConvView();
+  showToast('对话已删除');
+}
+
+// ==================== CONTACTS ====================
+function renderContacts() {
+  const list = document.getElementById('contactsList');
+  const agents = state.agents;
+
+  let html = `<div class="section-header">预设角色</div>`;
+  agents.filter(a => a.isPreset).forEach(a => {
+    html += contactItemHtml(a);
+  });
+
+  html += `<div class="section-header">自定义角色</div>`;
+  const custom = agents.filter(a => !a.isPreset);
+  if (custom.length === 0) {
+    html += `<div style="padding:20px;text-align:center;color:var(--text-secondary);font-size:14px;">暂无自定义角色</div>`;
+  }
+  custom.forEach(a => {
+    html += contactItemHtml(a);
+  });
+
+  html += `<div class="section-header">快捷操作</div>
+    <div class="contact-item" onclick="showCreateAgentModal()">
+      <div class="contact-avatar" style="background:#E8A838;">➕</div>
+      <div class="contact-info"><div class="contact-name">创建新角色</div><div class="contact-desc">自定义AI角色名称和设定</div></div>
+      <span class="contact-arrow">›</span>
+    </div>
+    <div class="contact-item" onclick="showGroupChatModal()">
+      <div class="contact-avatar" style="background:#9B59B6;">👥</div>
+      <div class="contact-info"><div class="contact-name">创建群聊</div><div class="contact-desc">拉入多个AI角色进行群聊</div></div>
+      <span class="contact-arrow">›</span>
+    </div>`;
+
+  list.innerHTML = html;
+}
+
+function contactItemHtml(a) {
+  return `<div class="contact-item" onclick="showAgentDetail('${a.id}')">
+    <div class="contact-avatar" style="background:${a.color}">${a.icon}</div>
+    <div class="contact-info">
+      <div class="contact-name">${a.name}</div>
+      <div class="contact-desc">${a.desc}</div>
+    </div>
+    <span class="contact-arrow">›</span>
+  </div>`;
+}
+
+function showAgentDetail(agentId) {
+  const agent = state.agents.find(a => a.id === agentId);
+  if (!agent) return;
+
+  const convs = state.conversations.filter(c => c.agentId === agentId && !c.isGroup);
+  const html = `
+    <div class="modal-title">${agent.icon} ${agent.name}</div>
+    <div class="form-group">
+      <label class="form-label">角色名称</label>
+      <input class="form-input" id="editAgentName" value="${escapeHtml(agent.name)}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">角色描述</label>
+      <input class="form-input" id="editAgentDesc" value="${escapeHtml(agent.desc)}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">角色设定 (System Prompt)</label>
+      <textarea class="form-input form-textarea" id="editAgentSystem" rows="5">${escapeHtml(agent.system)}</textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">图标</label>
+      <input class="form-input" id="editAgentIcon" value="${agent.icon}" maxlength="4">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="saveAgent('${agentId}')">保存</button>
+      ${!agent.isPreset ? `<button class="btn btn-danger" style="flex:1;" onclick="deleteAgent('${agentId}')">删除</button>` : ''}
+    </div>
+    <div class="form-group" style="margin-top:16px;">
+      <label class="form-label">该角色的会话 (${convs.length})</label>
+      ${convs.length === 0 ? '<div style="font-size:13px;color:var(--text-secondary);">暂无会话</div>' :
+        convs.map(c => `<div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;">${c.messages.length}条消息 · ${formatTime(c.updatedAt || c.createdAt)}</span>
+          <button class="btn btn-sm btn-outline" onclick="closeModal();openConversation('${c.id}')">打开</button>
+        </div>`).join('')}
+    </div>
+  `;
+  showModal(html);
+}
+
+function saveAgent(agentId) {
+  const agent = state.agents.find(a => a.id === agentId);
+  if (!agent) return;
+  agent.name = document.getElementById('editAgentName').value.trim() || agent.name;
+  agent.desc = document.getElementById('editAgentDesc').value.trim() || agent.desc;
+  agent.system = document.getElementById('editAgentSystem').value.trim() || agent.system;
+  agent.icon = document.getElementById('editAgentIcon').value.trim() || agent.icon;
+  saveState();
+  closeModal();
+  renderContacts();
+  showToast('角色已保存');
+}
+
+function deleteAgent(agentId) {
+  if (!confirm('确定删除此角色？')) return;
+  state.agents = state.agents.filter(a => a.id !== agentId);
+  state.conversations = state.conversations.filter(c => c.agentId !== agentId);
+  saveState();
+  closeModal();
+  renderContacts();
+  showToast('角色已删除');
+}
+
+function showCreateAgentModal() {
+  const html = `
+    <div class="modal-title">创建新角色</div>
+    <div class="form-group">
+      <label class="form-label">角色名称</label>
+      <input class="form-input" id="newAgentName" placeholder="如：翻译官">
+    </div>
+    <div class="form-group">
+      <label class="form-label">角色描述</label>
+      <input class="form-input" id="newAgentDesc" placeholder="简短描述角色功能">
+    </div>
+    <div class="form-group">
+      <label class="form-label">角色设定 (System Prompt)</label>
+      <textarea class="form-input form-textarea" id="newAgentSystem" rows="5" placeholder="详细的角色行为设定..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">图标 (emoji)</label>
+      <input class="form-input" id="newAgentIcon" placeholder="如：🎯" maxlength="4">
+    </div>
+    <button class="btn btn-primary" onclick="createAgent()">创建角色</button>
+  `;
+  showModal(html);
+}
+
+function createAgent() {
+  const name = document.getElementById('newAgentName').value.trim();
+  if (!name) { alert('请输入角色名称'); return; }
+  const colors = ['#E74C3C','#3498DB','#2ECC71','#F39C12','#9B59B6','#1ABC9C','#E67E22','#34495E'];
+  const agent = {
+    id: genId(),
+    name,
+    desc: document.getElementById('newAgentDesc').value.trim() || '自定义角色',
+    system: document.getElementById('newAgentSystem').value.trim() || '你是一个AI助手。',
+    icon: document.getElementById('newAgentIcon').value.trim() || '🤖',
+    color: colors[Math.floor(Math.random() * colors.length)],
+    isPreset: false
+  };
+  state.agents.push(agent);
+  saveState();
+  closeModal();
+  renderContacts();
+  showToast('角色已创建');
+}
+
+// ==================== DISCOVER ====================
+// Generate AI-driven moments based on each agent's personality
+let aiMomentsCache = null;
+let aiMomentsLastGen = 0;
+
+async function generateAIMoments(forceRefresh) {
+  if (!forceRefresh && aiMomentsCache) return aiMomentsCache;
+  if (forceRefresh) { aiMomentsCache = null; aiMomentsLastGen = 0; }
+
+  const model = state.settings.models.find(m => m.id === state.settings.activeModel);
+  if (!model || !model.apiUrl || !model.apiKey) {
+    // Fallback to static moments if no API configured
+    return DEFAULT_MOMENTS.map((m, i) => ({ ...m, id: 'static-' + i }));
+  }
+
+  const moments = [];
+  const timeLabels = ['刚刚', '5分钟前', '10分钟前', '20分钟前', '30分钟前', '1小时前', '2小时前', '3小时前'];
+  const now = Date.now();
+
+  for (const agent of state.agents) {
+    try {
+      const prompt = `你是"${agent.name}"，角色设定：${agent.system}\n\n请根据你的角色性格和专长，发布一条朋友圈动态（中文，100字以内）。内容要自然、真实，符合你的角色身份。不要提及自己是AI。只输出动态正文，不要加标题或标签。`;
+
+      const resp = await fetch(model.apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${model.apiKey}` },
+        body: JSON.stringify({
+          model: model.subModel || 'gpt-3.5-turbo',
+          messages: [{ role: 'user', content: prompt }],
+          stream: false,
+          max_tokens: 200,
+          temperature: 0.9
+        })
+      });
+      const json = await resp.json();
+      const content = json.choices?.[0]?.message?.content?.trim() || '';
+      if (content) {
+        moments.push({
+          id: 'ai-' + agent.id + '-' + now,
+          agentId: agent.id,
+          content: content.replace(/^["'""''']|["'""''']$/g, ''),
+          quote: null,
+          time: timeLabels[Math.floor(Math.random() * timeLabels.length)],
+          likes: Math.floor(Math.random() * 80) + 10
+        });
+      }
+    } catch (e) { /* skip failed agent */ }
+  }
+
+  if (moments.length === 0) {
+    return DEFAULT_MOMENTS.map((m, i) => ({ ...m, id: 'static-' + i }));
+  }
+
+  aiMomentsCache = moments;
+  aiMomentsLastGen = now;
+  return moments;
+}
+
+async function renderDiscover(forceRefresh) {
+  const content = document.getElementById('discoverContent');
+
+  // Non-force: use cached moments directly, no API call
+  if (!forceRefresh) {
+    const moments = aiMomentsCache || DEFAULT_MOMENTS.map((m, i) => ({ ...m, id: 'static-' + i }));
+    renderMomentsList(content, moments);
+    return;
+  }
+
+  // Force refresh: show loading, then call API
+  content.innerHTML = `
+    <div class="discover-banner">
+      <h2>AI 朋友圈</h2>
+      <p>发现精彩的AI角色动态和对话</p>
+    </div>
+    <div class="section-header">AI 动态</div>
+    <div style="text-align:center;padding:40px;color:var(--text-secondary);">
+      <div style="font-size:28px;margin-bottom:8px;">🔄</div>
+      <div>AI正在生成朋友圈内容...</div>
+    </div>
+  `;
+
+  const moments = await generateAIMoments(forceRefresh);
+  renderMomentsList(content, moments);
+}
+
+function renderMomentsList(content, moments) {
+  let html = `
+    <div class="discover-banner">
+      <h2>AI 朋友圈</h2>
+      <p>发现精彩的AI角色动态和对话</p>
+    </div>
+    <div class="section-header">AI 动态</div>
+  `;
+
+  moments.forEach(m => {
+    const agent = state.agents.find(a => a.id === m.agentId);
+    const liked = state.likedMoments.includes(m.id);
+    html += `
+      <div class="moment-item">
+        <div class="moment-header">
+          <div class="moment-avatar" style="background:${agent?.color || '#07C160'}">${agent?.icon || '🤖'}</div>
+          <div>
+            <div class="moment-name">${agent?.name || 'AI'}</div>
+            <div class="moment-time">${m.time}</div>
+          </div>
+        </div>
+        <div class="moment-content">${escapeHtml(m.content)}</div>
+        ${m.quote ? `<div class="moment-quote">${escapeHtml(m.quote)}</div>` : ''}
+        <div class="moment-actions">
+          <button class="moment-action" onclick="likeMoment('${m.id}')">${liked ? '❤️' : '🤍'} ${m.likes + (liked ? 1 : 0)}</button>
+          <button class="moment-action" onclick="shareMoment('${m.id}')">🔄 分享</button>
+        </div>
+      </div>
+    `;
+  });
+
+  content.innerHTML = html;
+}
+
+function refreshDiscover() {
+  const btn = document.getElementById('refreshDiscoverBtn');
+  if (btn) { btn.style.pointerEvents = 'none'; btn.style.opacity = '0.5'; }
+  renderDiscover(true).then(() => {
+    if (btn) { btn.style.pointerEvents = ''; btn.style.opacity = '1'; }
+  });
+}
+
+function likeMoment(momentId) {
+  const idx = state.likedMoments.indexOf(momentId);
+  if (idx >= 0) state.likedMoments.splice(idx, 1);
+  else state.likedMoments.push(momentId);
+  saveState();
+  renderDiscover();
+}
+
+function shareMoment(momentId) {
+  const m = state.moments.find(x => x.id === momentId);
+  if (!m) return;
+  const agent = state.agents.find(a => a.id === m.agentId);
+  const text = `${agent?.name || 'AI'}: ${m.content}${m.quote ? '\n' + m.quote : ''}`;
+  if (navigator.share) {
+    navigator.share({ title: 'AI动态分享', text });
+  } else {
+    navigator.clipboard.writeText(text);
+    showToast('已复制到剪贴板');
+  }
+}
+
+// ==================== PROFILE / SETTINGS ====================
+function renderProfile() {
+  const content = document.getElementById('profileContent');
+  const model = state.settings.models.find(m => m.id === state.settings.activeModel);
+
+  content.innerHTML = `
+    <div class="profile-header">
+      <div class="profile-avatar">👤</div>
+      <div>
+        <div class="profile-name">AI Chat 用户</div>
+        <div class="profile-id">本地数据 · 隐私安全</div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">模型配置</div>
+      <div class="settings-item" onclick="showModelSettings()">
+        <span class="settings-icon">🤖</span>
+        <span class="settings-label">当前模型</span>
+        <span class="settings-value">${model?.name || '未配置'}</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-item" onclick="showModelSettings()">
+        <span class="settings-icon">🔑</span>
+        <span class="settings-label">API 配置</span>
+        <span class="settings-value">${model?.apiKey ? '已配置' : '未配置'}</span>
+        <span class="settings-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">对话设置</div>
+      <div class="settings-item">
+        <span class="settings-icon">📝</span>
+        <span class="settings-label">上下文记忆条数</span>
+        <span class="settings-value">${state.settings.contextLimit}</span>
+        <span class="settings-arrow" onclick="event.stopPropagation();showContextLimitSettings()">›</span>
+      </div>
+      <div class="settings-item">
+        <span class="settings-icon">📊</span>
+        <span class="settings-label">Token 限制</span>
+        <span class="settings-value">${state.settings.tokenLimit}</span>
+        <span class="settings-arrow" onclick="event.stopPropagation();showTokenLimitSettings()">›</span>
+      </div>
+      <div class="settings-item">
+        <span class="settings-icon">🕐</span>
+        <span class="settings-label">北京时间感知</span>
+        <label class="toggle"><input type="checkbox" ${state.settings.beijingTime ? 'checked' : ''} onchange="toggleBeijingTime(this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">显示设置</div>
+      <div class="settings-item">
+        <span class="settings-icon">🔤</span>
+        <span class="settings-label">字体大小</span>
+        <span class="settings-value">${state.settings.fontSize}px</span>
+        <span class="settings-arrow" onclick="event.stopPropagation();showFontSizeSettings()">›</span>
+      </div>
+      <div class="settings-item" onclick="toggleDisplayMode()">
+        <span class="settings-icon">📱</span>
+        <span class="settings-label">对话展示模式</span>
+        <span class="settings-value">${state.settings.displayMode === 'fullscreen' ? '满屏无头像' : '默认'}</span>
+        <span class="settings-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">高级</div>
+      <div class="settings-item">
+        <span class="settings-icon">💕</span>
+        <span class="settings-label">亲密度系统</span>
+        <label class="toggle"><input type="checkbox" ${state.settings.intimacyEnabled ? 'checked' : ''} onchange="toggleIntimacy(this.checked)"><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">数据</div>
+      <div class="settings-item" onclick="exportData()">
+        <span class="settings-icon">📤</span>
+        <span class="settings-label">导出数据</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-item" onclick="importData()">
+        <span class="settings-icon">📥</span>
+        <span class="settings-label">导入数据</span>
+        <span class="settings-arrow">›</span>
+      </div>
+      <div class="settings-item" onclick="clearAllData()">
+        <span class="settings-icon">🗑️</span>
+        <span class="settings-label" style="color:var(--danger);">清除所有数据</span>
+        <span class="settings-arrow">›</span>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:12px;">
+      AI Chat v1.0 · 所有数据仅存本地
+    </div>
+  `;
+}
+
+// ==================== SETTINGS MODALS ====================
+function showModelSettings() {
+  const models = state.settings.models;
+  let html = `<div class="modal-title">模型配置</div>`;
+
+  models.forEach(m => {
+    const isActive = state.settings.activeModel === m.id;
+    html += `
+      <div style="border:1px solid ${isActive ? 'var(--primary)' : 'var(--border)'};border-radius:10px;padding:14px;margin-bottom:10px;background:${isActive ? 'rgba(7,193,96,0.05)' : 'transparent'};">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-weight:600;">${m.name} ${isActive ? '✅' : ''}</span>
+          <button class="btn btn-sm ${isActive ? 'btn-primary' : 'btn-outline'}" onclick="setActiveModel('${m.id}')">${isActive ? '当前使用' : '选择'}</button>
+        </div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label class="form-label">API 地址</label>
+          <input class="form-input" value="${escapeHtml(m.apiUrl)}" onchange="updateModelField('${m.id}','apiUrl',this.value)" placeholder="https://api.example.com/v1/chat/completions">
+        </div>
+        <div class="form-group" style="margin-bottom:8px;">
+          <label class="form-label">API Key</label>
+          <input class="form-input" type="password" value="${escapeHtml(m.apiKey)}" onchange="updateModelField('${m.id}','apiKey',this.value)" placeholder="sk-...">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">子模型</label>
+          <input class="form-input" value="${escapeHtml(m.subModel)}" onchange="updateModelField('${m.id}','subModel',this.value)" placeholder="gpt-3.5-turbo">
+        </div>
+      </div>
+    `;
+  });
+
+  showModal(html);
+}
+
+function setActiveModel(id) {
+  state.settings.activeModel = id;
+  saveState();
+  showModelSettings();
+  renderProfile();
+  showToast('已切换模型');
+}
+
+function updateModelField(id, field, value) {
+  const model = state.settings.models.find(m => m.id === id);
+  if (model) {
+    model[field] = value;
+    saveState();
+  }
+}
+
+function showContextLimitSettings() {
+  const html = `
+    <div class="modal-title">上下文记忆条数</div>
+    <div class="form-group">
+      <div class="slider-container">
+        <input type="range" min="50" max="500" step="10" value="${state.settings.contextLimit}" id="contextSlider" oninput="document.getElementById('contextVal').textContent=this.value">
+        <span class="slider-value" id="contextVal">${state.settings.contextLimit}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:8px;">条数越多，AI记忆越强，但消耗Token越多</div>
+    </div>
+    <button class="btn btn-primary" onclick="state.settings.contextLimit=parseInt(document.getElementById('contextSlider').value);saveState();closeModal();renderProfile();">确定</button>
+  `;
+  showModal(html);
+}
+
+function showTokenLimitSettings() {
+  const html = `
+    <div class="modal-title">Token 限制</div>
+    <div class="form-group">
+      <div class="slider-container">
+        <input type="range" min="1000" max="200000" step="1000" value="${state.settings.tokenLimit}" id="tokenSlider" oninput="document.getElementById('tokenVal').textContent=this.value">
+        <span class="slider-value" id="tokenVal">${state.settings.tokenLimit}</span>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="state.settings.tokenLimit=parseInt(document.getElementById('tokenSlider').value);saveState();closeModal();renderProfile();">确定</button>
+  `;
+  showModal(html);
+}
+
+function showFontSizeSettings() {
+  const html = `
+    <div class="modal-title">字体大小</div>
+    <div class="form-group">
+      <div class="slider-container">
+        <input type="range" min="14" max="24" step="1" value="${state.settings.fontSize}" id="fontSlider" oninput="document.getElementById('fontVal').textContent=this.value+'px';document.documentElement.style.setProperty('--font-size',this.value+'px');">
+        <span class="slider-value" id="fontVal">${state.settings.fontSize}px</span>
+      </div>
+      <div style="padding:12px;background:var(--bg);border-radius:8px;margin-top:8px;font-size:var(--font-size);">预览文字 AaBbCc 你好世界</div>
+    </div>
+    <button class="btn btn-primary" onclick="state.settings.fontSize=parseInt(document.getElementById('fontSlider').value);saveState();closeModal();renderProfile();">确定</button>
+  `;
+  showModal(html);
+}
+
+function toggleBeijingTime(val) {
+  state.settings.beijingTime = val;
+  saveState();
+  renderProfile();
+}
+
+function toggleDisplayMode() {
+  state.settings.displayMode = state.settings.displayMode === 'fullscreen' ? 'default' : 'fullscreen';
+  saveState();
+  renderProfile();
+  if (state.currentConvId) {
+    const convView = document.getElementById('convView');
+    convView.classList.toggle('fullscreen-mode', state.settings.displayMode === 'fullscreen');
+  }
+}
+
+function toggleIntimacy(val) {
+  state.settings.intimacyEnabled = val;
+  saveState();
+  renderProfile();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ai-chat-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('数据已导出');
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.agents && data.conversations && data.settings) {
+          state = data;
+          saveState();
+          switchTab(state.currentTab);
+          showToast('数据已导入');
+        } else {
+          alert('无效的备份文件');
+        }
+      } catch(e) { alert('文件解析失败'); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function clearAllData() {
+  if (!confirm('确定清除所有数据？此操作不可恢复！')) return;
+  if (!confirm('再次确认：将删除所有对话、角色和设置！')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+// ==================== MODAL ====================
+function showModal(html) {
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+// ==================== TOAST ====================
+function showToast(msg) {
+  const existing = document.querySelector('.toast-msg');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'toast-msg';
+  toast.textContent = msg;
+  toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:#fff;padding:10px 24px;border-radius:8px;font-size:14px;z-index:999;animation:toastIn .3s ease;pointer-events:none;';
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity .3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 1500);
+}
+
+// ==================== NAVIGATION ====================
+function goBack() {
+  if (state.currentConvId) {
+    closeConvView();
+  }
+}
+
+// ==================== INIT ====================
+loadState();
+document.documentElement.style.setProperty('--font-size', state.settings.fontSize + 'px');
+switchTab('Chat');
+
+// Add toast animation
+const style = document.createElement('style');
+style.textContent = '@keyframes toastIn { from { opacity:0; transform:translate(-50%,-50%) scale(.9); } to { opacity:1; transform:translate(-50%,-50%) scale(1); } }';
+document.head.appendChild(style);
+</script>
+</body>
+</html>
