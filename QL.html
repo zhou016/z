@@ -342,14 +342,6 @@ function loadState() {
         appState.groups = [createDefaultGroup('g_default')];
         appState.activeGroupId = 'g_default';
       }
-      // Ensure presets in each group
-      appState.groups.forEach(g => {
-        DEFAULT_PRESETS.forEach(p => {
-          if (!g.members.find(m => m.id === p.id)) {
-            g.members.push({...p});
-          }
-        });
-      });
     }
   } catch(e) { console.error('Load state error:', e); }
 }
