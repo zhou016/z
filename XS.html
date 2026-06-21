@@ -943,20 +943,6 @@ body {
           </div>
 
           <div class="form-group">
-            <label class="form-label">创作模式</label>
-            <div class="model-presets" id="modeSelector">
-              <div class="model-preset active" data-mode="outline" onclick="selectMode('outline')">
-                <div style="font-weight:700;">目录模式</div>
-                <div style="font-size:0.75rem;opacity:0.7;">AI先整体生成目录，再逐章写作</div>
-              </div>
-              <div class="model-preset" data-mode="free" onclick="selectMode('free')">
-                <div style="font-weight:700;">自由模式</div>
-                <div style="font-size:0.75rem;opacity:0.7;">逐章输入标题和内容，灵活创作</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
             <label class="form-label">主题描述 <span style="font-weight:400;color:var(--muted);">（选填）</span></label>
             <textarea class="form-textarea" id="inputDescription" placeholder="请描述书籍的主题、风格、主要角色、故事背景等信息，帮助AI更好地理解您的需求..."></textarea>
           </div>
@@ -1217,11 +1203,24 @@ body {
         </div>
       </div>
       <div class="form-group">
+        <label class="form-label">创作模式</label>
+        <div class="model-presets" id="modalModeSelector">
+          <div class="model-preset active" data-mode="outline" onclick="selectModalMode('outline')">
+            <div style="font-weight:700;">目录模式</div>
+            <div style="font-size:0.75rem;opacity:0.7;">AI先整体生成目录，再逐章写作</div>
+          </div>
+          <div class="model-preset" data-mode="free" onclick="selectModalMode('free')">
+            <div style="font-weight:700;">自由模式</div>
+            <div style="font-size:0.75rem;opacity:0.7;">逐章输入标题和内容，灵活创作</div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
         <label class="form-label">主题描述 <span style="font-weight:400;color:var(--muted);">（选填）</span></label>
         <textarea class="form-textarea" id="modalDescription" placeholder="请描述书籍的主题、风格、主要角色、故事背景等信息..."></textarea>
       </div>
       <div class="text-center">
-        <button class="btn btn-primary" onclick="createNewBookFromModal()">创建并生成目录</button>
+        <button class="btn btn-primary" onclick="createNewBookFromModal()">创建书籍</button>
       </div>
     </div>
   </div>
@@ -1239,6 +1238,41 @@ body {
       <div class="flex gap-1 justify-end">
         <button class="btn btn-secondary" onclick="closeDeleteModal()">取消</button>
         <button class="btn btn-danger" onclick="confirmDeleteBook()">删除</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Book Modal -->
+<div class="modal-overlay" id="editBookModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">编辑书籍</span>
+      <button class="modal-close" onclick="closeEditBookModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">书名 <span class="required">*</span></label>
+        <input type="text" class="form-input" id="editBookTitle" placeholder="请输入书籍名称">
+      </div>
+      <div class="form-group">
+        <div class="flex gap-2 flex-wrap">
+          <div style="flex:1; min-width:140px;">
+            <label class="form-label">章节数 <span class="required">*</span></label>
+            <input type="number" class="form-input" id="editChapterCount" value="10" min="1" max="100">
+          </div>
+          <div style="flex:1; min-width:140px;">
+            <label class="form-label">每章字数 <span class="required">*</span></label>
+            <input type="number" class="form-input" id="editWordCount" value="3000" min="500" max="50000" step="500">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">主题描述 <span style="font-weight:400;color:var(--muted);">（选填）</span></label>
+        <textarea class="form-textarea" id="editDescription" placeholder="请描述书籍的主题、风格、主要角色、故事背景等信息..."></textarea>
+      </div>
+      <div class="text-center">
+        <button class="btn btn-primary" onclick="saveEditBook()">保存修改</button>
       </div>
     </div>
   </div>
@@ -1459,14 +1493,18 @@ function renderSidePanelBooks() {
     const modeLabel = book.mode === 'free' ? '自由' : '目录';
     const modeColor = book.mode === 'free' ? 'var(--accent2)' : 'var(--accent)';
     return `
-      <div style="padding:0.6rem 0.75rem; border-radius:8px; cursor:pointer; margin-bottom:0.35rem; border:1px solid var(--rule); transition:all 0.15s;" onclick="closeSidePanel(); openBook('${book.id}')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--rule)'">
+      <div style="padding:0.6rem 0.75rem; border-radius:8px; margin-bottom:0.35rem; border:1px solid var(--rule); transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--rule)'">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
-          <div style="font-weight:600; font-size:0.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">${escapeHtml(book.title)}</div>
+          <div style="font-weight:600; font-size:0.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; cursor:pointer;" onclick="closeSidePanel(); openBook('${book.id}')">${escapeHtml(book.title)}</div>
           <span style="font-size:0.7rem; padding:2px 6px; border-radius:4px; background:${modeColor}15; color:${modeColor}; margin-left:0.5rem; flex-shrink:0;">${modeLabel}</span>
         </div>
         <div style="font-size:0.75rem; color:var(--muted); margin-bottom:0.4rem;">${total} 章 · ${completed} 已完成</div>
-        <div style="height:4px; background:var(--rule); border-radius:999px; overflow:hidden;">
+        <div style="height:4px; background:var(--rule); border-radius:999px; overflow:hidden; margin-bottom:0.5rem;">
           <div style="height:100%; width:${pct}%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:999px;"></div>
+        </div>
+        <div style="display:flex; gap:0.35rem; justify-content:flex-end;">
+          <button class="btn btn-sm btn-secondary" style="font-size:0.7rem; padding:0.2rem 0.5rem;" onclick="event.stopPropagation(); openEditBookModal('${book.id}')">编辑</button>
+          <button class="btn btn-sm btn-danger" style="font-size:0.7rem; padding:0.2rem 0.5rem;" onclick="event.stopPropagation(); promptDeleteBook('${book.id}', '${escapeHtml(book.title)}')">删除</button>
         </div>
       </div>
     `;
@@ -1511,7 +1549,6 @@ function openBook(bookId) {
     document.getElementById('inputChapterCount').value = book.chapterCount;
     document.getElementById('inputWordCount').value = book.defaultWordCount;
     document.getElementById('inputDescription').value = book.description || '';
-    if (book.mode) selectMode(book.mode);
     showStep(1);
   } else if (book.step === 2) {
     showStep(2);
@@ -1537,16 +1574,16 @@ async function createNewBookFromModal() {
   const count = parseInt(document.getElementById('modalChapterCount').value);
   const words = parseInt(document.getElementById('modalWordCount').value);
   const desc = document.getElementById('modalDescription').value.trim();
+  const mode = getSelectedModalMode();
 
   if (!title) { showToast('请输入书名', 'error'); return; }
   if (!count || count < 1) { showToast('请输入有效的章节数', 'error'); return; }
   if (!words || words < 500) { showToast('每章字数至少500字', 'error'); return; }
 
-  createBook(title, count, words, desc, 'outline');
+  createBook(title, count, words, desc, mode);
   closeNewBookModal();
   document.getElementById('topHeader').style.display = 'flex';
   document.getElementById('homeTopBar').style.display = 'none';
-  selectMode('outline');
   showStep(1);
   document.getElementById('inputBookTitle').value = title;
   document.getElementById('inputChapterCount').value = count;
@@ -1554,6 +1591,46 @@ async function createNewBookFromModal() {
   document.getElementById('inputDescription').value = desc || '';
 
   await startGenerateOutline();
+}
+
+/* ===== Edit Book Modal ===== */
+let editingBookId = null;
+function openEditBookModal(bookId) {
+  const book = state.books.find(b => b.id === bookId);
+  if (!book) return;
+  editingBookId = bookId;
+  document.getElementById('editBookTitle').value = book.title;
+  document.getElementById('editChapterCount').value = book.chapterCount;
+  document.getElementById('editWordCount').value = book.defaultWordCount;
+  document.getElementById('editDescription').value = book.description || '';
+  document.getElementById('editBookModal').classList.add('active');
+}
+function closeEditBookModal() {
+  document.getElementById('editBookModal').classList.remove('active');
+  editingBookId = null;
+}
+function saveEditBook() {
+  if (!editingBookId) return;
+  const book = state.books.find(b => b.id === editingBookId);
+  if (!book) return;
+
+  const title = document.getElementById('editBookTitle').value.trim();
+  const count = parseInt(document.getElementById('editChapterCount').value);
+  const words = parseInt(document.getElementById('editWordCount').value);
+  const desc = document.getElementById('editDescription').value.trim();
+
+  if (!title) { showToast('请输入书名', 'error'); return; }
+  if (!count || count < 1) { showToast('请输入有效的章节数', 'error'); return; }
+  if (!words || words < 500) { showToast('每章字数至少500字', 'error'); return; }
+
+  book.title = title;
+  book.chapterCount = count;
+  book.defaultWordCount = words;
+  book.description = desc;
+  updateBook(book);
+  closeEditBookModal();
+  renderSidePanelBooks();
+  showToast('书籍信息已更新');
 }
 
 /* ===== Delete Book ===== */
@@ -1638,7 +1715,7 @@ async function startGenerateOutline() {
   const count = parseInt(document.getElementById('inputChapterCount').value);
   const words = parseInt(document.getElementById('inputWordCount').value);
   const desc = document.getElementById('inputDescription').value.trim();
-  const mode = getSelectedMode();
+  const mode = book.mode || 'outline';
 
   if (!title) { showToast('请输入书名', 'error'); return; }
   if (!count || count < 1) { showToast('请输入有效的章节数', 'error'); return; }
@@ -1648,7 +1725,6 @@ async function startGenerateOutline() {
   book.chapterCount = count;
   book.defaultWordCount = words;
   book.description = desc;
-  book.mode = mode;
 
   const btn = document.getElementById('btnStart');
   let outlineAbort = null;
@@ -2209,6 +2285,15 @@ function selectMode(mode) {
 }
 function getSelectedMode() {
   const active = document.querySelector('#modeSelector .model-preset.active');
+  return active ? active.dataset.mode : 'outline';
+}
+function selectModalMode(mode) {
+  document.querySelectorAll('#modalModeSelector .model-preset').forEach(el => {
+    el.classList.toggle('active', el.dataset.mode === mode);
+  });
+}
+function getSelectedModalMode() {
+  const active = document.querySelector('#modalModeSelector .model-preset.active');
   return active ? active.dataset.mode : 'outline';
 }
 
