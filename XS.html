@@ -390,6 +390,20 @@ body {
   color: #fff;
 }
 .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  font-size: 1rem;
+  line-height: 1;
+}
+.btn-accent {
+  background: var(--accent-light);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+.btn-accent:hover { background: var(--accent); color: #fff; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ===== Loading Spinner ===== */
@@ -1002,6 +1016,7 @@ body {
           <div class="content-toolbar" id="contentToolbar">
             <div class="content-toolbar-left">
               <button class="btn btn-sm btn-secondary" id="btnReadMode" onclick="openReader()">阅读模式</button>
+              <button class="btn btn-icon btn-sm btn-accent" id="btnConfirmContinue" onclick="nextChapter()" title="确认本章继续">&#10003;</button>
             </div>
             <div class="content-toolbar-right">
               <button class="btn btn-sm btn-secondary" onclick="copyCurrentChapter()">复制本章</button>
