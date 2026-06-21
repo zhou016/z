@@ -943,6 +943,20 @@ body {
           </div>
 
           <div class="form-group">
+            <label class="form-label">创作模式</label>
+            <div class="model-presets" id="modeSelector">
+              <div class="model-preset active" data-mode="outline" onclick="selectMode('outline')">
+                <div style="font-weight:700;">目录模式</div>
+                <div style="font-size:0.75rem;opacity:0.7;">AI先整体生成目录，再逐章写作</div>
+              </div>
+              <div class="model-preset" data-mode="free" onclick="selectMode('free')">
+                <div style="font-weight:700;">自由模式</div>
+                <div style="font-size:0.75rem;opacity:0.7;">逐章输入标题和内容，灵活创作</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
             <label class="form-label">主题描述 <span style="font-weight:400;color:var(--muted);">（选填）</span></label>
             <textarea class="form-textarea" id="inputDescription" placeholder="请描述书籍的主题、风格、主要角色、故事背景等信息，帮助AI更好地理解您的需求..."></textarea>
           </div>
@@ -977,7 +991,7 @@ body {
 
       <!-- Step 3: Writing -->
       <div id="step3" class="step-page hidden">
-        <div class="steps-indicator">
+        <div class="steps-indicator" id="step3Indicator">
           <div class="step-dot completed">1</div>
           <div class="step-line completed"></div>
           <div class="step-dot completed">2</div>
@@ -988,6 +1002,17 @@ body {
           <div class="chapter-meta">
             <span class="chapter-badge" id="currentChapterBadge">第 1 章</span>
             <h2 class="card-title" style="margin:0;" id="currentChapterTitle">章节标题</h2>
+          </div>
+
+          <div id="freeModeInputs" class="hidden">
+            <div class="form-group">
+              <label class="form-label">章节标题 <span class="required">*</span></label>
+              <input type="text" class="form-input" id="freeChapterTitle" placeholder="请输入本章标题">
+            </div>
+            <div class="form-group">
+              <label class="form-label">章节内容摘要 <span class="required">*</span></label>
+              <textarea class="form-textarea" id="freeChapterSummary" placeholder="请描述本章的主要内容、情节发展、关键场景等..."></textarea>
+            </div>
           </div>
 
           <div class="form-group">
@@ -1292,7 +1317,12 @@ function loadState() {
     try {
       const parsed = JSON.parse(raw);
       if (parsed.settings) state.settings = { ...state.settings, ...parsed.settings };
-      if (parsed.books) state.books = parsed.books;
+      if (parsed.books) {
+        state.books = parsed.books.map(book => ({
+          ...book,
+          mode: book.mode || 'outline'
+        }));
+      }
       if (parsed.currentBookId) state.currentBookId = parsed.currentBookId;
       if (parsed.step) state.step = parsed.step;
     } catch(e) {}
@@ -1333,17 +1363,19 @@ function getCurrentBook() {
 function generateId() {
   return 'book_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
-function createBook(title, chapterCount, wordCount, description) {
+function createBook(title, chapterCount, wordCount, description, mode = 'outline') {
   const book = {
     id: generateId(),
     title,
     chapterCount: parseInt(chapterCount),
     defaultWordCount: parseInt(wordCount),
     description,
+    mode: mode,
     chapters: [],
     currentChapterIndex: 0,
     createdAt: Date.now(),
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
+    apiSettings: null
   };
   state.books.unshift(book);
   state.currentBookId = book.id;
@@ -1355,6 +1387,13 @@ function updateBook(book) {
   const idx = state.books.findIndex(b => b.id === book.id);
   if (idx >= 0) state.books[idx] = book;
   saveState();
+}
+
+function getBookApiSettings(book) {
+  if (book && book.apiSettings) {
+    return book.apiSettings;
+  }
+  return state.settings;
 }
 function deleteBook(bookId) {
   state.books = state.books.filter(b => b.id !== bookId);
@@ -1417,9 +1456,14 @@ function renderSidePanelBooks() {
     const completed = book.chapters.filter(c => c.status === 'completed').length;
     const total = book.chapters.length || book.chapterCount;
     const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const modeLabel = book.mode === 'free' ? '自由' : '目录';
+    const modeColor = book.mode === 'free' ? 'var(--accent2)' : 'var(--accent)';
     return `
       <div style="padding:0.6rem 0.75rem; border-radius:8px; cursor:pointer; margin-bottom:0.35rem; border:1px solid var(--rule); transition:all 0.15s;" onclick="closeSidePanel(); openBook('${book.id}')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--rule)'">
-        <div style="font-weight:600; font-size:0.9rem; margin-bottom:0.25rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(book.title)}</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+          <div style="font-weight:600; font-size:0.9rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;">${escapeHtml(book.title)}</div>
+          <span style="font-size:0.7rem; padding:2px 6px; border-radius:4px; background:${modeColor}15; color:${modeColor}; margin-left:0.5rem; flex-shrink:0;">${modeLabel}</span>
+        </div>
         <div style="font-size:0.75rem; color:var(--muted); margin-bottom:0.4rem;">${total} 章 · ${completed} 已完成</div>
         <div style="height:4px; background:var(--rule); border-radius:999px; overflow:hidden;">
           <div style="height:100%; width:${pct}%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:999px;"></div>
@@ -1467,6 +1511,7 @@ function openBook(bookId) {
     document.getElementById('inputChapterCount').value = book.chapterCount;
     document.getElementById('inputWordCount').value = book.defaultWordCount;
     document.getElementById('inputDescription').value = book.description || '';
+    if (book.mode) selectMode(book.mode);
     showStep(1);
   } else if (book.step === 2) {
     showStep(2);
@@ -1476,6 +1521,7 @@ function openBook(bookId) {
     renderWritingPage();
   }
   renderSidebar();
+  loadSettingsUI();
 }
 
 /* ===== New Book Modal ===== */
@@ -1496,10 +1542,11 @@ async function createNewBookFromModal() {
   if (!count || count < 1) { showToast('请输入有效的章节数', 'error'); return; }
   if (!words || words < 500) { showToast('每章字数至少500字', 'error'); return; }
 
-  createBook(title, count, words, desc);
+  createBook(title, count, words, desc, 'outline');
   closeNewBookModal();
   document.getElementById('topHeader').style.display = 'flex';
   document.getElementById('homeTopBar').style.display = 'none';
+  selectMode('outline');
   showStep(1);
   document.getElementById('inputBookTitle').value = title;
   document.getElementById('inputChapterCount').value = count;
@@ -1591,6 +1638,7 @@ async function startGenerateOutline() {
   const count = parseInt(document.getElementById('inputChapterCount').value);
   const words = parseInt(document.getElementById('inputWordCount').value);
   const desc = document.getElementById('inputDescription').value.trim();
+  const mode = getSelectedMode();
 
   if (!title) { showToast('请输入书名', 'error'); return; }
   if (!count || count < 1) { showToast('请输入有效的章节数', 'error'); return; }
@@ -1600,25 +1648,43 @@ async function startGenerateOutline() {
   book.chapterCount = count;
   book.defaultWordCount = words;
   book.description = desc;
+  book.mode = mode;
 
   const btn = document.getElementById('btnStart');
   let outlineAbort = null;
   setLoading(btn, true);
 
   try {
-    const outline = await callAIForOutline(title, desc, count, function(ctrl) { outlineAbort = ctrl; });
-    book.chapters = outline.map((item, i) => ({
-      title: item.title || `第${i+1}章`,
-      summary: item.summary || '',
-      content: '',
-      wordTarget: words,
-      status: 'pending'
-    }));
-    book.step = 2;
-    updateBook(book);
-    renderOutline();
-    showStep(2);
-    showToast('目录生成成功！');
+    if (mode === 'free') {
+      book.chapters = [{
+        title: '第一章',
+        summary: '',
+        content: '',
+        wordTarget: words,
+        status: 'pending'
+      }];
+      book.currentChapterIndex = 0;
+      book.step = 3;
+      updateBook(book);
+      showStep(3);
+      renderWritingPage();
+      renderSidebar();
+      showToast('已进入自由模式，请编辑第一章');
+    } else {
+      const outline = await callAIForOutline(title, desc, count, function(ctrl) { outlineAbort = ctrl; });
+      book.chapters = outline.map((item, i) => ({
+        title: item.title || `第${i+1}章`,
+        summary: item.summary || '',
+        content: '',
+        wordTarget: words,
+        status: 'pending'
+      }));
+      book.step = 2;
+      updateBook(book);
+      renderOutline();
+      showStep(2);
+      showToast('目录生成成功！');
+    }
   } catch (err) {
     showToast('生成失败: ' + err.message, 'error');
   } finally {
@@ -1627,7 +1693,8 @@ async function startGenerateOutline() {
 }
 
 async function callAIForOutline(title, description, count, setAbort) {
-  const settings = state.settings;
+  const book = getCurrentBook();
+  const settings = getBookApiSettings(book);
   if (!settings.apiKey) {
     return generateMockOutline(title, count);
   }
@@ -1746,6 +1813,31 @@ function renderWritingPage() {
   document.getElementById('chapterWordTarget').value = ch.wordTarget || book.defaultWordCount;
   document.getElementById('chapterFeedback').value = '';
 
+  const freeModeInputs = document.getElementById('freeModeInputs');
+  const freeTitle = document.getElementById('freeChapterTitle');
+  const freeSummary = document.getElementById('freeChapterSummary');
+
+  const step3Indicator = document.getElementById('step3Indicator');
+  if (book.mode === 'free') {
+    freeModeInputs.classList.remove('hidden');
+    freeTitle.value = ch.title || '';
+    freeSummary.value = ch.summary || '';
+    step3Indicator.innerHTML = `
+      <div class="step-dot completed">1</div>
+      <div class="step-line completed"></div>
+      <div class="step-dot active">2</div>
+    `;
+  } else {
+    freeModeInputs.classList.add('hidden');
+    step3Indicator.innerHTML = `
+      <div class="step-dot completed">1</div>
+      <div class="step-line completed"></div>
+      <div class="step-dot completed">2</div>
+      <div class="step-line completed"></div>
+      <div class="step-dot active">3</div>
+    `;
+  }
+
   const display = document.getElementById('chapterContentDisplay');
   const btnNext = document.getElementById('btnNextChapter');
   const btnGen = document.getElementById('btnGenerateChapter');
@@ -1781,6 +1873,16 @@ async function generateChapter() {
   const ch = book.chapters[book.currentChapterIndex];
   const feedback = document.getElementById('chapterFeedback').value.trim();
   const wordTarget = parseInt(document.getElementById('chapterWordTarget').value) || book.defaultWordCount;
+
+  if (book.mode === 'free') {
+    const freeTitle = document.getElementById('freeChapterTitle').value.trim();
+    const freeSummary = document.getElementById('freeChapterSummary').value.trim();
+    if (!freeTitle) { showToast('请输入章节标题', 'error'); return; }
+    if (!freeSummary) { showToast('请输入章节内容摘要', 'error'); return; }
+    ch.title = freeTitle;
+    ch.summary = freeSummary;
+  }
+
   ch.wordTarget = wordTarget;
   ch.status = 'writing';
   updateBook(book);
@@ -1794,7 +1896,8 @@ async function generateChapter() {
   display.textContent = '';
 
   try {
-    if (state.settings.apiKey) {
+    const settings = getBookApiSettings(book);
+    if (settings.apiKey) {
       await callAIForChapterStream(ch, feedback, wordTarget, book, display);
     } else {
       const content = generateMockChapter(ch, wordTarget);
@@ -1827,7 +1930,7 @@ async function generateChapter() {
 
 /* ===== Streaming with Typewriter ===== */
 async function callAIForChapterStream(chapter, feedback, wordTarget, book, displayEl) {
-  const settings = state.settings;
+  const settings = getBookApiSettings(book);
   const prevChapters = book.chapters.slice(0, book.currentChapterIndex)
     .filter(c => c.content)
     .map(c => `《${c.title}》\n${c.content.substring(0, 300)}...`)
@@ -1934,6 +2037,20 @@ function nextChapter() {
     renderWritingPage();
     renderSidebar();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (book.mode === 'free' && book.chapters.length < book.chapterCount) {
+    book.chapters.push({
+      title: `第${book.chapters.length + 1}章`,
+      summary: '',
+      content: '',
+      wordTarget: book.defaultWordCount,
+      status: 'pending'
+    });
+    book.currentChapterIndex++;
+    updateBook(book);
+    renderWritingPage();
+    renderSidebar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast(`请编辑第 ${book.currentChapterIndex + 1} 章`);
   } else {
     showStep('complete');
   }
@@ -2084,6 +2201,17 @@ function resetApp() {
   showToast('已重置');
 }
 
+/* ===== Mode Selection ===== */
+function selectMode(mode) {
+  document.querySelectorAll('#modeSelector .model-preset').forEach(el => {
+    el.classList.toggle('active', el.dataset.mode === mode);
+  });
+}
+function getSelectedMode() {
+  const active = document.querySelector('#modeSelector .model-preset.active');
+  return active ? active.dataset.mode : 'outline';
+}
+
 /* ===== Settings ===== */
 function switchSettingsTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -2092,7 +2220,13 @@ function switchSettingsTab(tab) {
   document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
 }
 function selectPreset(name) {
-  state.settings.preset = name;
+  const book = getCurrentBook();
+  if (book) {
+    if (!book.apiSettings) book.apiSettings = {};
+    book.apiSettings.preset = name;
+  } else {
+    state.settings.preset = name;
+  }
   const preset = PRESETS[name];
   if (preset) {
     document.getElementById('homeBaseUrl').value = preset.baseUrl;
@@ -2102,7 +2236,8 @@ function selectPreset(name) {
   });
 }
 function loadSettingsUI() {
-  const s = state.settings;
+  const book = getCurrentBook();
+  const s = getBookApiSettings(book);
   document.getElementById('homeBaseUrl').value = s.baseUrl || '';
   document.getElementById('homeApiKey').value = s.apiKey || '';
   document.getElementById('homeCustomUrl').value = s.baseUrl || '';
@@ -2189,16 +2324,40 @@ function saveSettingsFromHome(source) {
   const selectId = isCustom ? 'homeCustomModelSelect' : 'homeModelSelect';
   const model = document.getElementById(selectId).value.trim();
 
-  state.settings.baseUrl = baseUrl;
-  state.settings.apiKey = apiKey;
-  if (model) state.settings.model = model;
-  saveState();
-  showToast('设置已保存');
+  const book = getCurrentBook();
+  if (book) {
+    book.apiSettings = {
+      preset: isCustom ? 'custom' : (state.settings.preset || 'deepseek'),
+      baseUrl: baseUrl,
+      apiKey: apiKey,
+      model: model || state.settings.model,
+      systemPrompt: state.settings.systemPrompt
+    };
+    updateBook(book);
+    showToast('已保存到当前书籍');
+  } else {
+    state.settings.baseUrl = baseUrl;
+    state.settings.apiKey = apiKey;
+    if (model) state.settings.model = model;
+    saveState();
+    showToast('设置已保存到全局');
+  }
 }
 function savePromptOnly() {
-  state.settings.systemPrompt = document.getElementById('homeSystemPrompt').value.trim();
-  saveState();
-  showToast('提示词已保存');
+  const prompt = document.getElementById('homeSystemPrompt').value.trim();
+  const book = getCurrentBook();
+  if (book) {
+    if (!book.apiSettings) {
+      book.apiSettings = {};
+    }
+    book.apiSettings.systemPrompt = prompt;
+    updateBook(book);
+    showToast('提示词已保存到当前书籍');
+  } else {
+    state.settings.systemPrompt = prompt;
+    saveState();
+    showToast('提示词已保存到全局');
+  }
 }
 
 /* ===== Test Connection ===== */
@@ -2211,7 +2370,9 @@ async function testConnectionFromHome(source) {
     ? document.getElementById('homeCustomKey').value.trim()
     : document.getElementById('homeApiKey').value.trim();
   const selectId = isCustom ? 'homeCustomModelSelect' : 'homeModelSelect';
-  const model = document.getElementById(selectId).value.trim() || state.settings.model;
+  const book = getCurrentBook();
+  const bookSettings = getBookApiSettings(book);
+  const model = document.getElementById(selectId).value.trim() || bookSettings.model || state.settings.model;
 
   if (!baseUrl) { showToast('请先填写 API Base URL', 'error'); return; }
   if (!apiKey) { showToast('请先填写 API Key', 'error'); return; }
