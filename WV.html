@@ -395,7 +395,8 @@
   .chat-container {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
   }
   .chat-messages {
     flex: 1;
@@ -810,11 +811,13 @@
       <span onclick="showChatFontSizeSettings()" style="font-size:15px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);font-weight:600;">Aa</span>
     </div>
   </div>
-  <div class="chat-container">
-    <div class="chat-messages" id="chat-messages"></div>
-    <div class="chat-input-area">
-      <textarea id="chat-input" placeholder="输入消息..." rows="1" oninput="autoResizeChatInput(this)" onkeydown="handleChatInputKeydown(event)"></textarea>
-      <button class="btn" onclick="sendMessage()">➤</button>
+  <div class="app-content" style="padding:0;display:flex;flex-direction:column;">
+    <div class="chat-container">
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-area">
+        <textarea id="chat-input" placeholder="输入消息..." rows="1" oninput="autoResizeChatInput(this)" onkeydown="handleChatInputKeydown(event)"></textarea>
+        <button class="btn" onclick="sendMessage()">➤</button>
+      </div>
     </div>
   </div>
 </div>
