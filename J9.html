@@ -614,25 +614,65 @@
 
   function renderChatHistory() {
     aiMessages.innerHTML = chatHistory.map(m =>
-      `<div class="ai-msg ${m.role}">${formatMessage(m.content)}</div>`
+      `<div class="ai-msg ${m.role}">${formatMessage(m.content, m.role)}</div>`
     ).join('');
     aiMessages.querySelectorAll('.ai-msg').forEach(el => {
       const idx = Array.from(aiMessages.querySelectorAll('.ai-msg')).indexOf(el);
-      if (chatHistory[idx]) addCopyBtn(el, chatHistory[idx].content);
+      if (chatHistory[idx]) {
+        const msg = chatHistory[idx];
+        addCopyBtn(el, getMessageDisplayText(msg.content, msg.role));
+      }
     });
     aiMessages.scrollTop = aiMessages.scrollHeight;
   }
 
-  function formatMessage(text) {
-    // Simple markdown-like formatting
-    let html = escapeHtml(text);
-    // Code blocks
-    html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
-    // Inline code
-    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-    // Bold
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    // Line breaks
+  function stripMarkdown(text) {
+    const protectedRanges = [];
+    const protectRange = match => {
+      const key = `\uE000${protectedRanges.length}\uE001`;
+      protectedRanges.push(match);
+      return key;
+    };
+
+    const restoreRanges = str => protectedRanges.reduce(
+      (result, value, index) => result.replaceAll(`\uE000${index}\uE001`, value),
+      str
+    );
+
+    const plain = String(text || '')
+      .replace(/\r\n?/g, '\n')
+      .replace(/([\p{L}\p{N}])\s*-\s*([\p{L}\p{N}])/gu, protectRange)
+      .replace(/```[\w-]*\n?([\s\S]*?)```/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+      .replace(/^\s{0,3}>\s?/gm, '')
+      .replace(/^\s*[-*_]{3,}\s*$/gm, '')
+      .replace(/^\s*([-*+]|\d+[.)])\s+/gm, '')
+      .replace(/(\*\*|__)(.*?)\1/g, '$2')
+      .replace(/(\*|_)(.*?)\1/g, '$2')
+      .replace(/~~(.*?)~~/g, '$1')
+      .replace(/^\s*\|?(.*?)\|?\s*$/gm, (line, content) => {
+        if (!line.includes('|')) return line;
+        if (/^:?-{3,}:?(\s*\|\s*:?-{3,}:?)*$/.test(content.trim())) return '';
+        return content.split('|').map(s => s.trim()).filter(Boolean).join('  ');
+      })
+      .split('\n')
+      .map(line => line.trim())
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    return restoreRanges(plain);
+  }
+
+  function getMessageDisplayText(text, role) {
+    return role === 'assistant' ? stripMarkdown(text) : String(text || '');
+  }
+
+  function formatMessage(text, role) {
+    let html = escapeHtml(getMessageDisplayText(text, role));
     html = html.replace(/\n/g, '<br>');
     return html;
   }
@@ -642,8 +682,8 @@
     saveChatHistory();
     const div = document.createElement('div');
     div.className = 'ai-msg ' + role;
-    div.innerHTML = formatMessage(content);
-    addCopyBtn(div, content);
+    div.innerHTML = formatMessage(content, role);
+    addCopyBtn(div, getMessageDisplayText(content, role));
     aiMessages.appendChild(div);
     aiMessages.scrollTop = aiMessages.scrollHeight;
   }
@@ -657,7 +697,7 @@
       last.dataset.streaming = '1';
       aiMessages.appendChild(last);
     }
-    last.innerHTML = formatMessage(text);
+    last.innerHTML = formatMessage(text, 'assistant');
     aiMessages.scrollTop = aiMessages.scrollHeight;
   }
 
@@ -667,7 +707,7 @@
     if (last) {
       delete last.dataset.streaming;
       if (!last.querySelector('.ai-msg-copy') && fullResponse) {
-        addCopyBtn(last, fullResponse);
+        addCopyBtn(last, getMessageDisplayText(fullResponse, 'assistant'));
       }
     }
     isStreaming = false;
