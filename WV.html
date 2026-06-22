@@ -425,18 +425,41 @@
     color: var(--ink);
     border-bottom-left-radius: 4px;
   }
+  /* 满屏气泡模式 */
+  .chat-messages.full-width .chat-bubble {
+    max-width: 100%;
+    width: 100%;
+    padding: 10px 16px;
+  }
   .chat-input-area {
     display: flex;
     gap: 8px;
     padding: 10px 12px;
     border-top: 1px solid var(--border);
     background: var(--chat-input-bg);
+    align-items: flex-end;
   }
-  .chat-input-area input {
+  .chat-input-area textarea {
     flex: 1;
     margin-bottom: 0;
     border-radius: 20px;
     padding: 10px 16px;
+    min-height: 40px;
+    max-height: 120px;
+    resize: none;
+    overflow-y: auto;
+    line-height: 20px;
+    font-family: inherit;
+    font-size: 15px;
+    border: 1px solid var(--border);
+    background: var(--surface-solid);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+  .chat-input-area textarea:focus {
+    border-color: var(--accent);
   }
   .chat-input-area .btn {
     width: 40px; height: 40px;
@@ -782,12 +805,15 @@
   <div class="app-header">
     <div class="back-btn" onclick="showApp('app-wechat')">←</div>
     <div class="title" id="chat-title">聊天</div>
-    <div class="right-btn"></div>
+    <div class="right-btn" style="gap:5px;width:auto;">
+      <span id="bubble-mode-btn" onclick="toggleBubbleMode()" style="font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="切换气泡模式">💬</span>
+      <span onclick="showChatFontSizeSettings()" style="font-size:15px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);font-weight:600;">Aa</span>
+    </div>
   </div>
   <div class="chat-container">
     <div class="chat-messages" id="chat-messages"></div>
     <div class="chat-input-area">
-      <input type="text" id="chat-input" placeholder="输入消息..." onkeypress="if(event.key==='Enter')sendMessage()">
+      <textarea id="chat-input" placeholder="输入消息..." rows="1" oninput="autoResizeChatInput(this)" onkeydown="handleChatInputKeydown(event)"></textarea>
       <button class="btn" onclick="sendMessage()">➤</button>
     </div>
   </div>
@@ -862,14 +888,6 @@
         </div>
         <div class="toggle" id="toggle-theme"></div>
       </div>
-      <div class="setting-item" onclick="showFontSizeSettings()">
-        <div class="setting-icon" style="background:#af52de;">🔤</div>
-        <div class="setting-info">
-          <div class="label">对话字号</div>
-          <div class="desc">调节聊天字体大小</div>
-        </div>
-        <span class="arrow" id="font-size-display">17 ›</span>
-      </div>
       <div class="setting-item" onclick="toggleAITime()">
         <div class="setting-icon" style="background:#5856d6;">🕐</div>
         <div class="setting-info">
@@ -941,7 +959,7 @@
 <!-- 字号设置 -->
 <div class="app-page" id="app-fontsize-settings">
   <div class="app-header">
-    <div class="back-btn" onclick="showApp('app-settings')">←</div>
+    <div class="back-btn" onclick="showApp('app-wechat-chat')">←</div>
     <div class="title">对话字号</div>
     <div class="right-btn"></div>
   </div>
@@ -1364,11 +1382,6 @@ function initData() {
     document.getElementById('status-bar').classList.add('hidden');
     document.getElementById('toggle-statusbar').classList.add('on');
   }
-
-  // 应用对话字号设置
-  const chatFontSize = parseInt(localStorage.getItem('chatFontSize')) || 17;
-  const fontDisplay = document.getElementById('font-size-display');
-  if (fontDisplay) fontDisplay.textContent = chatFontSize + ' ›';
 
   // 应用AI实时时间设置
   if (localStorage.getItem('aiRealTime') === 'true') {
@@ -2379,14 +2392,33 @@ function renderChatMessages() {
   const container = document.getElementById('chat-messages');
   const chats = JSON.parse(localStorage.getItem('chats')) || {};
   const messages = chats[currentChatContact.id] || [];
+  const size = parseInt(localStorage.getItem('chatFontSize')) || 17;
 
   container.innerHTML = messages.map(m => `
-    <div class="chat-bubble ${m.sender === 'me' ? 'sent' : 'received'}">
+    <div class="chat-bubble ${m.sender === 'me' ? 'sent' : 'received'}" style="font-size:${size}px;">
       ${escapeHtml(m.content)}
     </div>
   `).join('');
 
+  applyBubbleMode();
+
   container.scrollTop = container.scrollHeight;
+}
+
+function autoResizeChatInput(textarea) {
+  textarea.style.height = 'auto';
+  const lineHeight = 20;
+  const maxLines = 5;
+  const maxHeight = lineHeight * maxLines + 20;
+  const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+  textarea.style.height = newHeight + 'px';
+}
+
+function handleChatInputKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
 }
 
 function sendMessage() {
@@ -2405,6 +2437,7 @@ function sendMessage() {
 
   localStorage.setItem('chats', JSON.stringify(chats));
   input.value = '';
+  input.style.height = '40px';
   renderChatMessages();
 
   // AI回复
@@ -2689,7 +2722,7 @@ function saveAISettings() {
   showApp('app-settings');
 }
 
-function showFontSizeSettings() {
+function showChatFontSizeSettings() {
   const size = parseInt(localStorage.getItem('chatFontSize')) || 17;
   document.getElementById('font-size-slider').value = size;
   document.getElementById('font-size-value').textContent = size;
@@ -2709,10 +2742,25 @@ function onFontSizeChange(value) {
 
 function applyChatFontSize() {
   const size = parseInt(localStorage.getItem('chatFontSize')) || 17;
-  const bubbles = document.querySelectorAll('.chat-bubble');
+  const bubbles = document.querySelectorAll('#chat-messages .chat-bubble');
   bubbles.forEach(b => b.style.fontSize = size + 'px');
-  const display = document.getElementById('font-size-display');
-  if (display) display.textContent = size + ' ›';
+}
+
+function toggleBubbleMode() {
+  const container = document.getElementById('chat-messages');
+  const isFullWidth = container.classList.toggle('full-width');
+  localStorage.setItem('bubbleFullWidth', isFullWidth ? 'true' : 'false');
+  const btn = document.getElementById('bubble-mode-btn');
+  if (btn) btn.textContent = isFullWidth ? '▣' : '💬';
+}
+
+function applyBubbleMode() {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  const isFullWidth = localStorage.getItem('bubbleFullWidth') === 'true';
+  container.classList.toggle('full-width', isFullWidth);
+  const btn = document.getElementById('bubble-mode-btn');
+  if (btn) btn.textContent = isFullWidth ? '▣' : '💬';
 }
 
 function toggleAITime() {
