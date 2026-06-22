@@ -819,6 +819,7 @@
     <div class="back-btn" onclick="showApp('app-wechat')">←</div>
     <div class="title" id="chat-title">聊天</div>
     <div class="right-btn" style="gap:5px;width:auto;">
+      <span onclick="clearCurrentChat()" style="font-size:13px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="清空聊天记录">🗑️</span>
       <span id="bubble-mode-btn" onclick="toggleBubbleMode()" style="font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="切换气泡模式">💬</span>
       <span onclick="showChatFontSizeSettings()" style="font-size:15px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);font-weight:600;">Aa</span>
     </div>
@@ -2376,6 +2377,16 @@ function saveContact() {
   localStorage.setItem('contacts', JSON.stringify(contacts));
   showApp('app-contacts');
   renderContacts();
+}
+
+function clearCurrentChat() {
+  if (!currentChatContact) return;
+  if (!confirm('确定清空当前会话的聊天记录？\n（角色设定和模型配置会保留）')) return;
+
+  const chats = JSON.parse(localStorage.getItem('chats')) || {};
+  delete chats[currentChatContact.id];
+  localStorage.setItem('chats', JSON.stringify(chats));
+  renderChatMessages();
 }
 
 function deleteContact() {
