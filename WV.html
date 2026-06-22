@@ -911,6 +911,14 @@
         </div>
         <div class="toggle" id="toggle-aitime"></div>
       </div>
+      <div class="setting-item" onclick="showContextSettings()">
+        <div class="setting-icon" style="background:#af52de;">💭</div>
+        <div class="setting-info">
+          <div class="label">上下文记忆</div>
+          <div class="desc">AI记住的对话条数</div>
+        </div>
+        <span class="arrow" id="context-size-display">50 ›</span>
+      </div>
     </div>
     <div class="setting-group">
       <div class="setting-item" onclick="showAISettings()">
@@ -990,6 +998,27 @@
       <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">预览</div>
       <div class="chat-bubble sent" id="font-preview-sent" style="margin-bottom:10px;">这是发送的消息预览</div>
       <div class="chat-bubble received" id="font-preview-received">这是接收的消息预览</div>
+    </div>
+  </div>
+</div>
+
+<!-- 上下文记忆设置 -->
+<div class="app-page" id="app-context-settings">
+  <div class="app-header">
+    <div class="back-btn" onclick="showApp('app-settings')">←</div>
+    <div class="title">上下文记忆</div>
+    <div class="right-btn"></div>
+  </div>
+  <div class="app-content">
+    <div class="ai-setting-row">
+      <label>记忆条数：<span id="context-size-value">50</span>条</label>
+      <input type="range" id="context-size-slider" min="50" max="500" step="10" value="50" oninput="onContextSizeChange(this.value)">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px;">
+        <span>50</span><span>500</span>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:20px;">
+      AI会记住最近N条对话作为上下文，帮助保持对话连贯性。数值越大，AI对历史对话的记忆越完整，但会消耗更多Token。
     </div>
   </div>
 </div>
@@ -1375,6 +1404,9 @@ function initData() {
   if (!localStorage.getItem('hideStatusbar')) {
     localStorage.setItem('hideStatusbar', 'false');
   }
+  if (!localStorage.getItem('chatContextSize')) {
+    localStorage.setItem('chatContextSize', '50');
+  }
 
   aiConfig = JSON.parse(localStorage.getItem('aiConfig')) || {};
   totalPages = parseInt(localStorage.getItem('pagesCount')) || 2;
@@ -1402,6 +1434,11 @@ function initData() {
   if (localStorage.getItem('aiRealTime') === 'true') {
     document.getElementById('toggle-aitime').classList.add('on');
   }
+
+  // 应用上下文记忆设置
+  const ctxSize = parseInt(localStorage.getItem('chatContextSize')) || 50;
+  const ctxDisplay = document.getElementById('context-size-display');
+  if (ctxDisplay) ctxDisplay.textContent = ctxSize + ' ›';
 }
 
 // ==================== 桌面渲染 ====================
@@ -2463,6 +2500,9 @@ async function sendAIReply(userMsg) {
   const chats = JSON.parse(localStorage.getItem('chats')) || {};
   if (!chats[currentChatContact.id]) chats[currentChatContact.id] = [];
 
+  // 获取当前对话历史（不包含刚发送的用户消息）
+  const history = chats[currentChatContact.id];
+
   // 显示加载中
   const container = document.getElementById('chat-messages');
   const loadingId = 'loading-' + Date.now();
@@ -2473,7 +2513,8 @@ async function sendAIReply(userMsg) {
   container.appendChild(loadingDiv);
   container.scrollTop = container.scrollHeight;
 
-  const reply = await callAI(currentChatContact.role, userMsg);
+  // 传入历史消息作为上下文
+  const reply = await callAI(currentChatContact.role, userMsg, history);
 
   document.getElementById(loadingId)?.remove();
 
@@ -2501,7 +2542,7 @@ function getBeijingTimeString() {
   return `${yyyy}年${mm}月${dd}日 星期${week} ${hh}:${mi}`;
 }
 
-async function callAI(systemPrompt, userMessage) {
+async function callAI(systemPrompt, userMessage, historyMessages) {
   const config = JSON.parse(localStorage.getItem('aiConfig')) || {};
 
   if (!config.key) {
@@ -2521,6 +2562,24 @@ async function callAI(systemPrompt, userMessage) {
     finalSystemPrompt += `\n\n【当前时间】${getBeijingTimeString()}（北京时间）。你可以根据时间信息来回答与时间相关的问题。`;
   }
 
+  // 构建消息数组
+  const messages = [{ role: 'system', content: finalSystemPrompt }];
+
+  // 添加历史消息
+  if (historyMessages && historyMessages.length > 0) {
+    const contextSize = parseInt(localStorage.getItem('chatContextSize')) || 50;
+    const recentMessages = historyMessages.slice(-contextSize);
+    recentMessages.forEach(m => {
+      messages.push({
+        role: m.sender === 'me' ? 'user' : 'assistant',
+        content: m.content
+      });
+    });
+  }
+
+  // 添加当前用户消息
+  messages.push({ role: 'user', content: userMessage });
+
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -2530,10 +2589,7 @@ async function callAI(systemPrompt, userMessage) {
       },
       body: JSON.stringify({
         model: model,
-        messages: [
-          { role: 'system', content: finalSystemPrompt },
-          { role: 'user', content: userMessage }
-        ],
+        messages: messages,
         max_tokens: 500,
         temperature: 0.8
       })
@@ -2776,6 +2832,21 @@ function applyBubbleMode() {
   container.classList.toggle('full-width', isFullWidth);
   const btn = document.getElementById('bubble-mode-btn');
   if (btn) btn.textContent = isFullWidth ? '▣' : '💬';
+}
+
+function showContextSettings() {
+  const size = parseInt(localStorage.getItem('chatContextSize')) || 50;
+  document.getElementById('context-size-slider').value = size;
+  document.getElementById('context-size-value').textContent = size;
+  showApp('app-context-settings');
+}
+
+function onContextSizeChange(value) {
+  const size = parseInt(value);
+  document.getElementById('context-size-value').textContent = size;
+  localStorage.setItem('chatContextSize', size.toString());
+  const display = document.getElementById('context-size-display');
+  if (display) display.textContent = size + ' ›';
 }
 
 function toggleAITime() {
