@@ -540,21 +540,21 @@
   .post-card {
     background: var(--surface-solid);
     border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
   }
   .post-card .post-header {
     display: flex; align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
-  .post-card .post-header .avatar { margin: 0; }
-  .post-card .post-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-  .post-card .post-content { font-size: 14px; color: var(--post-content-color); line-height: 1.5; }
+  .post-card .post-header .avatar { margin: 0; width: 36px; height: 36px; font-size: 16px; }
+  .post-card .post-title { font-size: 17px; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+  .post-card .post-content { font-size: 17px; color: var(--post-content-color); line-height: 1.6; }
   .post-card .post-footer {
     display: flex; gap: 16px;
-    margin-top: 12px;
-    font-size: 13px;
+    margin-top: 10px;
+    font-size: 14px;
     color: var(--muted);
   }
 
@@ -562,20 +562,21 @@
   .moment-card {
     background: var(--surface-solid);
     border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
   }
   .moment-card .moment-header {
     display: flex; align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
-  .moment-card .moment-text { font-size: 15px; line-height: 1.5; margin-bottom: 10px; }
+  .moment-card .moment-header .avatar { width: 36px; height: 36px; font-size: 16px; }
+  .moment-card .moment-text { font-size: 17px; line-height: 1.6; margin-bottom: 8px; }
   .moment-card .moment-images {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 4px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   .moment-card .moment-images .img-placeholder {
     aspect-ratio: 1;
@@ -583,7 +584,7 @@
     border-radius: 4px;
   }
   .moment-card .moment-footer {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--muted);
     display: flex; justify-content: space-between;
   }
@@ -716,6 +717,17 @@
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 刷新提示 */
+  .refresh-hint {
+    text-align: center;
+    padding: 40px 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--accent);
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   /* AI设置 */
   .ai-setting-row {
@@ -2909,13 +2921,13 @@ let isGeneratingForum = false;
 function renderForum() {
   const list = document.getElementById('forum-list');
 
-  if (forumPostsData.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">正在生成论坛内容...</div>';
+  if (forumPostsData.length === 0 && !isGeneratingForum) {
+    list.innerHTML = '<div class="refresh-hint">正在刷新</div>';
     generateAIForumPosts(5);
     return;
   }
 
-  let html = '';
+  let html = isGeneratingForum ? '<div class="refresh-hint">正在刷新</div>' : '';
   forumPostsData.forEach((post, i) => {
     html += `
       <div class="post-card" onclick="openForumPost(${i})">
@@ -2941,9 +2953,6 @@ function renderForum() {
 }
 
 async function generateAIForumPosts(count) {
-  if (isGeneratingForum) return;
-  isGeneratingForum = true;
-
   const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
   if (contacts.length === 0) {
     isGeneratingForum = false;
@@ -3050,6 +3059,8 @@ function generateRandomReply() {
 
 function refreshForum() {
   if (isGeneratingForum) return;
+  isGeneratingForum = true;
+  renderForum();
   generateAIForumPosts(3);
 }
 
@@ -3062,13 +3073,13 @@ function renderMoments() {
   const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
 
   // 如果没有数据，显示提示并生成初始内容
-  if (momentsData.length === 0) {
-    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">正在生成朋友圈内容...</div>';
+  if (momentsData.length === 0 && !isGeneratingMoments) {
+    list.innerHTML = '<div class="refresh-hint">正在刷新</div>';
     generateAIMoments(5);
     return;
   }
 
-  let html = '';
+  let html = isGeneratingMoments ? '<div class="refresh-hint">正在刷新</div>' : '';
   momentsData.forEach((m, i) => {
     const author = contacts.find(c => c.name === m.authorName) || { name: m.authorName || '匿名' };
     html += `
@@ -3094,9 +3105,6 @@ function renderMoments() {
 }
 
 async function generateAIMoments(count) {
-  if (isGeneratingMoments) return;
-  isGeneratingMoments = true;
-
   const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
   if (contacts.length === 0) {
     isGeneratingMoments = false;
@@ -3139,6 +3147,8 @@ async function generateAIMoments(count) {
 
 function refreshMoments() {
   if (isGeneratingMoments) return;
+  isGeneratingMoments = true;
+  renderMoments();
   generateAIMoments(3);
 }
 
