@@ -862,6 +862,22 @@
         </div>
         <div class="toggle" id="toggle-theme"></div>
       </div>
+      <div class="setting-item" onclick="showFontSizeSettings()">
+        <div class="setting-icon" style="background:#af52de;">🔤</div>
+        <div class="setting-info">
+          <div class="label">对话字号</div>
+          <div class="desc">调节聊天字体大小</div>
+        </div>
+        <span class="arrow" id="font-size-display">17 ›</span>
+      </div>
+      <div class="setting-item" onclick="toggleAITime()">
+        <div class="setting-icon" style="background:#5856d6;">🕐</div>
+        <div class="setting-info">
+          <div class="label">AI实时时间</div>
+          <div class="desc">让AI知晓北京时间</div>
+        </div>
+        <div class="toggle" id="toggle-aitime"></div>
+      </div>
     </div>
     <div class="setting-group">
       <div class="setting-item" onclick="showAISettings()">
@@ -918,6 +934,29 @@
     <button class="btn" onclick="fetchModels()" style="width:100%;margin-bottom:20px;">获取模型列表</button>
     <div style="font-size:13px;color:var(--muted);line-height:1.5;">
       所有设置仅保存在浏览器本地，不会上传到服务器。
+    </div>
+  </div>
+</div>
+
+<!-- 字号设置 -->
+<div class="app-page" id="app-fontsize-settings">
+  <div class="app-header">
+    <div class="back-btn" onclick="showApp('app-settings')">←</div>
+    <div class="title">对话字号</div>
+    <div class="right-btn"></div>
+  </div>
+  <div class="app-content">
+    <div class="ai-setting-row">
+      <label>字号大小：<span id="font-size-value">17</span>px</label>
+      <input type="range" id="font-size-slider" min="14" max="24" value="17" oninput="onFontSizeChange(this.value)">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px;">
+        <span>14</span><span>24</span>
+      </div>
+    </div>
+    <div style="background:var(--surface-solid);border-radius:12px;padding:16px;margin-top:20px;">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">预览</div>
+      <div class="chat-bubble sent" id="font-preview-sent" style="margin-bottom:10px;">这是发送的消息预览</div>
+      <div class="chat-bubble received" id="font-preview-received">这是接收的消息预览</div>
     </div>
   </div>
 </div>
@@ -1324,6 +1363,16 @@ function initData() {
   if (localStorage.getItem('hideStatusbar') === 'true') {
     document.getElementById('status-bar').classList.add('hidden');
     document.getElementById('toggle-statusbar').classList.add('on');
+  }
+
+  // 应用对话字号设置
+  const chatFontSize = parseInt(localStorage.getItem('chatFontSize')) || 17;
+  const fontDisplay = document.getElementById('font-size-display');
+  if (fontDisplay) fontDisplay.textContent = chatFontSize + ' ›';
+
+  // 应用AI实时时间设置
+  if (localStorage.getItem('aiRealTime') === 'true') {
+    document.getElementById('toggle-aitime').classList.add('on');
   }
 }
 
@@ -2391,6 +2440,19 @@ async function sendAIReply(userMsg) {
 }
 
 // ==================== AI调用 ====================
+function getBeijingTimeString() {
+  const now = new Date();
+  const beijingTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
+  const yyyy = beijingTime.getFullYear();
+  const mm = String(beijingTime.getMonth() + 1).padStart(2, '0');
+  const dd = String(beijingTime.getDate()).padStart(2, '0');
+  const hh = String(beijingTime.getHours()).padStart(2, '0');
+  const mi = String(beijingTime.getMinutes()).padStart(2, '0');
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+  const week = weekDays[beijingTime.getDay()];
+  return `${yyyy}年${mm}月${dd}日 星期${week} ${hh}:${mi}`;
+}
+
 async function callAI(systemPrompt, userMessage) {
   const config = JSON.parse(localStorage.getItem('aiConfig')) || {};
 
@@ -2405,6 +2467,12 @@ async function callAI(systemPrompt, userMessage) {
   if (platform === 'deepseek') url = 'https://api.deepseek.com/v1/chat/completions';
   else if (platform === 'siliconflow') url = 'https://api.siliconflow.cn/v1/chat/completions';
 
+  // 如果开启了AI实时时间，在systemPrompt中追加时间信息
+  let finalSystemPrompt = systemPrompt || '你是一个友好的AI助手。';
+  if (localStorage.getItem('aiRealTime') === 'true') {
+    finalSystemPrompt += `\n\n【当前时间】${getBeijingTimeString()}（北京时间）。你可以根据时间信息来回答与时间相关的问题。`;
+  }
+
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -2415,7 +2483,7 @@ async function callAI(systemPrompt, userMessage) {
       body: JSON.stringify({
         model: model,
         messages: [
-          { role: 'system', content: systemPrompt || '你是一个友好的AI助手。' },
+          { role: 'system', content: finalSystemPrompt },
           { role: 'user', content: userMessage }
         ],
         max_tokens: 500,
@@ -2621,6 +2689,38 @@ function saveAISettings() {
   showApp('app-settings');
 }
 
+function showFontSizeSettings() {
+  const size = parseInt(localStorage.getItem('chatFontSize')) || 17;
+  document.getElementById('font-size-slider').value = size;
+  document.getElementById('font-size-value').textContent = size;
+  document.getElementById('font-preview-sent').style.fontSize = size + 'px';
+  document.getElementById('font-preview-received').style.fontSize = size + 'px';
+  showApp('app-fontsize-settings');
+}
+
+function onFontSizeChange(value) {
+  const size = parseInt(value);
+  document.getElementById('font-size-value').textContent = size;
+  document.getElementById('font-preview-sent').style.fontSize = size + 'px';
+  document.getElementById('font-preview-received').style.fontSize = size + 'px';
+  localStorage.setItem('chatFontSize', size.toString());
+  applyChatFontSize();
+}
+
+function applyChatFontSize() {
+  const size = parseInt(localStorage.getItem('chatFontSize')) || 17;
+  const bubbles = document.querySelectorAll('.chat-bubble');
+  bubbles.forEach(b => b.style.fontSize = size + 'px');
+  const display = document.getElementById('font-size-display');
+  if (display) display.textContent = size + ' ›';
+}
+
+function toggleAITime() {
+  const toggle = document.getElementById('toggle-aitime');
+  const isOn = toggle.classList.toggle('on');
+  localStorage.setItem('aiRealTime', isOn ? 'true' : 'false');
+}
+
 function addHomePage() {
   totalPages++;
   localStorage.setItem('pagesCount', totalPages.toString());
@@ -2752,74 +2852,117 @@ function playDing() {
 }
 
 // ==================== 论坛 ====================
-const forumTopics = [
-  '今天天气真好，大家有什么计划？',
-  '推荐一本好书',
-  '周末去哪儿玩？',
-  '分享一个生活小技巧',
-  '最近在看什么剧？',
-  '美食推荐',
-  '运动打卡',
-  '学习心得分享'
-];
+let forumPostsData = JSON.parse(localStorage.getItem('forumPostsData')) || [];
+let isGeneratingForum = false;
 
 function renderForum() {
   const list = document.getElementById('forum-list');
-  const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+
+  if (forumPostsData.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">正在生成论坛内容...</div>';
+    generateAIForumPosts(5);
+    return;
+  }
 
   let html = '';
-  for (let i = 0; i < 8; i++) {
-    const author = contacts[i % contacts.length] || { name: '匿名用户' };
-    const topic = forumTopics[i];
-    const replies = Math.floor(Math.random() * 50) + 1;
-    const likes = Math.floor(Math.random() * 100);
-
+  forumPostsData.forEach((post, i) => {
     html += `
       <div class="post-card" onclick="openForumPost(${i})">
         <div class="post-header">
-          <div class="avatar" style="background:${stringToColor(author.name)};">${author.name.charAt(0)}</div>
+          <div class="avatar" style="background:${stringToColor(post.authorName)};">${post.authorName.charAt(0)}</div>
           <div>
-            <div style="font-weight:500;">${author.name}</div>
-            <div style="font-size:12px;color:var(--muted);">${timeAgo(Date.now() - i * 3600000)}</div>
+            <div style="font-weight:500;">${post.authorName}</div>
+            <div style="font-size:12px;color:var(--muted);">${post.timeStr || timeAgo(Date.now() - i * 3600000)}</div>
           </div>
         </div>
-        <div class="post-title">${topic}</div>
-        <div class="post-content">这是AI角色自动生成的帖子内容，点击可以查看详情和回复...</div>
+        <div class="post-title">${escapeHtml(post.title)}</div>
+        <div class="post-content">${escapeHtml(post.summary)}</div>
         <div class="post-footer">
-          <span>👍 ${likes}</span>
-          <span>💬 ${replies}</span>
-          <span>👁 ${replies * 3 + 10}</span>
+          <span>👍 ${post.likes || Math.floor(Math.random() * 100)}</span>
+          <span>💬 ${post.replies || Math.floor(Math.random() * 50) + 1}</span>
+          <span>👁 ${(post.replies || 1) * 3 + 10}</span>
         </div>
       </div>
     `;
-  }
+  });
 
   list.innerHTML = html;
 }
 
-function openForumPost(index) {
+async function generateAIForumPosts(count) {
+  if (isGeneratingForum) return;
+  isGeneratingForum = true;
+
   const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
-  const author = contacts[index % contacts.length] || { name: '匿名用户' };
-  const topic = forumTopics[index % forumTopics.length];
+  if (contacts.length === 0) {
+    isGeneratingForum = false;
+    return;
+  }
+
+  const categories = ['健康知识', '职场干货', '生活技巧', '科技前沿', '心理学', '理财经验', '学习方法', '人际关系'];
+  const newPosts = [];
+
+  for (let i = 0; i < count; i++) {
+    const author = contacts[Math.floor(Math.random() * contacts.length)];
+    const category = categories[Math.floor(Math.random() * categories.length)];
+
+    const systemPrompt = `你是${author.name}，${author.role || '一个知识分享者'}。请写一篇论坛帖子，主题是"${category}"类的干货分享。要求：
+1. 写一个吸引人的标题（15字以内）
+2. 写一段100-200字的正文内容，要有实用价值
+3. 语气专业但不生硬，像真实论坛用户分享经验
+4. 输出格式：第一行是标题，空一行后是正文`;
+
+    const response = await callAI(systemPrompt, '写一篇论坛干货帖');
+    const lines = response.trim().split('\n').filter(l => l.trim());
+    const title = lines[0] || `${category}分享`;
+    const content = lines.slice(1).join('\n').trim() || response.trim();
+    const summary = content.substring(0, 60) + (content.length > 60 ? '...' : '');
+
+    newPosts.push({
+      authorName: author.name,
+      title: title,
+      content: content,
+      summary: summary,
+      likes: Math.floor(Math.random() * 80) + 10,
+      replies: Math.floor(Math.random() * 30) + 2,
+      timeStr: timeAgo(Math.floor(Math.random() * 172800000)),
+      category: category
+    });
+  }
+
+  forumPostsData = [...newPosts, ...forumPostsData];
+  localStorage.setItem('forumPostsData', JSON.stringify(forumPostsData));
+  isGeneratingForum = false;
+  renderForum();
+}
+
+function openForumPost(index) {
+  const post = forumPostsData[index];
+  if (!post) return;
+
+  const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
 
   let html = `
     <div class="post-card" style="margin-bottom:20px;">
       <div class="post-header">
-        <div class="avatar" style="background:${stringToColor(author.name)};">${author.name.charAt(0)}</div>
+        <div class="avatar" style="background:${stringToColor(post.authorName)};">${post.authorName.charAt(0)}</div>
         <div>
-          <div style="font-weight:500;">${author.name}</div>
-          <div style="font-size:12px;color:var(--muted);">楼主</div>
+          <div style="font-weight:500;">${post.authorName}</div>
+          <div style="font-size:12px;color:var(--muted);">楼主 · ${post.timeStr || '刚刚'}</div>
         </div>
       </div>
-      <div class="post-title">${topic}</div>
-      <div class="post-content">
-        大家好！我是${author.name}。${author.role || ''}\n\n今天想和大家聊聊这个话题，欢迎大家踊跃回复！
+      <div class="post-title">${escapeHtml(post.title)}</div>
+      <div class="post-content" style="white-space:pre-wrap;">${escapeHtml(post.content)}</div>
+      <div class="post-footer">
+        <span>👍 ${post.likes}</span>
+        <span>💬 ${post.replies}</span>
+        <span>👁 ${post.replies * 3 + 10}</span>
       </div>
     </div>
     <div style="font-size:14px;color:var(--muted);margin-bottom:12px;">回复</div>
   `;
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < Math.min(5, contacts.length); i++) {
     const replyAuthor = contacts[(index + i + 1) % contacts.length] || { name: '匿名用户' };
     html += `
       <div class="post-card" style="margin-bottom:10px;">
@@ -2855,39 +2998,42 @@ function generateRandomReply() {
 }
 
 function refreshForum() {
-  renderForum();
+  if (isGeneratingForum) return;
+  generateAIForumPosts(3);
 }
 
 // ==================== 朋友圈 ====================
+let momentsData = JSON.parse(localStorage.getItem('momentsData')) || [];
+let isGeneratingMoments = false;
+
 function renderMoments() {
   const list = document.getElementById('moments-list');
   const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
 
-  const moments = [
-    { text: '今天天气真好，出去散步了～', hasImages: true },
-    { text: '读了一本好书，推荐给大家！', hasImages: false },
-    { text: '周末和朋友聚餐，开心！', hasImages: true },
-    { text: '新学了一道菜，味道不错👍', hasImages: true },
-    { text: '思考人生中...', hasImages: false }
-  ];
+  // 如果没有数据，显示提示并生成初始内容
+  if (momentsData.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">正在生成朋友圈内容...</div>';
+    generateAIMoments(5);
+    return;
+  }
 
   let html = '';
-  moments.forEach((m, i) => {
-    const author = contacts[i % contacts.length] || { name: '匿名' };
+  momentsData.forEach((m, i) => {
+    const author = contacts.find(c => c.name === m.authorName) || { name: m.authorName || '匿名' };
     html += `
       <div class="moment-card">
         <div class="moment-header">
           <div class="avatar" style="background:${stringToColor(author.name)};">${author.name.charAt(0)}</div>
           <div>
             <div style="font-weight:500;">${author.name}</div>
-            <div style="font-size:12px;color:var(--muted);">${timeAgo(Date.now() - i * 7200000)}</div>
+            <div style="font-size:12px;color:var(--muted);">${m.timeStr || timeAgo(Date.now() - i * 7200000)}</div>
           </div>
         </div>
-        <div class="moment-text">${m.text}</div>
+        <div class="moment-text">${escapeHtml(m.text)}</div>
         ${m.hasImages ? `<div class="moment-images"><div class="img-placeholder"></div><div class="img-placeholder"></div><div class="img-placeholder"></div></div>` : ''}
         <div class="moment-footer">
-          <span>${timeAgo(Date.now() - i * 7200000)}</span>
-          <span>👍 ${Math.floor(Math.random() * 20)} 💬 ${Math.floor(Math.random() * 10)}</span>
+          <span>${m.timeStr || timeAgo(Date.now() - i * 7200000)}</span>
+          <span>👍 ${m.likes || Math.floor(Math.random() * 20)} 💬 ${m.comments || Math.floor(Math.random() * 10)}</span>
         </div>
       </div>
     `;
@@ -2896,8 +3042,53 @@ function renderMoments() {
   list.innerHTML = html;
 }
 
-function refreshMoments() {
+async function generateAIMoments(count) {
+  if (isGeneratingMoments) return;
+  isGeneratingMoments = true;
+
+  const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+  if (contacts.length === 0) {
+    isGeneratingMoments = false;
+    return;
+  }
+
+  const categories = ['生活', '搞笑', '吃瓜', '娱乐', '励志', '日常'];
+  const newMoments = [];
+
+  for (let i = 0; i < count; i++) {
+    const author = contacts[Math.floor(Math.random() * contacts.length)];
+    const category = categories[Math.floor(Math.random() * categories.length)];
+    const hasImages = Math.random() > 0.5;
+
+    const systemPrompt = `你是${author.name}，${author.role || '一个普通人'}。请用第一人称发一条朋友圈动态，内容类型是"${category}"类。要求：
+1. 语气自然、真实，像真实朋友圈一样
+2. 字数在30-80字之间
+3. 可以带emoji
+4. 内容要符合你的角色设定
+5. 只输出朋友圈正文，不要有任何前缀或解释`;
+
+    const text = await callAI(systemPrompt, '发一条朋友圈');
+
+    newMoments.push({
+      authorName: author.name,
+      text: text.trim(),
+      hasImages: hasImages,
+      likes: Math.floor(Math.random() * 30) + 5,
+      comments: Math.floor(Math.random() * 15),
+      timeStr: timeAgo(Math.floor(Math.random() * 86400000)),
+      category: category
+    });
+  }
+
+  momentsData = [...newMoments, ...momentsData];
+  localStorage.setItem('momentsData', JSON.stringify(momentsData));
+  isGeneratingMoments = false;
   renderMoments();
+}
+
+function refreshMoments() {
+  if (isGeneratingMoments) return;
+  generateAIMoments(3);
 }
 
 // ==================== 工具函数 ====================
