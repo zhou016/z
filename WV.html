@@ -2991,6 +2991,7 @@ async function generateAIForumPosts(count) {
   }
 
   forumPostsData = [...newPosts, ...forumPostsData];
+  if (forumPostsData.length > 100) forumPostsData = forumPostsData.slice(0, 100);
   localStorage.setItem('forumPostsData', JSON.stringify(forumPostsData));
   isGeneratingForum = false;
   renderForum();
@@ -3140,6 +3141,7 @@ async function generateAIMoments(count) {
   }
 
   momentsData = [...newMoments, ...momentsData];
+  if (momentsData.length > 100) momentsData = momentsData.slice(0, 100);
   localStorage.setItem('momentsData', JSON.stringify(momentsData));
   isGeneratingMoments = false;
   renderMoments();
