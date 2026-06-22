@@ -920,6 +920,14 @@
         </div>
         <span class="arrow" id="context-size-display">50 ›</span>
       </div>
+      <div class="setting-item" onclick="showMaskList()">
+        <div class="setting-icon" style="background:#ff3b30;">🎭</div>
+        <div class="setting-info">
+          <div class="label">面具</div>
+          <div class="desc" id="mask-desc">设置你的身份</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
     </div>
     <div class="setting-group">
       <div class="setting-item" onclick="showAISettings()">
@@ -1020,6 +1028,40 @@
     </div>
     <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:20px;">
       AI会记住最近N条对话作为上下文，帮助保持对话连贯性。数值越大，AI对历史对话的记忆越完整，但会消耗更多Token。
+    </div>
+  </div>
+</div>
+
+<!-- 面具列表 -->
+<div class="app-page" id="app-mask-list">
+  <div class="app-header">
+    <div class="back-btn" onclick="showApp('app-settings')">←</div>
+    <div class="title">面具</div>
+    <div class="right-btn" onclick="showMaskEditor()" style="font-size:20px;cursor:pointer;">+</div>
+  </div>
+  <div class="app-content" id="mask-list-content"></div>
+</div>
+
+<!-- 面具编辑 -->
+<div class="app-page" id="app-mask-editor">
+  <div class="app-header">
+    <div class="back-btn" onclick="backFromMaskEditor()">←</div>
+    <div class="title">编辑面具</div>
+    <div class="right-btn" onclick="saveMask()">✓</div>
+  </div>
+  <div class="app-content">
+    <input type="hidden" id="mask-id">
+    <div class="ai-setting-row">
+      <label>面具名字</label>
+      <input type="text" id="mask-name" placeholder="例如：小明">
+    </div>
+    <div class="ai-setting-row">
+      <label>身份设定</label>
+      <textarea id="mask-identity" placeholder="例如：一个充满好奇心的程序员，喜欢探索新技术" rows="6"></textarea>
+    </div>
+    <div class="ai-setting-row">
+      <label>底色</label>
+      <input type="color" id="mask-color" value="#007aff">
     </div>
   </div>
 </div>
@@ -1440,6 +1482,9 @@ function initData() {
   const ctxSize = parseInt(localStorage.getItem('chatContextSize')) || 50;
   const ctxDisplay = document.getElementById('context-size-display');
   if (ctxDisplay) ctxDisplay.textContent = ctxSize + ' ›';
+
+  // 应用面具设置
+  updateMaskDesc();
 }
 
 // ==================== 桌面渲染 ====================
@@ -2524,8 +2569,12 @@ async function sendAIReply(userMsg) {
   container.appendChild(loadingDiv);
   container.scrollTop = container.scrollHeight;
 
-  // 传入历史消息作为上下文
-  const reply = await callAI(currentChatContact.role, userMsg, history);
+  // 获取面具信息
+  const mask = getActiveMask();
+  const maskInfo = mask ? { name: mask.name, identity: mask.identity } : null;
+
+  // 传入历史消息和面具信息作为上下文
+  const reply = await callAI(currentChatContact.role, userMsg, history, maskInfo);
 
   document.getElementById(loadingId)?.remove();
 
@@ -2553,7 +2602,7 @@ function getBeijingTimeString() {
   return `${yyyy}年${mm}月${dd}日 星期${week} ${hh}:${mi}`;
 }
 
-async function callAI(systemPrompt, userMessage, historyMessages) {
+async function callAI(systemPrompt, userMessage, historyMessages, maskInfo) {
   const config = JSON.parse(localStorage.getItem('aiConfig')) || {};
 
   if (!config.key) {
@@ -2567,8 +2616,20 @@ async function callAI(systemPrompt, userMessage, historyMessages) {
   if (platform === 'deepseek') url = 'https://api.deepseek.com/v1/chat/completions';
   else if (platform === 'siliconflow') url = 'https://api.siliconflow.cn/v1/chat/completions';
 
+  // 构建强角色保持提示词
+  let finalSystemPrompt = '';
+  if (systemPrompt) {
+    finalSystemPrompt = `你现在的角色是：${systemPrompt}\n\n【核心规则】\n1. 你完全就是这个角色，不是AI助手\n2. 用该角色的语气、性格和知识来回应\n3. 绝对不能说出"作为AI"、"作为语言模型"等话\n4. 永远不要脱离角色设定\n5. 保持对话自然生动，像真实的人`;
+  } else {
+    finalSystemPrompt = '你是一个友好的AI助手。请用自然友好的语气与用户交流。';
+  }
+
+  // 添加面具信息（用户身份）
+  if (maskInfo && maskInfo.name) {
+    finalSystemPrompt += `\n\n【对话对象】\n你正在和"${maskInfo.name}"对话。${maskInfo.identity ? `对方是一位${maskInfo.identity}。` : ''}\n请根据对方的身份调整你的对话风格。`;
+  }
+
   // 如果开启了AI实时时间，在systemPrompt中追加时间信息
-  let finalSystemPrompt = systemPrompt || '你是一个友好的AI助手。';
   if (localStorage.getItem('aiRealTime') === 'true') {
     finalSystemPrompt += `\n\n【当前时间】${getBeijingTimeString()}（北京时间）。你可以根据时间信息来回答与时间相关的问题。`;
   }
@@ -2864,6 +2925,113 @@ function toggleAITime() {
   const toggle = document.getElementById('toggle-aitime');
   const isOn = toggle.classList.toggle('on');
   localStorage.setItem('aiRealTime', isOn ? 'true' : 'false');
+}
+
+function getActiveMask() {
+  const masks = JSON.parse(localStorage.getItem('masks')) || [];
+  const activeId = localStorage.getItem('activeMaskId');
+  return masks.find(m => m.id === activeId) || null;
+}
+
+function showMaskList() {
+  const content = document.getElementById('mask-list-content');
+  const masks = JSON.parse(localStorage.getItem('masks')) || [];
+  const activeId = localStorage.getItem('activeMaskId');
+
+  if (masks.length === 0) {
+    content.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:15px;">暂无面具<br><br>点击右上角 + 创建一个</div>';
+  } else {
+    let html = '';
+    masks.forEach(m => {
+      const isActive = m.id === activeId;
+      html += `
+        <div class="post-card" onclick="showMaskEditor('${m.id}')" style="position:relative;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:40px;height:40px;border-radius:50%;background:${m.color || '#007aff'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:16px;flex-shrink:0;">${m.name.charAt(0)}</div>
+            <div style="flex:1;">
+              <div style="font-weight:600;font-size:16px;">${m.name}</div>
+              <div style="font-size:14px;color:var(--muted);margin-top:2px;">${m.identity || '无身份设定'}</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              ${isActive ? '<span style="font-size:12px;background:var(--accent);color:#fff;border-radius:10px;padding:2px 8px;">使用中</span>' : `<span onclick="event.stopPropagation();activateMask('${m.id}')" style="font-size:12px;color:var(--accent);cursor:pointer;border:1px solid var(--accent);border-radius:10px;padding:2px 8px;">启用</span>`}
+              <span onclick="event.stopPropagation();deleteMask('${m.id}')" style="font-size:12px;color:#ff3b30;cursor:pointer;border:1px solid #ff3b30;border-radius:10px;padding:2px 8px;">删除</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    content.innerHTML = html;
+  }
+
+  updateMaskDesc();
+  showApp('app-mask-list');
+}
+
+function showMaskEditor(id) {
+  document.getElementById('mask-id').value = id || '';
+  if (id) {
+    const masks = JSON.parse(localStorage.getItem('masks')) || [];
+    const mask = masks.find(m => m.id === id);
+    if (mask) {
+      document.getElementById('mask-name').value = mask.name || '';
+      document.getElementById('mask-identity').value = mask.identity || '';
+      document.getElementById('mask-color').value = mask.color || '#007aff';
+    }
+  } else {
+    document.getElementById('mask-name').value = '';
+    document.getElementById('mask-identity').value = '';
+    document.getElementById('mask-color').value = '#007aff';
+  }
+  showApp('app-mask-editor');
+}
+
+function backFromMaskEditor() {
+  showMaskList();
+}
+
+function saveMask() {
+  const id = document.getElementById('mask-id').value;
+  const name = document.getElementById('mask-name').value.trim();
+  const identity = document.getElementById('mask-identity').value.trim();
+  const color = document.getElementById('mask-color').value || '#007aff';
+
+  if (!name) { alert('请输入面具名字'); return; }
+
+  let masks = JSON.parse(localStorage.getItem('masks')) || [];
+
+  if (id) {
+    const idx = masks.findIndex(m => m.id === id);
+    if (idx >= 0) masks[idx] = { ...masks[idx], name, identity, color };
+  } else {
+    const newId = 'mask_' + Date.now();
+    masks.push({ id: newId, name, identity, color });
+  }
+
+  localStorage.setItem('masks', JSON.stringify(masks));
+  showMaskList();
+}
+
+function deleteMask(id) {
+  if (!confirm('确定删除此面具？')) return;
+  let masks = JSON.parse(localStorage.getItem('masks')) || [];
+  masks = masks.filter(m => m.id !== id);
+  localStorage.setItem('masks', JSON.stringify(masks));
+  if (localStorage.getItem('activeMaskId') === id) {
+    localStorage.removeItem('activeMaskId');
+  }
+  showMaskList();
+}
+
+function activateMask(id) {
+  localStorage.setItem('activeMaskId', id);
+  updateMaskDesc();
+  showMaskList();
+}
+
+function updateMaskDesc() {
+  const mask = getActiveMask();
+  const desc = document.getElementById('mask-desc');
+  if (desc) desc.textContent = mask ? mask.name : '设置你的身份';
 }
 
 function addHomePage() {
