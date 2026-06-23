@@ -913,7 +913,7 @@
     <div class="back-btn" onclick="showApp('app-wechat')">←</div>
     <div class="title" id="chat-title">聊天</div>
     <div class="right-btn" style="gap:5px;width:auto;">
-      <span id="refresh-page-btn" onclick="refreshPage()" style="font-size:15px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="刷新网页（紧急保存当前内容后重新加载）">⟳</span>
+      <span id="fix-input-btn" onclick="fixInputBox()" style="font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="修复输入框（重置后输入1并撤销）">🔧</span>
       <span onclick="clearCurrentChat()" style="font-size:13px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="清空聊天记录">🗑️</span>
       <span id="bubble-mode-btn" onclick="toggleBubbleMode()" style="font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="切换气泡模式">💬</span>
       <span onclick="showChatFontSizeSettings()" style="font-size:15px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);font-weight:600;">Aa</span>
@@ -3259,30 +3259,68 @@ function clearCurrentChat() {
   renderChatMessages();
 }
 
-// 刷新网页：先强制将所有在内存中暂存的 localStorage 数据写回（数据本就实时保存，这里做一次兜底同步），
-// 然后立即重新加载页面，恢复聊天界面。
-function refreshPage() {
+// 修复输入框：重置底部输入框（清空 + 还原高度），再插入数字 "1"，最后撤销这次输入，
+// 借此触发 textarea 自身在某些移动端浏览器上假死/失焦的内部重排，达到"修复"效果。
+function fixInputBox() {
   try {
-    // 兜底：触发一次同步写回（页面中的所有修改本就通过 localStorage.setItem 实时保存）
-    // 兼容部分浏览器在页面卸载前异步写入不完整的情况
-    if (currentChatContact) {
-      // 重新读取一次最新聊天记录并写回，确保刷新前数据已落盘
-      const chats = JSON.parse(localStorage.getItem('chats')) || {};
-      localStorage.setItem('chats', JSON.stringify(chats));
+    const input = document.getElementById('chat-input');
+    if (!input) return;
+
+    // 1) 重置输入框：清空内容并恢复默认高度
+    input.value = '';
+    input.style.height = 'auto';
+    if (typeof autoResizeChatInput === 'function') {
+      autoResizeChatInput(input);
     }
-    // 给一个极短的视觉反馈后再刷新
-    const btn = document.getElementById('refresh-page-btn');
+
+    // 2) 重新获得焦点，并在框内输入数字 1
+    input.focus();
+    // 使用原生 setter，绕过部分框架对 value 的拦截，确保触发 input/change 事件
+    const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+    nativeSetter.call(input, '1');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    // 3) 撤销刚才的输入（模拟用户按下撤销快捷键 Ctrl/Cmd+Z）
+    setTimeout(() => {
+      try {
+        input.focus();
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const ev = new KeyboardEvent('keydown', {
+          key: 'z',
+          code: 'KeyZ',
+          keyCode: 90,
+          which: 90,
+          ctrlKey: !isMac,
+          metaKey: isMac,
+          bubbles: true,
+          cancelable: true
+        });
+        input.dispatchEvent(ev);
+        // 兜底：直接清空值并触发 input（确保最终输入框为空）
+        nativeSetter.call(input, '');
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        if (typeof autoResizeChatInput === 'function') {
+          autoResizeChatInput(input);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, 60);
+
+    // 按钮轻微视觉反馈
+    const btn = document.getElementById('fix-input-btn');
     if (btn) {
       btn.style.opacity = '0.4';
       btn.style.transition = 'opacity 0.15s';
+      setTimeout(() => { btn.style.opacity = '1'; }, 180);
     }
-    setTimeout(() => {
-      // 强制从服务器重新加载，不使用浏览器缓存
-      window.location.reload();
-    }, 120);
   } catch (e) {
-    // 出现异常时仍然执行刷新，保证用户意图可达
-    window.location.reload();
+    // 出现异常时尝试最简兜底
+    const input = document.getElementById('chat-input');
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
   }
 }
 
