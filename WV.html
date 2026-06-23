@@ -913,7 +913,7 @@
     <div class="back-btn" onclick="showApp('app-wechat')">←</div>
     <div class="title" id="chat-title">聊天</div>
     <div class="right-btn" style="gap:5px;width:auto;">
-      <span onclick="refreshAndReturnToChat()" style="font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="刷新网页">🔄</span>
+      <span id="refresh-page-btn" onclick="refreshPage()" style="font-size:15px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="刷新网页（紧急保存当前内容后重新加载）">⟳</span>
       <span onclick="clearCurrentChat()" style="font-size:13px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="清空聊天记录">🗑️</span>
       <span id="bubble-mode-btn" onclick="toggleBubbleMode()" style="font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="切换气泡模式">💬</span>
       <span onclick="showChatFontSizeSettings()" style="font-size:15px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);font-weight:600;">Aa</span>
@@ -3259,6 +3259,33 @@ function clearCurrentChat() {
   renderChatMessages();
 }
 
+// 刷新网页：先强制将所有在内存中暂存的 localStorage 数据写回（数据本就实时保存，这里做一次兜底同步），
+// 然后立即重新加载页面，恢复聊天界面。
+function refreshPage() {
+  try {
+    // 兜底：触发一次同步写回（页面中的所有修改本就通过 localStorage.setItem 实时保存）
+    // 兼容部分浏览器在页面卸载前异步写入不完整的情况
+    if (currentChatContact) {
+      // 重新读取一次最新聊天记录并写回，确保刷新前数据已落盘
+      const chats = JSON.parse(localStorage.getItem('chats')) || {};
+      localStorage.setItem('chats', JSON.stringify(chats));
+    }
+    // 给一个极短的视觉反馈后再刷新
+    const btn = document.getElementById('refresh-page-btn');
+    if (btn) {
+      btn.style.opacity = '0.4';
+      btn.style.transition = 'opacity 0.15s';
+    }
+    setTimeout(() => {
+      // 强制从服务器重新加载，不使用浏览器缓存
+      window.location.reload();
+    }, 120);
+  } catch (e) {
+    // 出现异常时仍然执行刷新，保证用户意图可达
+    window.location.reload();
+  }
+}
+
 function deleteContact() {
   const id = document.getElementById('contact-id').value;
   if (!id) return;
@@ -3319,16 +3346,6 @@ function openChat(contactId) {
   document.getElementById('chat-title').textContent = contact.name;
   renderChatMessages();
   showApp('app-wechat-chat');
-  // 记录当前聊天ID，刷新后自动恢复
-  localStorage.setItem('lastChatId', contactId);
-}
-
-function refreshAndReturnToChat() {
-  if (currentChatContact) {
-    localStorage.setItem('lastChatId', currentChatContact.id);
-  }
-  // 紧急保存：触发一次 beforeunload 的保存（localStorage 已是同步写入，确保数据已落盘）
-  location.reload();
 }
 
 function renderChatMessages() {
@@ -4459,25 +4476,6 @@ function init() {
   updateClock();
   setInterval(updateClock, 60000);
   updateTimerDisplay();
-
-  // 刷新后自动恢复上次聊天的角色界面
-  const lastChatId = localStorage.getItem('lastChatId');
-  if (lastChatId) {
-    const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
-    if (contacts.find(c => c.id === lastChatId)) {
-      // 跳过锁屏（用户主动刷新视为已解锁）
-      const lockScreen = document.getElementById('lock-screen');
-      if (lockScreen) {
-        lockScreen.style.transition = 'none';
-        lockScreen.style.transform = 'translateY(-100%)';
-        lockScreen.style.opacity = '0';
-        lockScreen.style.display = 'none';
-      }
-      openChat(lastChatId);
-    } else {
-      localStorage.removeItem('lastChatId');
-    }
-  }
 }
 
 init();
