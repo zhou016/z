@@ -913,6 +913,7 @@
     <div class="back-btn" onclick="showApp('app-wechat')">←</div>
     <div class="title" id="chat-title">聊天</div>
     <div class="right-btn" style="gap:5px;width:auto;">
+      <span onclick="refreshAndReturnToChat()" style="font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="刷新网页">🔄</span>
       <span onclick="clearCurrentChat()" style="font-size:13px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="清空聊天记录">🗑️</span>
       <span id="bubble-mode-btn" onclick="toggleBubbleMode()" style="font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="切换气泡模式">💬</span>
       <span onclick="showChatFontSizeSettings()" style="font-size:15px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);font-weight:600;">Aa</span>
@@ -3318,6 +3319,16 @@ function openChat(contactId) {
   document.getElementById('chat-title').textContent = contact.name;
   renderChatMessages();
   showApp('app-wechat-chat');
+  // 记录当前聊天ID，刷新后自动恢复
+  localStorage.setItem('lastChatId', contactId);
+}
+
+function refreshAndReturnToChat() {
+  if (currentChatContact) {
+    localStorage.setItem('lastChatId', currentChatContact.id);
+  }
+  // 紧急保存：触发一次 beforeunload 的保存（localStorage 已是同步写入，确保数据已落盘）
+  location.reload();
 }
 
 function renderChatMessages() {
@@ -4448,6 +4459,25 @@ function init() {
   updateClock();
   setInterval(updateClock, 60000);
   updateTimerDisplay();
+
+  // 刷新后自动恢复上次聊天的角色界面
+  const lastChatId = localStorage.getItem('lastChatId');
+  if (lastChatId) {
+    const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+    if (contacts.find(c => c.id === lastChatId)) {
+      // 跳过锁屏（用户主动刷新视为已解锁）
+      const lockScreen = document.getElementById('lock-screen');
+      if (lockScreen) {
+        lockScreen.style.transition = 'none';
+        lockScreen.style.transform = 'translateY(-100%)';
+        lockScreen.style.opacity = '0';
+        lockScreen.style.display = 'none';
+      }
+      openChat(lastChatId);
+    } else {
+      localStorage.removeItem('lastChatId');
+    }
+  }
 }
 
 init();
