@@ -29,6 +29,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .top-nav .nav-btn:active { background:var(--bg); }
 .top-nav .nav-left { position:absolute; left:12px; }
 .top-nav .nav-right { position:absolute; right:12px; display:flex; gap:4px; }
+.top-nav .nav-title-wrap { flex:1; display:flex; align-items:center; justify-content:center; gap:4px; min-width:0; }
+.top-nav .nav-title { font-size:18px; font-weight:600; text-align:center; max-width:60vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.top-nav .nav-inline-btn { width:28px; height:28px; font-size:16px; color:var(--text-secondary); border-radius:50%; }
+.top-nav .nav-inline-btn:active { background:var(--bg); }
 
 /* Tab Bar */
 .tab-bar { height:56px; background:var(--card); border-top:1px solid var(--border); display:flex; flex-shrink:0; z-index:100; padding-bottom: env(safe-area-inset-bottom, 0); }
@@ -263,7 +267,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
   <div class="conv-view" id="convView">
     <div class="top-nav">
       <button class="nav-btn nav-left" onclick="closeConvView()">←</button>
-      <span class="nav-title" id="convTitle">对话</span>
+      <div class="nav-title-wrap">
+        <span class="nav-title" id="convTitle">对话</span>
+        <button class="nav-btn nav-inline-btn" id="resetInputBtn" onclick="resetInputBox()" title="修复输入框" aria-label="修复输入框">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/>
+            <polyline points="21 3 21 8 16 8"/>
+            <path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/>
+            <polyline points="3 21 3 16 8 16"/>
+          </svg>
+        </button>
+      </div>
       <div class="nav-right" id="convNavRight"></div>
     </div>
     <div class="conv-messages" id="convMessages"></div>
@@ -1272,6 +1286,43 @@ function updateSendButton() {
 function autoResize(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// Repair / reset the bottom input box to its initial state
+function resetInputBox() {
+  const input = document.getElementById('msgInput');
+  if (!input) return;
+  input.value = '';
+  input.placeholder = '';
+  input.style.height = 'auto';
+  // Reset computed min height by reapplying the class default
+  input.style.height = '40px';
+  // Hide mention dropdown if it was open
+  const dropdown = document.getElementById('mentionDropdown');
+  if (dropdown) dropdown.classList.remove('active');
+  if (typeof updateSendButton === 'function') updateSendButton();
+  if (typeof showToast === 'function') showToast('输入框已重置');
+  // Step 1 (50ms): Auto-fill text "1" after reset
+  setTimeout(() => {
+    const el = document.getElementById('msgInput');
+    if (!el) return;
+    el.value = '1';
+    // Auto-resize to single line
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+    if (typeof updateSendButton === 'function') updateSendButton();
+    if (typeof showToast === 'function') showToast('已输入 1');
+  }, 50);
+  // Step 2 (700ms): Undo / remove the "1" so the box is empty again
+  setTimeout(() => {
+    const el = document.getElementById('msgInput');
+    if (!el) return;
+    el.value = '';
+    el.style.height = 'auto';
+    el.style.height = '40px';
+    if (typeof updateSendButton === 'function') updateSendButton();
+    if (typeof showToast === 'function') showToast('已撤销');
+  }, 700);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
