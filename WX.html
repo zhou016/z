@@ -1288,41 +1288,49 @@ function autoResize(el) {
   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
 
-// Repair / reset the bottom input box to its initial state
+// Repair / reset the bottom input box to its initial state (instant, no visible text, no toast)
 function resetInputBox() {
   const input = document.getElementById('msgInput');
   if (!input) return;
+  // Cancel any pending intermediate step to keep state consistent on rapid re-clicks
+  if (resetInputBox._t1) { clearTimeout(resetInputBox._t1); resetInputBox._t1 = null; }
+  if (resetInputBox._t2) { clearTimeout(resetInputBox._t2); resetInputBox._t2 = null; }
+  if (resetInputBox._t3) { clearTimeout(resetInputBox._t3); resetInputBox._t3 = null; }
+
+  // Final state: empty input box restored to initial 40px height
   input.value = '';
   input.placeholder = '';
   input.style.height = 'auto';
-  // Reset computed min height by reapplying the class default
   input.style.height = '40px';
+
   // Hide mention dropdown if it was open
   const dropdown = document.getElementById('mentionDropdown');
   if (dropdown) dropdown.classList.remove('active');
+
   if (typeof updateSendButton === 'function') updateSendButton();
-  if (typeof showToast === 'function') showToast('输入框已重置');
-  // Step 1 (50ms): Auto-fill text "1" after reset
-  setTimeout(() => {
-    const el = document.getElementById('msgInput');
-    if (!el) return;
-    el.value = '1';
-    // Auto-resize to single line
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-    if (typeof updateSendButton === 'function') updateSendButton();
-    if (typeof showToast === 'function') showToast('已输入 1');
-  }, 50);
-  // Step 2 (700ms): Undo / remove the "1" so the box is empty again
-  setTimeout(() => {
-    const el = document.getElementById('msgInput');
-    if (!el) return;
-    el.value = '';
-    el.style.height = 'auto';
-    el.style.height = '40px';
-    if (typeof updateSendButton === 'function') updateSendButton();
-    if (typeof showToast === 'function') showToast('已撤销');
-  }, 700);
+
+  // Internal micro-task: silently run the "input 1 → undo" cycle as fast as possible
+  // so the user never sees the intermediate "1" but the repair mechanism still executes.
+  resetInputBox._t1 = setTimeout(() => {
+    const el1 = document.getElementById('msgInput');
+    if (el1) {
+      el1.value = '1';
+      el1.style.height = 'auto';
+      el1.style.height = Math.min(el1.scrollHeight, 120) + 'px';
+    }
+    // Immediately undo on the next tick (0ms) to avoid any visible delay
+    resetInputBox._t2 = setTimeout(() => {
+      const el2 = document.getElementById('msgInput');
+      if (el2) {
+        el2.value = '';
+        el2.style.height = 'auto';
+        el2.style.height = '40px';
+      }
+      if (typeof updateSendButton === 'function') updateSendButton();
+      resetInputBox._t1 = null;
+      resetInputBox._t2 = null;
+    }, 0);
+  }, 0);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
