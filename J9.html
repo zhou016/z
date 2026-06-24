@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>智能记事本</title>
+<title>J9</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
@@ -31,7 +31,7 @@
     z-index: 100;
   }
   .topbar-left, .topbar-right { display: flex; align-items: center; gap: 4px; }
-  .topbar-title { font-size: 15px; font-weight: 600; color: var(--primary); user-select: none; }
+  .topbar-spacer { flex: 1; }
   .btn-icon {
     width: 34px; height: 34px;
     display: flex; align-items: center; justify-content: center;
@@ -121,7 +121,7 @@
   /* AI Chat Panel */
   .ai-panel {
     display: none; position: fixed; top: 0; right: 0; bottom: 0;
-    width: 420px; max-width: 100vw;
+    width: 520px; max-width: 100vw;
     background: var(--surface); z-index: 210;
     box-shadow: var(--shadow);
     flex-direction: column;
@@ -133,6 +133,32 @@
     border-bottom: 1px solid var(--border);
   }
   .ai-panel-header h3 { font-size: 16px; font-weight: 600; }
+  .ai-session-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+    background: #fbfbfb;
+  }
+  .ai-session-list {
+    flex: 1; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px;
+  }
+  .ai-session-item {
+    display: flex; align-items: center; gap: 4px; max-width: 150px;
+    border: 1px solid var(--border); background: var(--surface);
+    border-radius: 999px; padding: 5px 8px; cursor: pointer;
+    color: var(--text-secondary); font-size: 12px; white-space: nowrap;
+  }
+  .ai-session-item.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+  .ai-session-title { overflow: hidden; text-overflow: ellipsis; }
+  .ai-session-del {
+    border: none; background: transparent; color: inherit; cursor: pointer;
+    font-size: 14px; line-height: 1; padding: 0 2px;
+  }
+  .btn-mini {
+    padding: 5px 10px; border: 1px solid var(--border); border-radius: 999px;
+    background: var(--surface); color: var(--text); font-size: 12px; cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-mini:hover { border-color: var(--primary); color: var(--primary); }
   .ai-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
   .ai-msg { max-width: 88%; padding: 10px 14px; border-radius: 12px; font-size: 18px; line-height: 1.6; word-break: break-word; position: relative; }
   .ai-msg.user { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
@@ -208,6 +234,83 @@
     background: var(--surface); color: var(--text); font-size: 14px; cursor: pointer;
   }
 
+  /* ===== Fullscreen Pages ===== */
+  .fullscreen-page {
+    display: none; position: fixed; inset: 0; z-index: 260;
+    background: var(--bg); flex-direction: column;
+    animation: fadeIn .15s ease;
+  }
+  .fullscreen-page.active { display: flex; }
+  .fullscreen-header {
+    height: 52px; min-height: 52px; padding: 0 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+  }
+  .fullscreen-title-wrap { display: flex; align-items: center; gap: 6px; }
+  .fullscreen-header h2 { font-size: 17px; font-weight: 700; }
+  #btnFixTodoInput { display: none; }
+  #btnFixTodoInput.active { display: flex; }
+  .fullscreen-body { flex: 1; overflow-y: auto; padding: 12px; }
+  .section-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px; margin-bottom: 12px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+  }
+  .mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .mode-card {
+    border: 1px solid var(--border); background: var(--surface); border-radius: 12px;
+    padding: 14px 10px; cursor: pointer; text-align: left; font-family: inherit;
+  }
+  .mode-card.active, .mode-card:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+  .mode-card strong { display: block; font-size: 14px; margin-bottom: 4px; }
+  .mode-card span { display: block; font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+  .new-mode-section { display: none; }
+  .new-mode-section.active { display: block; }
+  .field-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .field-row label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+  .field-row input, .field-row textarea, .todo-card input, .todo-card textarea, .todo-card select {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 14px; font-family: inherit; outline: none; background: var(--surface);
+  }
+  .field-row textarea { min-height: 110px; resize: vertical; line-height: 1.6; }
+  #manualTodoTitle {
+    min-height: 42px; max-height: 138px; resize: none; overflow-y: hidden;
+    line-height: 1.6;
+  }
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .todo-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .todo-stats { color: var(--text-secondary); font-size: 13px; }
+  .todo-list-full { display: flex; flex-direction: column; gap: 4px; }
+  .todo-card {
+    display: grid; grid-template-columns: 20px 1fr; gap: 6px; align-items: start;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 5px 8px;
+  }
+  .todo-card.done { opacity: .65; }
+  .todo-card.done .todo-title-input { text-decoration: line-through; }
+  .todo-check { width: 16px; height: 16px; margin-top: 4px; accent-color: var(--primary); }
+  .todo-content { min-width: 0; display: flex; flex-direction: column; gap: 0; }
+  .todo-main-row { display: flex; align-items: flex-start; gap: 6px; min-height: 24px; }
+  .todo-title-input {
+    border: none !important; background: transparent !important; padding: 0 !important;
+    border-radius: 0 !important; box-shadow: none !important;
+  }
+  .todo-title-input {
+    flex: 1 1 auto; width: 0 !important; min-width: 0; box-sizing: border-box;
+    font-size: 17px !important; line-height: 1.2; font-weight: 600;
+    min-height: 22px !important; height: auto; overflow: hidden !important; resize: none;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .todo-delete {
+    flex: 0 0 auto; color: var(--accent); border-color: transparent;
+    padding: 2px 6px; font-size: 12px; line-height: 1.2; opacity: .75;
+  }
+  .todo-delete:hover { opacity: 1; background: #fff3ef; }
+  @media (max-width: 600px) {
+    .mode-grid { grid-template-columns: 1fr; }
+    .todo-card { grid-template-columns: 20px 1fr; }
+    .todo-meta { grid-template-columns: 1fr; }
+  }
+
   /* Toast */
   .toast {
     position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
@@ -228,7 +331,7 @@
     .ai-panel { width: 100vw; }
     .notes-panel { width: 85vw; }
     .note-title-input { font-size: 18px; padding: 12px 16px 4px; }
-    .note-editor { padding: 8px 16px 16px; font-size: 14px; }
+    .note-editor { padding: 8px 16px 16px; font-size: 18px; }
     .settings-content { max-width: 95vw; }
   }
 </style>
@@ -238,7 +341,7 @@
 <!-- Top Bar -->
 <div class="topbar">
   <div class="topbar-left">
-    <button class="btn-icon" id="btnNew" title="新建笔记">
+    <button class="btn-icon" id="btnNew" title="新建">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
     </button>
     <button class="btn-icon" id="btnRefresh" title="刷新">
@@ -254,8 +357,11 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.13-9.36L23 10"/></svg>
     </button>
   </div>
-  <span class="topbar-title">智能记事本</span>
+  <div class="topbar-spacer"></div>
   <div class="topbar-right">
+    <button class="btn-icon" id="btnTodos" title="待办">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    </button>
     <button class="btn-icon" id="btnAI" title="AI 助手">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 014 4v2a4 4 0 01-8 0V6a4 4 0 014-4z"/><path d="M16 14H8a4 4 0 00-4 4v2h16v-2a4 4 0 00-4-4z"/><circle cx="12" cy="6" r="1" fill="currentColor"/></svg>
       <span class="badge" id="aiBadge" style="display:none"></span>
@@ -288,6 +394,92 @@
   <div class="notes-list" id="notesList"></div>
 </div>
 
+<!-- Todos Fullscreen Page -->
+<div class="fullscreen-page" id="todosPage">
+  <div class="fullscreen-header">
+    <h2>待办</h2>
+    <div style="display:flex;gap:6px;">
+      <button class="btn-primary" id="btnTodoFromPage">新建待办</button>
+      <button class="btn-icon" id="closeTodos" title="关闭">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="fullscreen-body">
+    <div class="todo-toolbar">
+      <div class="todo-stats" id="todoStats">0 个待办</div>
+      <button class="btn-secondary" id="btnClearDoneTodos">清除已完成</button>
+    </div>
+    <div class="todo-list-full" id="todosList"></div>
+  </div>
+</div>
+
+<!-- New Item Fullscreen Page -->
+<div class="fullscreen-page" id="newPage">
+  <div class="fullscreen-header">
+    <div class="fullscreen-title-wrap">
+      <h2>新建</h2>
+      <button class="btn-icon" id="btnFixTodoInput" title="修复输入框">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.4 2.4-3-3 2.4-2.4z"/></svg>
+      </button>
+    </div>
+    <button class="btn-icon" id="closeNewPage" title="关闭">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="fullscreen-body">
+    <div class="mode-grid">
+      <button class="mode-card active" data-mode="note">
+        <strong>新建笔记</strong>
+        <span>创建一篇空白笔记</span>
+      </button>
+      <button class="mode-card" data-mode="todoManual">
+        <strong>手动输入待办</strong>
+        <span>只填写待办标题</span>
+      </button>
+      <button class="mode-card" data-mode="todoAI">
+        <strong>AI 生成待办</strong>
+        <span>让大模型分析内容并拆成待办</span>
+      </button>
+    </div>
+
+    <div class="section-card new-mode-section active" id="mode-note">
+      <div class="field-row">
+        <label>笔记标题</label>
+        <input id="newNoteTitle" placeholder="留空则使用当前时间">
+      </div>
+      <div class="field-row">
+        <label>笔记内容</label>
+        <textarea id="newNoteContent" placeholder="可选"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" id="btnCreateNoteFromPage">创建笔记</button>
+      </div>
+    </div>
+
+    <div class="section-card new-mode-section" id="mode-todoManual">
+      <div class="field-row">
+        <label>待办标题</label>
+        <textarea id="manualTodoTitle" rows="1" placeholder="输入待办内容"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" id="btnCreateTodoManual">创建待办</button>
+      </div>
+    </div>
+
+    <div class="section-card new-mode-section" id="mode-todoAI">
+      <div class="field-row">
+        <label>交给 AI 分析的内容</label>
+        <textarea id="aiTodoSource" placeholder="粘贴会议记录、聊天记录、想法或任务描述，AI 会拆解为待办"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" id="btnGenerateTodosAI">AI 智能分析生成待办</button>
+      </div>
+      <div id="aiTodoPreview" style="margin-top:12px;color:var(--text-secondary);font-size:13px;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- AI Panel -->
 <div class="panel-overlay" id="aiOverlay"></div>
 <div class="ai-panel" id="aiPanel">
@@ -302,10 +494,14 @@
       </button>
     </div>
   </div>
+  <div class="ai-session-bar">
+    <button class="btn-mini" id="btnNewChat">新会话</button>
+    <div class="ai-session-list" id="aiSessionList"></div>
+  </div>
   <div class="ai-messages" id="aiMessages"></div>
   <div class="ai-typing" id="aiTyping" style="display:none">AI 正在思考...</div>
   <div class="ai-input-area">
-    <textarea id="aiInput" placeholder="输入问题..." rows="1"></textarea>
+    <textarea id="aiInput" placeholder="输入问题，也可说：修改当前笔记 / 创建笔记 / 生成待办..." rows="1"></textarea>
   </div>
 </div>
 
@@ -338,6 +534,11 @@
         <label>系统提示词（可选）</label>
         <textarea id="cfgSystemPrompt" rows="3" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:inherit;outline:none;resize:vertical;" placeholder="你是一个智能助手..."></textarea>
       </div>
+      <div class="form-group">
+        <label>AI 上下文字符预算</label>
+        <input type="number" id="cfgContextBudget" min="0" step="1000" placeholder="留空代表不限制预算">
+        <div class="hint">输入任意数字作为字符预算；留空表示不限制。内容很多时，AI 会先在本地智能检索最相关的笔记和待办。</div>
+      </div>
       <div style="font-size:13px;font-weight:600;color:var(--primary);margin-top:8px;">编辑器设置</div>
       <div class="form-group">
         <label>字号：<span id="fontSizeLabel">18</span>px</label>
@@ -367,16 +568,22 @@
   // ===== Storage Keys =====
   const KEYS = {
     notes: 'smartpad_notes',
+    todos: 'smartpad_todos',
     activeId: 'smartpad_active_id',
     settings: 'smartpad_settings',
-    chatHistory: 'smartpad_chat_history'
+    chatHistory: 'smartpad_chat_history',
+    chatSessions: 'smartpad_chat_sessions',
+    activeChatId: 'smartpad_active_chat_id'
   };
 
   // ===== State =====
   let notes = [];
+  let todos = [];
   let activeNoteId = null;
   let autoSaveTimer = null;
   let chatHistory = [];
+  let chatSessions = [];
+  let activeChatId = null;
   let isStreaming = false;
 
   // ===== DOM =====
@@ -386,6 +593,8 @@
   const charCount = $('charCount');
   const saveStatus = $('saveStatus');
   const notesList = $('notesList');
+  const todosList = $('todosList');
+  const aiSessionList = $('aiSessionList');
   const aiMessages = $('aiMessages');
   const aiInput = $('aiInput');
   const aiTyping = $('aiTyping');
@@ -417,11 +626,13 @@
     return `${bj.getFullYear()}-${pad(bj.getMonth()+1)}-${pad(bj.getDate())} ${pad(bj.getHours())}:${pad(bj.getMinutes())}:${pad(bj.getSeconds())}`;
   }
 
-  function createNote() {
+  function createNote(customTitle, customContent, silent) {
+    if (typeof customTitle !== 'string') customTitle = '';
+    if (typeof customContent !== 'string') customContent = '';
     const note = {
       id: 'n_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
-      title: getBeijingTimeStr(),
-      content: '',
+      title: customTitle.trim() || getBeijingTimeStr(),
+      content: customContent || '',
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
@@ -431,7 +642,8 @@
     renderNote();
     renderNotesList();
     noteContent.focus();
-    showToast('已创建新笔记');
+    if (!silent) showToast('已创建新笔记');
+    return note;
   }
 
   function deleteNote(id) {
@@ -518,7 +730,101 @@
     return div.innerHTML;
   }
 
+  function escapeAttr(str) {
+    return escapeHtml(String(str || '')).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   window._deleteNote = deleteNote;
+
+  // ===== Todos CRUD =====
+  function loadTodos() {
+    try { todos = JSON.parse(localStorage.getItem(KEYS.todos)) || []; } catch { todos = []; }
+  }
+
+  function saveTodos() {
+    localStorage.setItem(KEYS.todos, JSON.stringify(todos));
+  }
+
+  function createTodo(title, detail, priority, dueText) {
+    const todo = {
+      id: 't_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+      title: (title || '').trim() || '未命名待办',
+      detail: (detail || '').trim(),
+      priority: priority || '普通',
+      dueText: dueText || '',
+      done: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    todos.unshift(todo);
+    saveTodos();
+    renderTodosList();
+    return todo;
+  }
+
+  function updateTodo(id, patch) {
+    const todo = todos.find(t => t.id === id);
+    if (!todo) return;
+    Object.assign(todo, patch, { updatedAt: Date.now() });
+    saveTodos();
+    renderTodosStats();
+  }
+
+  function deleteTodo(id) {
+    todos = todos.filter(t => t.id !== id);
+    saveTodos();
+    renderTodosList();
+    showToast('已删除待办');
+  }
+
+  function renderTodosStats() {
+    const total = todos.length;
+    const done = todos.filter(t => t.done).length;
+    $('todoStats').textContent = total ? `${total} 个待办，${done} 个已完成` : '暂无待办';
+  }
+
+  function renderTodosList() {
+    renderTodosStats();
+    if (!todos.length) {
+      todosList.innerHTML = '<div class="section-card" style="color:var(--text-secondary);text-align:center;">暂无待办，点击“新建待办”添加。</div>';
+      return;
+    }
+    const sorted = [...todos].sort((a, b) => Number(a.done) - Number(b.done) || b.updatedAt - a.updatedAt);
+    todosList.innerHTML = sorted.map(t => {
+      const displayText = [
+        t.title || '',
+        (t.detail || '').trim(),
+        (t.dueText || '').trim() ? `时间：${t.dueText}` : '',
+        t.priority && t.priority !== '普通' ? `优先级：${t.priority}` : ''
+      ].filter(Boolean).join('\n');
+      return `
+      <div class="todo-card ${t.done ? 'done' : ''}" data-id="${escapeAttr(t.id)}">
+        <input class="todo-check" type="checkbox" ${t.done ? 'checked' : ''} title="完成状态">
+        <div class="todo-content">
+          <div class="todo-main-row">
+            <textarea class="todo-title-input" rows="1" placeholder="待办内容">${escapeHtml(displayText)}</textarea>
+            <button class="btn-secondary todo-delete">删除</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    todosList.querySelectorAll('.todo-card').forEach(card => {
+      const id = card.dataset.id;
+      card.querySelector('.todo-check').addEventListener('change', e => {
+        updateTodo(id, { done: e.target.checked });
+        card.classList.toggle('done', e.target.checked);
+      });
+      const titleInput = card.querySelector('.todo-title-input');
+      requestAnimationFrame(() => autoGrowTodoText(titleInput));
+      titleInput.addEventListener('input', e => {
+        autoGrowTodoText(e.target);
+        updateTodo(id, { title: e.target.value, detail: '', dueText: '', priority: '普通' });
+      });
+      card.querySelector('.todo-delete').addEventListener('click', () => deleteTodo(id));
+    });
+    requestAnimationFrame(autoGrowAllTodoText);
+  }
 
   // ===== Panels =====
   function openPanel(name) {
@@ -528,10 +834,18 @@
     } else if (name === 'ai') {
       $('aiOverlay').classList.add('active');
       $('aiPanel').classList.add('active');
+      renderChatSessions();
+      renderChatHistory();
       aiInput.focus();
     } else if (name === 'settings') {
       $('settingsModal').classList.add('active');
       loadSettings();
+    } else if (name === 'todos') {
+      renderTodosList();
+      $('todosPage').classList.add('active');
+    } else if (name === 'new') {
+      $('newPage').classList.add('active');
+      setNewMode('note');
     }
   }
 
@@ -544,7 +858,19 @@
       $('aiPanel').classList.remove('active');
     } else if (name === 'settings') {
       $('settingsModal').classList.remove('active');
+    } else if (name === 'todos') {
+      $('todosPage').classList.remove('active');
+    } else if (name === 'new') {
+      $('newPage').classList.remove('active');
     }
+  }
+
+  function setNewMode(mode) {
+    document.querySelectorAll('.mode-card').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
+    document.querySelectorAll('.new-mode-section').forEach(section => section.classList.remove('active'));
+    const section = $('mode-' + mode);
+    if (section) section.classList.add('active');
+    $('btnFixTodoInput').classList.toggle('active', mode === 'todoManual');
   }
 
   // ===== Settings =====
@@ -555,6 +881,7 @@
       $('cfgKey').value = s.key || '';
       $('cfgModel').value = s.model || '';
       $('cfgSystemPrompt').value = s.systemPrompt || '';
+      $('cfgContextBudget').value = s.contextBudget == null ? '' : s.contextBudget;
       const fontSize = s.fontSize || 18;
       $('cfgFontSize').value = fontSize;
       $('fontSizeLabel').textContent = fontSize;
@@ -567,6 +894,7 @@
       key: $('cfgKey').value.trim(),
       model: $('cfgModel').value.trim(),
       systemPrompt: $('cfgSystemPrompt').value.trim(),
+      contextBudget: $('cfgContextBudget').value.trim() === '' ? null : Math.max(0, parseInt($('cfgContextBudget').value, 10) || 0),
       fontSize: parseInt($('cfgFontSize').value, 10)
     };
     localStorage.setItem(KEYS.settings, JSON.stringify(s));
@@ -585,11 +913,99 @@
 
   // ===== AI Chat =====
   function loadChatHistory() {
-    try { chatHistory = JSON.parse(localStorage.getItem(KEYS.chatHistory)) || []; } catch { chatHistory = []; }
+    try { chatSessions = JSON.parse(localStorage.getItem(KEYS.chatSessions)) || []; } catch { chatSessions = []; }
+    activeChatId = localStorage.getItem(KEYS.activeChatId);
+    if (!chatSessions.length) {
+      try { chatHistory = JSON.parse(localStorage.getItem(KEYS.chatHistory)) || []; } catch { chatHistory = []; }
+      chatSessions = [{
+        id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+        title: chatHistory.length ? '历史会话' : '新会话',
+        messages: chatHistory,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      }];
+      activeChatId = chatSessions[0].id;
+      saveChatHistory();
+    }
+    if (!chatSessions.find(s => s.id === activeChatId)) activeChatId = chatSessions[0]?.id || null;
   }
 
   function saveChatHistory() {
+    localStorage.setItem(KEYS.chatSessions, JSON.stringify(chatSessions));
+    localStorage.setItem(KEYS.activeChatId, activeChatId || '');
+    chatHistory = getActiveMessages();
     localStorage.setItem(KEYS.chatHistory, JSON.stringify(chatHistory));
+  }
+
+  function getActiveSession() {
+    if (!chatSessions.length) createChatSession();
+    return chatSessions.find(s => s.id === activeChatId) || chatSessions[0] || null;
+  }
+
+  function getActiveMessages() {
+    const session = getActiveSession();
+    return session?.messages || [];
+  }
+
+  function createChatSession(title) {
+    const session = {
+      id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+      title: title || '新会话',
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    chatSessions.unshift(session);
+    activeChatId = session.id;
+    saveChatHistory();
+    renderChatSessions();
+    renderChatHistory();
+    return session;
+  }
+
+  function updateActiveSessionTitle(text) {
+    const session = getActiveSession();
+    if (!session || session.messages.length > 1 || session.title !== '新会话') return;
+    session.title = String(text || '新会话').replace(/\s+/g, ' ').slice(0, 18) || '新会话';
+  }
+
+  function deleteChatSession(id) {
+    if (chatSessions.length <= 1) {
+      const session = getActiveSession();
+      if (session) {
+        session.messages = [];
+        session.title = '新会话';
+        session.updatedAt = Date.now();
+      }
+    } else {
+      chatSessions = chatSessions.filter(s => s.id !== id);
+      if (activeChatId === id) activeChatId = chatSessions[0]?.id || null;
+    }
+    saveChatHistory();
+    renderChatSessions();
+    renderChatHistory();
+    showToast('会话已删除');
+  }
+
+  function renderChatSessions() {
+    if (!aiSessionList) return;
+    aiSessionList.innerHTML = chatSessions.map(s => `
+      <div class="ai-session-item ${s.id === activeChatId ? 'active' : ''}" data-id="${escapeAttr(s.id)}" title="${escapeAttr(s.title || '新会话')}">
+        <span class="ai-session-title">${escapeHtml(s.title || '新会话')}</span>
+        <button class="ai-session-del" title="删除会话">×</button>
+      </div>`).join('');
+    aiSessionList.querySelectorAll('.ai-session-item').forEach(item => {
+      item.addEventListener('click', () => {
+        activeChatId = item.dataset.id;
+        saveChatHistory();
+        renderChatSessions();
+        renderChatHistory();
+      });
+      item.querySelector('.ai-session-del').addEventListener('click', e => {
+        e.stopPropagation();
+        deleteChatSession(item.dataset.id);
+      });
+    });
   }
 
   const COPY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
@@ -613,6 +1029,7 @@
   }
 
   function renderChatHistory() {
+    chatHistory = getActiveMessages();
     aiMessages.innerHTML = chatHistory.map(m =>
       `<div class="ai-msg ${m.role}">${formatMessage(m.content, m.role)}</div>`
     ).join('');
@@ -624,6 +1041,144 @@
       }
     });
     aiMessages.scrollTop = aiMessages.scrollHeight;
+  }
+
+  function summarizeUserContext() {
+    const recentNotes = [...notes].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 12);
+    const activeTodos = todos.filter(t => !t.done).slice(0, 30);
+    const doneTodos = todos.filter(t => t.done).slice(0, 10);
+    const noteTitles = recentNotes.map(n => n.title || '无标题').join('、') || '暂无';
+    const importantTodos = activeTodos.filter(t => t.priority === '重要' || t.priority === '紧急').map(t => t.title).join('、') || '暂无';
+    return [
+      `用户共有 ${notes.length} 篇笔记、${todos.length} 个待办，其中未完成待办 ${activeTodos.length} 个。`,
+      `近期笔记标题：${noteTitles}`,
+      `重要/紧急待办：${importantTodos}`,
+      `学习规则：把笔记和待办视为用户长期记忆，主动识别用户的目标、偏好、项目、时间安排、表达风格和未完成事项；回答时优先贴合用户当前记事本与待办，不要机械复述全部资料。`,
+      `隐私规则：这些资料只用于当前回答，不要声称已上传到外部长期记忆。`
+    ].join('\n');
+  }
+
+  function getKeywords(query) {
+    const stop = new Set(['的','了','和','是','我','你','他','她','它','在','要','把','给','请','帮','如何','怎么','什么','一个','一下','以及','或者','如果','因为','所以','the','and','for','with','this','that','what','how']);
+    return Array.from(new Set(String(query || '')
+      .toLowerCase()
+      .match(/[\u4e00-\u9fa5]{2,}|[a-z0-9_+-]{2,}/g) || []))
+      .filter(w => !stop.has(w))
+      .slice(0, 30);
+  }
+
+  function scoreText(text, keywords, updatedAt, extraScore) {
+    const lower = String(text || '').toLowerCase();
+    let score = extraScore || 0;
+    keywords.forEach(k => {
+      const escaped = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const count = (lower.match(new RegExp(escaped, 'g')) || []).length;
+      score += count * (k.length >= 4 ? 4 : 2);
+    });
+    if (updatedAt) score += Math.max(0, 7 - (Date.now() - updatedAt) / 86400000 / 7);
+    return score;
+  }
+
+  function makeSnippet(text, keywords, maxLen) {
+    const source = String(text || '').replace(/\s+/g, ' ').trim();
+    if (source.length <= maxLen) return source;
+    const lower = source.toLowerCase();
+    let pos = -1;
+    for (const k of keywords) {
+      pos = lower.indexOf(k.toLowerCase());
+      if (pos >= 0) break;
+    }
+    if (pos < 0) return source.slice(0, maxLen) + '...';
+    const start = Math.max(0, pos - Math.floor(maxLen / 3));
+    return (start > 0 ? '...' : '') + source.slice(start, start + maxLen) + (start + maxLen < source.length ? '...' : '');
+  }
+
+  function fitToBudget(sections, budget) {
+    let used = 0;
+    const result = [];
+    for (const section of sections) {
+      if (!section) continue;
+      const left = budget - used;
+      if (left <= 0) break;
+      const text = section.length > left ? section.slice(0, Math.max(0, left - 20)) + '\n...（已按预算截断）' : section;
+      result.push(text);
+      used += text.length;
+    }
+    return result.join('\n\n');
+  }
+
+  function buildOptimizedMemoryContext(query, settings) {
+    const rawBudget = Number(settings.contextBudget);
+    const unlimited = !(Number.isFinite(rawBudget) && rawBudget > 0);
+    const budget = unlimited ? Infinity : rawBudget;
+    const keywords = getKeywords(query);
+    const activeNote = getActiveNote();
+    const noteBudget = unlimited ? Infinity : Math.floor(budget * 0.62);
+    const todoBudget = unlimited ? Infinity : Math.floor(budget * 0.22);
+    const profileBudget = unlimited ? Infinity : budget - noteBudget - todoBudget;
+
+    const rankedNotes = notes.map(n => {
+      let extra = n.id === activeNoteId ? 80 : 0;
+      const text = `${n.title || ''}\n${n.content || ''}`;
+      return { note: n, score: scoreText(text, keywords, n.updatedAt, extra) };
+    }).sort((a, b) => b.score - a.score || b.note.updatedAt - a.note.updatedAt);
+
+    const noteSections = rankedNotes.slice(0, unlimited ? rankedNotes.length : 10).map(({ note, score }, index) => {
+      const date = new Date(note.updatedAt).toLocaleString('zh-CN');
+      const tag = note.id === activeNoteId ? '当前正在编辑' : `相关度 ${Math.round(score)}`;
+      const maxLen = unlimited ? Infinity : Math.max(500, Math.floor(noteBudget / 8));
+      return `【笔记 ${index + 1}｜${tag}】${note.title || '无标题'}\n更新时间：${date}\n片段：${makeSnippet(note.content || '（空）', keywords, maxLen)}`;
+    });
+
+    const rankedTodos = todos.map(t => {
+      let extra = t.done ? -5 : 20;
+      if (t.priority === '紧急') extra += 30;
+      if (t.priority === '重要') extra += 18;
+      return { todo: t, score: scoreText(`${t.title || ''}\n${t.detail || ''}\n${t.dueText || ''}`, keywords, t.updatedAt, extra) };
+    }).sort((a, b) => b.score - a.score || Number(a.todo.done) - Number(b.todo.done) || b.todo.updatedAt - a.todo.updatedAt);
+
+    const todoSections = rankedTodos.slice(0, unlimited ? rankedTodos.length : 18).map(({ todo }) => {
+      const status = todo.done ? '已完成' : '未完成';
+      return `【${status}｜${todo.priority || '普通'}】${todo.title || '未命名待办'}\n时间：${todo.dueText || '未设置'}\n说明：${makeSnippet(todo.detail || '无', keywords, unlimited ? Infinity : 220)}`;
+    });
+
+    const profile = fitToBudget([summarizeUserContext()], profileBudget);
+    const notesPart = fitToBudget(noteSections, noteBudget);
+    const todosPart = fitToBudget(todoSections, todoBudget);
+    const retrievalInfo = `本次采用本地智能检索${unlimited ? '，当前设置为不限制上下文预算' : '，不会把全部内容一次性发给 AI'}。\n检索关键词：${keywords.join('、') || '无明确关键词，优先当前笔记、近期内容和未完成待办'}\n笔记总数：${notes.length}，本次召回：${noteSections.length}；待办总数：${todos.length}，本次召回：${todoSections.length}；上下文预算：${unlimited ? '不限制' : budget + ' 字符'}。`;
+
+    return `【上下文优化说明】\n${retrievalInfo}
+
+【用户画像与近期重点】
+${profile || '暂无'}
+
+【本次最相关笔记片段】
+${notesPart || '（未召回相关笔记）'}
+
+【本次最相关待办】
+${todosPart || '（未召回相关待办）'}`;
+  }
+
+  function buildAISystemPrompt(settings, query) {
+    const base = settings.systemPrompt || '你是一个智能助手。';
+    return `${base}
+
+你需要像了解用户的私人助理一样回答问题。回答时综合四类信息：
+1. 大模型自身知识、推理能力与资料储备；
+2. 用户当前记事本内容；
+3. 用户待办内容与完成状态；
+4. 互联网最新资料：如果当前模型/API具备联网检索、浏览或搜索能力，你必须主动用于需要时效性的问题；如果当前接口不支持联网，不要伪造最新信息，要明确说明“当前接口未提供实时联网检索”，再基于已有知识和本地内容回答。
+
+回答规则：
+- 优先结合用户笔记和待办，给出更懂用户处境的回答。
+- 如果本地内容与通用知识冲突，说明你依据的是哪一类信息。
+- 涉及日期、价格、政策、新闻、版本、比赛、股票等时效问题时，优先使用联网能力；无法联网时要提示限制。
+- 不要把用户笔记和待办整段泄露式复述，除非用户明确要求。
+- 用户要求“修改当前笔记、创建笔记、生成待办”时，可以按已有工具逻辑执行或提示可执行。
+- 如果本次召回的片段不足以回答，要主动说明需要更具体关键词、标题、时间范围，或让用户打开相关笔记后再问；不要假装已经读取全部完整内容。
+- 当用户要求“查找、总结、回顾、基于我的记录分析”时，优先依据本次召回片段，并指出这是智能检索结果。
+
+${buildOptimizedMemoryContext(query || '', settings)}`;
   }
 
   function stripMarkdown(text) {
@@ -678,14 +1233,255 @@
   }
 
   function appendMessage(role, content) {
+    const session = getActiveSession();
+    chatHistory = session.messages;
     chatHistory.push({ role, content, ts: Date.now() });
+    session.updatedAt = Date.now();
+    if (role === 'user') updateActiveSessionTitle(content);
     saveChatHistory();
+    renderChatSessions();
     const div = document.createElement('div');
     div.className = 'ai-msg ' + role;
     div.innerHTML = formatMessage(content, role);
     addCopyBtn(div, getMessageDisplayText(content, role));
     aiMessages.appendChild(div);
     aiMessages.scrollTop = aiMessages.scrollHeight;
+  }
+
+  function ensureAIReady() {
+    const settings = getSettings();
+    if (!settings.url || !settings.key || !settings.model) {
+      showToast('请先在设置中配置 AI 模型');
+      openPanel('settings');
+      return null;
+    }
+    return settings;
+  }
+
+  async function callAIText(messages, temperature) {
+    const settings = ensureAIReady();
+    if (!settings) throw new Error('AI 模型未配置');
+    const resp = await fetch(settings.url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + settings.key
+      },
+      body: JSON.stringify({
+        model: settings.model,
+        messages,
+        temperature: temperature ?? 0.7,
+        stream: false
+      })
+    });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`API 错误 (${resp.status}): ${errText.slice(0, 200)}`);
+    }
+    const data = await resp.json();
+    return data.choices?.[0]?.message?.content?.trim() || '';
+  }
+
+  function getNoteOperationCandidates(query) {
+    const keywords = getKeywords(query);
+    return notes.map(n => ({
+      note: n,
+      score: scoreText(`${n.title || ''}\n${n.content || ''}`, keywords, n.updatedAt, n.id === activeNoteId ? 100 : 0)
+    })).sort((a, b) => b.score - a.score || b.note.updatedAt - a.note.updatedAt).slice(0, 12);
+  }
+
+  function parseJsonObject(text) {
+    const raw = String(text || '').trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+    const match = raw.match(/\{[\s\S]*\}/);
+    return JSON.parse(match ? match[0] : raw);
+  }
+
+  async function aiOperateNotes(userText) {
+    const settings = ensureAIReady();
+    if (!settings) return false;
+    autoSave();
+    isStreaming = true;
+    aiTyping.style.display = 'block';
+    aiInput.disabled = true;
+
+    const candidates = getNoteOperationCandidates(userText).map(({ note }, index) => ({
+      index: index + 1,
+      id: note.id,
+      title: note.title || '无标题',
+      updatedAt: new Date(note.updatedAt).toLocaleString('zh-CN'),
+      isActive: note.id === activeNoteId,
+      snippet: makeSnippet(note.content || '（空）', getKeywords(userText), 700)
+    }));
+
+    try {
+      const result = await callAIText([
+        {
+          role: 'system',
+          content: buildAISystemPrompt(settings, userText) + `
+
+你现在是“笔记操作规划器”。必须只返回一个 JSON 对象，不要 Markdown，不要解释。
+可用 action：
+- create_note：创建新笔记。字段：title, content
+- modify_note_new_version：修改某篇笔记，但不能覆盖原笔记，必须另建修改版。字段：targetId, title, content
+- rename_note：重命名笔记。字段：targetId, title
+- delete_note：删除笔记。字段：targetId
+- open_note：打开笔记。字段：targetId
+- need_clarification：目标不明确或缺少必要信息。字段：message
+
+规则：
+1. 如果用户说“修改/改写/优化/润色/整理/追加/添加到某篇笔记”，使用 modify_note_new_version，并输出修改后的完整正文 content。
+2. 如果用户说“修改当前笔记”，targetId 使用当前正在编辑的笔记。
+3. 删除、重命名、打开必须有明确目标；不明确就返回 need_clarification。
+4. targetId 必须来自候选笔记列表，除非是 create_note。
+5. create_note 的 content 必须是可直接保存的正文。
+6. 只返回 JSON，例如：{"action":"modify_note_new_version","targetId":"...","title":"...（AI修改版）","content":"..."}` },
+        {
+          role: 'user',
+          content: `用户指令：${userText}
+
+当前笔记ID：${activeNoteId || '无'}
+候选笔记：
+${JSON.stringify(candidates, null, 2)}`
+        }
+      ], 0.2);
+
+      const op = parseJsonObject(result);
+      let message = '';
+      if (op.action === 'create_note') {
+        const note = createNote(op.title || 'AI 创建笔记', op.content || '', true);
+        message = `已创建笔记：${note.title}`;
+      } else if (op.action === 'modify_note_new_version') {
+        const target = notes.find(n => n.id === op.targetId) || getActiveNote();
+        if (!target) throw new Error('没有找到要修改的笔记');
+        const title = op.title || `${target.title || '无标题'}（AI修改版）`;
+        const content = op.content || target.content || '';
+        const note = createNote(title, content, true);
+        message = `已创建修改版本：${note.title}\n原笔记“${target.title || '无标题'}”未删除。`;
+      } else if (op.action === 'rename_note') {
+        const target = notes.find(n => n.id === op.targetId);
+        if (!target) throw new Error('没有找到要重命名的笔记');
+        const oldTitle = target.title || '无标题';
+        target.title = op.title || oldTitle;
+        target.updatedAt = Date.now();
+        saveNotes();
+        renderNote();
+        renderNotesList();
+        message = `已将“${oldTitle}”重命名为“${target.title}”。`;
+      } else if (op.action === 'delete_note') {
+        const target = notes.find(n => n.id === op.targetId);
+        if (!target) throw new Error('没有找到要删除的笔记');
+        const oldTitle = target.title || '无标题';
+        deleteNote(target.id);
+        message = `已删除笔记：${oldTitle}`;
+      } else if (op.action === 'open_note') {
+        const target = notes.find(n => n.id === op.targetId);
+        if (!target) throw new Error('没有找到要打开的笔记');
+        activeNoteId = target.id;
+        saveNotes();
+        renderNote();
+        renderNotesList();
+        message = `已打开笔记：${target.title || '无标题'}`;
+      } else {
+        message = op.message || '我需要更明确的笔记标题、关键词或操作要求。';
+      }
+      appendMessage('assistant', message);
+      showToast(message.split('\n')[0]);
+      return true;
+    } catch (err) {
+      appendMessage('assistant', '笔记操作失败: ' + err.message);
+      return true;
+    } finally {
+      isStreaming = false;
+      aiTyping.style.display = 'none';
+      aiInput.disabled = false;
+      aiInput.focus();
+    }
+  }
+
+  async function aiModifyCurrentNote(instruction) {
+    autoSave();
+    const note = getActiveNote();
+    if (!note || (!note.title && !note.content)) {
+      showToast('当前笔记为空，无法修改');
+      return;
+    }
+    isStreaming = true;
+    aiTyping.style.display = 'block';
+    aiInput.disabled = true;
+    try {
+      const content = await callAIText([
+        { role: 'system', content: buildAISystemPrompt(getSettings(), instruction) + '\n\n你现在是专业笔记编辑助手。请根据用户要求修改笔记，只输出修改后的完整笔记正文，不要解释。必须保留原笔记的核心信息，不要删除原笔记。' },
+        { role: 'user', content: `修改要求：${instruction || '优化结构、表达和可读性'}\n\n原笔记标题：${note.title || '无标题'}\n原笔记内容：\n${note.content || '（空）'}` }
+      ], 0.6);
+      const newNote = createNote(`${note.title || '无标题'}（AI修改版）`, content, true);
+      appendMessage('assistant', `已创建修改版本：${newNote.title}\n\n原内容未删除。`);
+      showToast('已创建 AI 修改版本');
+    } catch (err) {
+      appendMessage('assistant', 'AI 修改失败: ' + err.message);
+    } finally {
+      isStreaming = false;
+      aiTyping.style.display = 'none';
+      aiInput.disabled = false;
+      aiInput.focus();
+    }
+  }
+
+  async function aiCreateNoteFromPrompt(promptText) {
+    const topic = (promptText || '').trim();
+    if (!topic) {
+      showToast('请先输入要创建的笔记主题或内容');
+      return;
+    }
+    isStreaming = true;
+    aiTyping.style.display = 'block';
+    aiInput.disabled = true;
+    try {
+      const content = await callAIText([
+        { role: 'system', content: buildAISystemPrompt(getSettings(), topic) + '\n\n你现在是笔记生成助手。根据用户要求创建一篇结构清晰、可直接保存的中文笔记。只输出笔记正文，不要解释。' },
+        { role: 'user', content: topic }
+      ], 0.7);
+      const titleText = topic.replace(/^(创建|新建|生成)?\s*笔记[:：]?\s*/,'').slice(0, 30) || 'AI 创建笔记';
+      const newNote = createNote(titleText, content, true);
+      appendMessage('assistant', `已创建笔记：${newNote.title}`);
+      showToast('已创建 AI 笔记');
+    } catch (err) {
+      appendMessage('assistant', 'AI 创建笔记失败: ' + err.message);
+    } finally {
+      isStreaming = false;
+      aiTyping.style.display = 'none';
+      aiInput.disabled = false;
+      aiInput.focus();
+    }
+  }
+
+  function extractJsonArray(text) {
+    const raw = String(text || '').trim();
+    const match = raw.match(/\[[\s\S]*\]/);
+    return JSON.parse(match ? match[0] : raw);
+  }
+
+  async function aiGenerateTodosFromText(sourceText) {
+    const source = (sourceText || '').trim();
+    if (!source) {
+      showToast('请先输入要分析的内容');
+      return;
+    }
+    $('aiTodoPreview').textContent = 'AI 正在分析...';
+    try {
+      const result = await callAIText([
+        { role: 'system', content: buildAISystemPrompt(getSettings(), source) + '\n\n你现在是待办拆解助手。把输入内容拆成可执行待办。只返回 JSON 数组，不要 Markdown，不要解释。数组项格式：{"title":"待办标题","detail":"说明","priority":"普通/重要/紧急","dueText":"时间或截止日期，可空"}。' },
+        { role: 'user', content: source }
+      ], 0.3);
+      const list = extractJsonArray(result);
+      if (!Array.isArray(list) || !list.length) throw new Error('AI 未返回有效待办');
+      list.forEach(item => createTodo(item.title, item.detail, item.priority, item.dueText));
+      $('aiTodoPreview').textContent = `已生成 ${list.length} 个待办，可到“待办”中编辑。`;
+      showToast(`已生成 ${list.length} 个待办`);
+      openPanel('todos');
+    } catch (err) {
+      $('aiTodoPreview').textContent = '生成失败：' + err.message;
+      showToast('AI 生成待办失败');
+    }
   }
 
   function appendStreamChunk(text) {
@@ -720,33 +1516,33 @@
     const text = aiInput.value.trim();
     if (!text || isStreaming) return;
 
-    const settings = getSettings();
-    if (!settings.url || !settings.key || !settings.model) {
-      showToast('请先在设置中配置 AI 模型');
-      openPanel('settings');
-      return;
-    }
+    const settings = ensureAIReady();
+    if (!settings) return;
 
     aiInput.value = '';
     aiInput.style.height = 'auto';
     appendMessage('user', text);
 
-    // Build messages with context
-    const allNotesContent = notes.map(n => `【${n.title || '无标题'}】\n${n.content}`).join('\n\n---\n\n');
-    const systemPrompt = (settings.systemPrompt || '你是一个智能助手。') +
-      `\n\n以下是用户的所有笔记内容，你可以参考这些内容来回答问题：\n\n${allNotesContent || '（用户暂无笔记）'}`;
+    if (/生成待办|创建待办|新建待办|拆解待办/.test(text)) {
+      await aiGenerateTodosFromText(text);
+      appendMessage('assistant', '已尝试根据你的内容生成待办，请打开“待办”查看和编辑。');
+      return;
+    }
 
-    const messages = [{ role: 'system', content: systemPrompt }];
+    if (/(笔记|记事本)/.test(text) && /(创建|新建|生成|修改|改写|优化|润色|整理|追加|添加|重命名|改名|删除|打开|操作|改一下|改成)/.test(text)) {
+      await aiOperateNotes(text);
+      return;
+    }
 
-    // Include recent chat history (last 10 messages)
-    const recent = chatHistory.slice(-10);
+    const messages = [{ role: 'system', content: buildAISystemPrompt(settings, text) }];
+
+    // Include recent messages of current session
+    const recent = getActiveMessages().slice(-12);
     recent.forEach(m => {
       if (m.role === 'user' || m.role === 'assistant') {
         messages.push({ role: m.role, content: m.content });
       }
     });
-    // Add current message
-    messages.push({ role: 'user', content: text });
 
     isStreaming = true;
     aiTyping.style.display = 'block';
@@ -804,8 +1600,12 @@
 
       // Save final assistant message
       if (fullResponse) {
+        const session = getActiveSession();
+        chatHistory = session.messages;
         chatHistory.push({ role: 'assistant', content: fullResponse, ts: Date.now() });
+        session.updatedAt = Date.now();
         saveChatHistory();
+        renderChatSessions();
       }
     } catch (err) {
       fullResponse = '请求失败: ' + err.message;
@@ -821,16 +1621,50 @@
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }
 
+  function autoGrowTodoText(el) {
+    if (!el) return;
+    el.style.height = '0px';
+    el.style.height = Math.max(el.scrollHeight, 22) + 'px';
+  }
+
+  function autoGrowAllTodoText() {
+    document.querySelectorAll('.todo-title-input').forEach(autoGrowTodoText);
+  }
+
+  function autoGrowManualTodoTitle() {
+    const el = $('manualTodoTitle');
+    if (!el) return;
+    el.style.height = 'auto';
+    const maxHeight = parseFloat(getComputedStyle(el).lineHeight) * 5 + 20;
+    const nextHeight = Math.min(el.scrollHeight, maxHeight);
+    el.style.height = nextHeight + 'px';
+    el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
+  }
+
+  function fixManualTodoInput() {
+    const el = $('manualTodoTitle');
+    if (!el) return;
+    el.focus();
+    el.select();
+    document.execCommand('delete');
+    document.execCommand('insertText', false, '1');
+    document.execCommand('undo');
+    requestAnimationFrame(autoGrowManualTodoTitle);
+  }
+
   // ===== Event Bindings =====
-  $('btnNew').addEventListener('click', createNote);
+  $('btnNew').addEventListener('click', () => createNote());
   $('btnRefresh').addEventListener('click', () => { autoSave(); location.reload(); });
   $('btnNotes').addEventListener('click', () => { autoSave(); renderNotesList(); openPanel('notes'); });
   $('btnUndo').addEventListener('click', () => { document.execCommand('undo'); });
   $('btnRedo').addEventListener('click', () => { document.execCommand('redo'); });
+  $('btnTodos').addEventListener('click', () => { autoSave(); openPanel('todos'); });
   $('btnAI').addEventListener('click', () => { openPanel('ai'); });
   $('btnSettings').addEventListener('click', () => openPanel('settings'));
 
   $('closeNotes').addEventListener('click', () => closePanel('notes'));
+  $('closeTodos').addEventListener('click', () => closePanel('todos'));
+  $('closeNewPage').addEventListener('click', () => closePanel('new'));
   $('closeAI').addEventListener('click', () => closePanel('ai'));
   $('closeSettings').addEventListener('click', () => closePanel('settings'));
 
@@ -845,6 +1679,66 @@
     const v = $('cfgFontSize').value;
     $('fontSizeLabel').textContent = v;
     applyFontSize(parseInt(v, 10));
+  });
+
+  $('btnFixTodoInput').addEventListener('click', fixManualTodoInput);
+
+  document.querySelectorAll('.mode-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setNewMode(btn.dataset.mode);
+      if (btn.dataset.mode === 'todoManual') {
+        requestAnimationFrame(() => {
+          $('manualTodoTitle').focus();
+          autoGrowManualTodoTitle();
+        });
+      }
+    });
+  });
+
+  $('btnTodoFromPage').addEventListener('click', () => {
+    closePanel('todos');
+    openPanel('new');
+    setNewMode('todoManual');
+    requestAnimationFrame(() => {
+      $('manualTodoTitle').focus();
+      autoGrowManualTodoTitle();
+    });
+  });
+
+  $('btnCreateNoteFromPage').addEventListener('click', () => {
+    createNote($('newNoteTitle').value.trim(), $('newNoteContent').value.trim());
+    $('newNoteTitle').value = '';
+    $('newNoteContent').value = '';
+    closePanel('new');
+  });
+
+  $('btnCreateTodoManual').addEventListener('click', () => {
+    const title = $('manualTodoTitle').value.trim();
+    if (!title) { showToast('请输入待办标题'); return; }
+    createTodo(title, '');
+    $('manualTodoTitle').value = '';
+    autoGrowManualTodoTitle();
+    closePanel('new');
+    openPanel('todos');
+    showToast('已创建待办');
+  });
+
+  $('manualTodoTitle').addEventListener('input', autoGrowManualTodoTitle);
+
+  $('btnGenerateTodosAI').addEventListener('click', () => aiGenerateTodosFromText($('aiTodoSource').value));
+
+  $('btnNewChat').addEventListener('click', () => {
+    createChatSession();
+    aiInput.focus();
+    showToast('已创建新会话');
+  });
+
+  $('btnClearDoneTodos').addEventListener('click', () => {
+    const before = todos.length;
+    todos = todos.filter(t => !t.done);
+    saveTodos();
+    renderTodosList();
+    showToast(`已清除 ${before - todos.length} 个已完成待办`);
   });
 
   // ===== Data Management =====
@@ -887,10 +1781,15 @@
   });
 
   $('btnClearChat').addEventListener('click', () => {
-    chatHistory = [];
+    const session = getActiveSession();
+    session.messages = [];
+    session.title = '新会话';
+    session.updatedAt = Date.now();
+    chatHistory = session.messages;
     saveChatHistory();
+    renderChatSessions();
     renderChatHistory();
-    showToast('对话已清空');
+    showToast('当前会话已清空');
   });
 
   aiInput.addEventListener('input', () => autoResize(aiInput));
@@ -908,6 +1807,13 @@
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); createNote(); }
     if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); autoSave(); showToast('已保存'); }
+    if (e.key === 'Escape') {
+      closePanel('new');
+      closePanel('todos');
+      closePanel('notes');
+      closePanel('ai');
+      closePanel('settings');
+    }
   });
 
   // ===== Robust Auto-Save =====
@@ -917,14 +1823,19 @@
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') autoSave();
   });
+  window.addEventListener('resize', () => requestAnimationFrame(autoGrowAllTodoText));
   // Periodic save every 10s as safety net
   setInterval(() => { autoSave(); }, 10000);
 
   // ===== Init =====
   loadNotes();
+  loadTodos();
   renderNote();
   renderNotesList();
+  renderTodosList();
+  requestAnimationFrame(autoGrowAllTodoText);
   loadChatHistory();
+  renderChatSessions();
   renderChatHistory();
 
   // Apply saved font size
