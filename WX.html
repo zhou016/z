@@ -58,8 +58,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .chat-time { font-size:11px; color:var(--text-secondary); flex-shrink:0; }
 .chat-meta { display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
 .chat-unread { background:var(--danger); color:#fff; font-size:10px; min-width:18px; height:18px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 5px; }
-.fab-btn { position:absolute; bottom:16px; right:16px; width:56px; height:56px; border-radius:50%; background:var(--primary); color:#fff; border:none; font-size:28px; cursor:pointer; box-shadow:0 4px 12px rgba(7,193,96,0.4); display:flex; align-items:center; justify-content:center; z-index:10; }
-.fab-btn:active { background:var(--primary-dark); }
+.nav-plus-btn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:none; background:none; font-size:22px; font-weight:300; color:var(--text); cursor:pointer; border-radius:50%; }
+.nav-plus-btn:active { background:var(--bg); }
 
 /* Conversation View */
 .conv-view { position:absolute; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:200; display:none; flex-direction:column; }
@@ -243,13 +243,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
     <!-- Chat List Page -->
     <div class="page active" id="pageChat">
       <div class="chat-list" id="chatList"></div>
-      <button class="fab-btn" onclick="showNewChatModal()">+</button>
+      <!-- + button moved to top nav -->
     </div>
 
     <!-- Contacts Page -->
     <div class="page" id="pageContacts">
       <div style="flex:1;overflow-y:auto;" id="contactsList"></div>
-      <button class="fab-btn" onclick="showCreateAgentModal()">+</button>
+      <!-- + button moved to top nav -->
     </div>
 
     <!-- Discover Page -->
@@ -468,6 +468,15 @@ function switchTab(tab) {
   document.getElementById('navLeft').style.display = 'none';
   document.getElementById('navRight').style.display = 'none';
   document.getElementById('navRight').innerHTML = '';
+
+  if (tab === 'Chat') {
+    document.getElementById('navRight').style.display = 'flex';
+    document.getElementById('navRight').innerHTML = '<button class="nav-plus-btn" onclick="showNewChatModal()">＋</button>';
+  }
+  if (tab === 'Contacts') {
+    document.getElementById('navRight').style.display = 'flex';
+    document.getElementById('navRight').innerHTML = '<button class="nav-plus-btn" onclick="showCreateAgentModal()">＋</button>';
+  }
 
   const titles = { Chat:'AI Chat', Contacts:'通讯录', Discover:'发现', Profile:'我的' };
   document.getElementById('navTitle').textContent = titles[tab];
