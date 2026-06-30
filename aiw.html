@@ -762,7 +762,24 @@ async function copyText(text){
   }catch(e){ toast('复制失败'); }
 }
 
-/** Markdown → 纯文本，保留段落换行与行首 "- " */
+/** 文本排版规则：流式实时清洗 & 最终清洗共用 */
+function cleanFormatting(t){
+  if(!t) return '';
+  t = String(t);
+  // 标题 # ## ...
+  t = t.replace(/^\s{0,3}#{1,6}\s+/gm, '');
+  // 引用 >
+  t = t.replace(/^\s{0,3}>\s?/gm, '');
+  // 去掉行首无序列表标记 "- "、"* "、"+ "（行中/行末的"-"保留）
+  t = t.replace(/^\s{0,3}[-*+]\s+/gm, '');
+  // 行首有序列表标记规范化：1) 1、 → 1.
+  t = t.replace(/^\s{0,3}(\d+)\)\s/gm, '$1. ');
+  t = t.replace(/^\s{0,3}(\d+)[、]\s/gm, '$1. ');
+  // 水平线（3个以上连续 - * _，整行删除）
+  t = t.replace(/^\s{0,3}[-*_]{3,}\s*$/gm, '');
+  return t;
+}
+/** Markdown → 纯文本，保留段落换行 */
 function mdToPlain(md){
   if(!md) return '';
   let t = String(md);
@@ -778,15 +795,8 @@ function mdToPlain(md){
   t = t.replace(/(\*\*|__)(.*?)\1/g, '$2');
   t = t.replace(/(\*|_)(.*?)\1/g, '$2');
   t = t.replace(/~~(.*?)~~/g, '$1');
-  // 标题 # ## ...
-  t = t.replace(/^\s{0,3}#{1,6}\s+/gm, '');
-  // 引用 > 
-  t = t.replace(/^\s{0,3}>\s?/gm, '');
-  // 去掉行首无序列表标记 "- "、"* "、"+ "（行中/行末的"-"保留）
-  t = t.replace(/^\s{0,3}[-*+]\s+/gm, '');
-  // 保留行首有序列表标记 "1. " 等
-  // 水平线（3个以上连续 - * _，整行删除）
-  t = t.replace(/^\s{0,3}[-*_]{3,}\s*$/gm, '');
+  // 排版规则
+  t = cleanFormatting(t);
   // HTML 标签
   t = t.replace(/<[^>]+>/g, '');
   // 多空行压为2换行（保留段落）
@@ -1124,7 +1134,7 @@ async function readStreamReply(resp, onText){
         const delta = (c && (c.delta?.content || c.message?.content || c.text)) || '';
         if(delta){
           raw += delta;
-          onText(raw);
+          onText(cleanFormatting(raw));
         }
       }catch(e){}
     }
