@@ -24,8 +24,9 @@
     .ai-group{display:inline-flex;align-items:center;gap:4px}.ai-dropdown{display:none;position:relative}.ai-menu{display:none;position:absolute;top:36px;right:0;min-width:148px;padding:6px;border:1px solid var(--rule);border-radius:12px;background:var(--bg2);box-shadow:0 12px 32px var(--shade);z-index:40}.ai-dropdown.open .ai-menu{display:grid;gap:3px}.ai-menu button{justify-content:flex-start;width:100%}
     .find-panel{display:none;grid-template-columns:minmax(150px,1fr) minmax(150px,1fr) repeat(3,auto);gap:8px;align-items:center;padding:8px 10px;background:var(--bg2);border-bottom:1px solid var(--rule);z-index:15}.find-panel.open{display:grid}
     .field{border:1px solid var(--rule);border-radius:9px;background:var(--bg);color:var(--ink);height:34px;padding:0 10px;outline:0}.field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent2)}
-    .editor-shell{position:relative;flex:1;min-height:0;background:var(--bg2)}.editor-wrap{position:absolute;inset:0;background:var(--bg2);overflow:hidden}
+    .editor-shell{position:relative;flex:1;min-height:0;background:var(--bg2)}.editor-wrap{position:absolute;inset:0;bottom:22px;background:var(--bg2);overflow:hidden}
     .highlight-layer,.editor{position:absolute;inset:0;width:100%;height:100%;margin:0;border:0;padding:28px 34px;font-family:var(--font);font-size:var(--editor-size);line-height:1.72;letter-spacing:.01em;tab-size:2;white-space:pre-wrap;overflow-wrap:break-word}
+    .word-count{position:absolute;left:0;right:0;bottom:0;height:22px;display:flex;align-items:center;justify-content:flex-end;padding:0 12px;background:var(--bg2);border-top:1px solid var(--rule);color:var(--muted);font-size:11px;gap:10px;z-index:10;pointer-events:none}
     .highlight-layer{pointer-events:none;color:transparent;background:var(--bg2);overflow:auto}.highlight-layer mark{color:transparent;background:var(--mark);border-radius:3px;padding:1px 0}
     .editor{resize:none;outline:none;background:transparent;color:var(--ink);caret-color:var(--accent);overflow:auto}
     .sidebar-backdrop,.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(32,37,43,.24);z-index:60}.sidebar-backdrop.show,.modal-backdrop.show{display:block}
@@ -59,7 +60,7 @@
       <button class="text-btn hidden" id="stopBtn">停止生成</button><button class="text-btn copy-btn" id="copyBtn">一键复制</button>
     </div>
     <div class="find-panel" id="findPanel"><input class="field" id="findInput" placeholder="查找内容"><input class="field" id="replaceInput" placeholder="替换为"><button class="text-btn" id="findNextBtn">查找下一个</button><button class="text-btn" id="replaceBtn">替换</button><button class="text-btn" id="replaceAllBtn">全部替换</button></div>
-    <main class="editor-shell"><div class="editor-wrap"><div class="highlight-layer" id="highlightLayer" aria-hidden="true"></div><textarea class="editor" id="editor" spellcheck="false" placeholder="开始记录，内容会自动保存。"></textarea></div></main>
+    <main class="editor-shell"><div class="editor-wrap"><div class="highlight-layer" id="highlightLayer" aria-hidden="true"></div><textarea class="editor" id="editor" spellcheck="false" placeholder="开始记录，内容会自动保存。"></textarea></div><div class="word-count" id="wordCount">总字符 0　|　不含空格 0　|　行数 1</div></main>
   </div>
   <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
   <aside class="sidebar" id="sidebar"><div class="sidebar-head"><span>智能记事本</span><button class="icon-btn" id="closeSidebar">×</button></div><div class="side-control"><label><span>文字字号</span><strong id="fontValue">17px</strong></label><input id="fontSlider" type="range" min="15" max="24" value="17"></div><button class="menu-item" id="newDocBtn">新建</button><button class="menu-item" id="saveDocBtn">保存</button><button class="menu-item" id="customClearBtn">自选清除</button><button class="menu-item" id="docListBtn">文本列表</button><button class="menu-item" id="fullAiBtn">全文 AI 操作</button><button class="menu-item" id="apiSettingsBtn">AI 设置</button></aside>
@@ -80,7 +81,7 @@
   <div class="toast" id="toast"></div>
   <script>
   (function(){
-    var $=function(id){return document.getElementById(id)},editor=$('editor'),highlight=$('highlightLayer'),title=$('titleInput'),font=$('fontSlider'),fontValue=$('fontValue'),findPanel=$('findPanel'),findInput=$('findInput'),replaceInput=$('replaceInput'),stopBtn=$('stopBtn'),toastEl=$('toast'),selectionAi=$('selectionAi'),slashPopup=$('slashPopup');
+    var $=function(id){return document.getElementById(id)},editor=$('editor'),highlight=$('highlightLayer'),title=$('titleInput'),font=$('fontSlider'),fontValue=$('fontValue'),findPanel=$('findPanel'),findInput=$('findInput'),replaceInput=$('replaceInput'),stopBtn=$('stopBtn'),toastEl=$('toast'),selectionAi=$('selectionAi'),slashPopup=$('slashPopup'),wordCount=$('wordCount');
     var S={text:'aiNotepad.text',title:'aiNotepad.title',font:'aiNotepad.fontSize',docs:'aiNotepad.docs',def:'aiNotepad.defaultPlatform',api:'aiNotepad.api.'};
     var D={deepseek:{base:'https://api.deepseek.com',model:'deepseek-chat'},siliconflow:{base:'https://api.siliconflow.cn/v1',model:'Qwen/Qwen2.5-7B-Instruct'},custom:{base:'',model:''}};
     var undo=[],redo=[],last='',timer=0,match=-1,aborter=null,typing=false,queue='',range=null,out='',aiScope='selection',slashIndex=-1;
@@ -92,7 +93,8 @@
     function hist(force){var v=editor.value;if(!force&&v===last)return;undo.push(state());if(undo.length>120)undo.shift();last=v;redo=[]}
     function sched(){clearTimeout(timer);timer=setTimeout(function(){hist(false)},350)}
     function setVal(v,s,e){editor.value=v;if(typeof s==='number')editor.setSelectionRange(s,typeof e==='number'?e:s);sync()}
-    function sync(){save();paint();highlight.scrollTop=editor.scrollTop;highlight.scrollLeft=editor.scrollLeft}
+    function updateCount(){var v=editor.value,total=v.length,nows=v.replace(/\s/g,'').length,lines=v.length?(v.split(/\n/).length):1;wordCount.textContent='总字符 '+total+'　|　不含空格 '+nows+'　|　行数 '+lines}
+    function sync(){save();paint();updateCount();highlight.scrollTop=editor.scrollTop;highlight.scrollLeft=editor.scrollLeft}
     function target(){var s=editor.selectionStart,e=editor.selectionEnd;return s!==e?{s:s,e:e,sel:true}:{s:0,e:editor.value.length,sel:false}}
     function transform(fn){hist(true);var r=target(),b=editor.value.slice(0,r.s),t=editor.value.slice(r.s,r.e),a=editor.value.slice(r.e),n=fn(t);editor.value=b+n+a;editor.setSelectionRange(r.s,r.s+n.length);sync()}
     function paint(){var t=editor.value,q=findInput.value;if(!q){highlight.innerHTML=esc(t)+'\n';return}var re=new RegExp(reEsc(q),'gi');highlight.innerHTML=esc(t).replace(re,function(m){return'<mark>'+esc(m)+'</mark>'})+'\n'}
