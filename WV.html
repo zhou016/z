@@ -6,8 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>模拟手机</title>
 <style>
-  /* ===== 日间主题（默认） ===== */
-  :root, :root[data-theme="light"] {
+  /* ===== 默认主题 ===== */
+  :root {
     --phone-width: 375px;
     --phone-height: 812px;
     --screen-width: 375px;
@@ -17,8 +17,8 @@
     --screen-bg: #f2f2f7;
     --ink: #1c1c1e;
     --muted: #8e8e93;
-    --accent: #007aff;
-    --accent2: #34c759;
+    --accent: #5d7a4a;
+    --accent2: #7c9070;
     --surface: rgba(0,0,0,0.04);
     --surface-solid: #ffffff;
     --border: #e5e5ea;
@@ -35,33 +35,412 @@
     --statusbar-ink: #1c1c1e;
   }
 
-  /* ===== 夜间主题 ===== */
-  :root[data-theme="dark"] {
-    --phone-width: 375px;
-    --phone-height: 812px;
-    --screen-width: 375px;
-    --screen-height: 812px;
-    --border-radius: 40px;
-    --bg: #000;
-    --screen-bg: #1a1a2e;
-    --ink: #fff;
-    --muted: #888;
-    --accent: #0a84ff;
-    --accent2: #30d158;
-    --surface: rgba(255,255,255,0.12);
-    --surface-solid: #2c2c3e;
-    --border: #333;
-    --app-page-bg: #000;
-    --app-header-bg: rgba(0,0,0,0.8);
-    --chat-input-bg: rgba(0,0,0,0.9);
-    --icon-label-shadow: 0 1px 3px rgba(0,0,0,0.6);
-    --post-content-color: #ccc;
-    --moment-img-bg: #333;
-    --body-bg: #111;
-    --phone-shadow-outer: 0 0 0 12px #1a1a1a, 0 20px 60px rgba(0,0,0,0.6);
-    --phone-shadow-inner: 0 20px 60px rgba(0,0,0,0.6);
-    --loading-border: rgba(255,255,255,0.2);
-    --statusbar-ink: #fff;
+  /* ===== 主题变量 ===== */
+  :root[data-icon-theme="sage-green"] {
+    --accent: #5d7a4a;
+    --accent2: #7c9070;
+    --bg: #f2f2f7;
+    --screen-bg: #f2f2f7;
+    --ink: #1c1c1e;
+    --muted: #8e8e93;
+    --surface: rgba(0,0,0,0.04);
+    --surface-solid: #ffffff;
+    --border: #d5ddd0;
+    --app-page-bg: #f2f2f7;
+    --app-header-bg: rgba(249,249,249,0.94);
+    --chat-input-bg: rgba(249,249,249,0.94);
+    --icon-label-shadow: none;
+    --post-content-color: #3a3a3c;
+    --moment-img-bg: #e5e5ea;
+    --body-bg: #e8ede5;
+    --phone-shadow-outer: 0 0 0 12px #d1d1d6, 0 20px 60px rgba(0,0,0,0.15);
+    --phone-shadow-inner: 0 20px 60px rgba(0,0,0,0.15);
+    --loading-border: rgba(0,0,0,0.1);
+    --statusbar-ink: #1c1c1e;
+    --icon-colors-1: #7c9070;
+    --icon-colors-2: #5d7a4a;
+    --icon-colors-3: #8fa982;
+    --icon-colors-4: #4a6741;
+    --icon-colors-5: #6b8e5a;
+    --icon-colors-6: #a3b899;
+    --icon-colors-7: #3e5735;
+    --icon-colors-8: #94a88a;
+    --icon-glyph-color: #ffffff;
+    --icon-label-color: #3a4a35;
+    --icon-wallpaper: linear-gradient(135deg, #e8ede5 0%, #d4ddd0 50%, #c8d4c2 100%);
+  }
+  :root[data-icon-theme="sunset-orange"] {
+    --accent: #c44b1e;
+    --accent2: #e07b4a;
+    --bg: #fff5f0;
+    --screen-bg: #fff5f0;
+    --ink: #3a1a10;
+    --muted: #b08070;
+    --surface: rgba(0,0,0,0.04);
+    --surface-solid: #ffffff;
+    --border: #f0d8c8;
+    --app-page-bg: #fff5f0;
+    --app-header-bg: rgba(255,245,240,0.94);
+    --chat-input-bg: rgba(255,245,240,0.94);
+    --icon-label-shadow: none;
+    --post-content-color: #4a3028;
+    --moment-img-bg: #f0d8c8;
+    --body-bg: #fef0e6;
+    --phone-shadow-outer: 0 0 0 12px #d1d1d6, 0 20px 60px rgba(0,0,0,0.15);
+    --phone-shadow-inner: 0 20px 60px rgba(0,0,0,0.15);
+    --loading-border: rgba(0,0,0,0.1);
+    --statusbar-ink: #3a1a10;
+    --icon-colors-1: #e07b4a;
+    --icon-colors-2: #d45d2b;
+    --icon-colors-3: #f0a07a;
+    --icon-colors-4: #c44b1e;
+    --icon-colors-5: #e89060;
+    --icon-colors-6: #f5bfa0;
+    --icon-colors-7: #a83d15;
+    --icon-colors-8: #d88a68;
+    --icon-glyph-color: #ffffff;
+    --icon-label-color: #5a3520;
+    --icon-wallpaper: linear-gradient(135deg, #fef0e6 0%, #fde0cc 50%, #f8cdb8 100%);
+  }
+  :root[data-icon-theme="lavender-purple"] {
+    --accent: #6b5596;
+    --accent2: #9b8ec4;
+    --bg: #f8f6fc;
+    --screen-bg: #f8f6fc;
+    --ink: #2a1a40;
+    --muted: #7a6a90;
+    --surface: rgba(0,0,0,0.04);
+    --surface-solid: #ffffff;
+    --border: #d8d0e6;
+    --app-page-bg: #f8f6fc;
+    --app-header-bg: rgba(248,246,252,0.94);
+    --chat-input-bg: rgba(248,246,252,0.94);
+    --icon-label-shadow: none;
+    --post-content-color: #3a2a50;
+    --moment-img-bg: #d8d0e6;
+    --body-bg: #f0ecf5;
+    --phone-shadow-outer: 0 0 0 12px #d1d1d6, 0 20px 60px rgba(0,0,0,0.15);
+    --phone-shadow-inner: 0 20px 60px rgba(0,0,0,0.15);
+    --loading-border: rgba(0,0,0,0.1);
+    --statusbar-ink: #2a1a40;
+    --icon-colors-1: #9b8ec4;
+    --icon-colors-2: #7e6ba8;
+    --icon-colors-3: #b8aee0;
+    --icon-colors-4: #6b5596;
+    --icon-colors-5: #a898d0;
+    --icon-colors-6: #cfc8e8;
+    --icon-colors-7: #55407e;
+    --icon-colors-8: #b0a4d4;
+    --icon-glyph-color: #ffffff;
+    --icon-label-color: #4a3a6a;
+    --icon-wallpaper: linear-gradient(135deg, #f0ecf5 0%, #e4ddf0 50%, #d8d0e6 100%);
+  }
+  :root[data-icon-theme="ocean-blue"] {
+    --accent: #2e6a8e;
+    --accent2: #5a9cbf;
+    --bg: #f0f7fb;
+    --screen-bg: #f0f7fb;
+    --ink: #1a3040;
+    --muted: #6a8a9a;
+    --surface: rgba(0,0,0,0.04);
+    --surface-solid: #ffffff;
+    --border: #c0daea;
+    --app-page-bg: #f0f7fb;
+    --app-header-bg: rgba(240,247,251,0.94);
+    --chat-input-bg: rgba(240,247,251,0.94);
+    --icon-label-shadow: none;
+    --post-content-color: #2a4050;
+    --moment-img-bg: #c0daea;
+    --body-bg: #e8f2f8;
+    --phone-shadow-outer: 0 0 0 12px #d1d1d6, 0 20px 60px rgba(0,0,0,0.15);
+    --phone-shadow-inner: 0 20px 60px rgba(0,0,0,0.15);
+    --loading-border: rgba(0,0,0,0.1);
+    --statusbar-ink: #1a3040;
+    --icon-colors-1: #5a9cbf;
+    --icon-colors-2: #3d7da6;
+    --icon-colors-3: #7db8d8;
+    --icon-colors-4: #2e6a8e;
+    --icon-colors-5: #6aaac8;
+    --icon-colors-6: #a0cce5;
+    --icon-colors-7: #1e5578;
+    --icon-colors-8: #88b8d4;
+    --icon-glyph-color: #ffffff;
+    --icon-label-color: #2a4a5e;
+    --icon-wallpaper: linear-gradient(135deg, #e8f2f8 0%, #d5e6f0 50%, #c0daea 100%);
+  }
+  :root[data-icon-theme="sakura-pink"] {
+    --accent: #c44e62;
+    --accent2: #e8899a;
+    --bg: #fff8fa;
+    --screen-bg: #fff8fa;
+    --ink: #4a2028;
+    --muted: #b0707a;
+    --surface: rgba(0,0,0,0.04);
+    --surface-solid: #ffffff;
+    --border: #f8d0d8;
+    --app-page-bg: #fff8fa;
+    --app-header-bg: rgba(255,248,250,0.94);
+    --chat-input-bg: rgba(255,248,250,0.94);
+    --icon-label-shadow: none;
+    --post-content-color: #3a2025;
+    --moment-img-bg: #f8d0d8;
+    --body-bg: #fef0f2;
+    --phone-shadow-outer: 0 0 0 12px #d1d1d6, 0 20px 60px rgba(0,0,0,0.15);
+    --phone-shadow-inner: 0 20px 60px rgba(0,0,0,0.15);
+    --loading-border: rgba(0,0,0,0.1);
+    --statusbar-ink: #4a2028;
+    --icon-colors-1: #e8899a;
+    --icon-colors-2: #d4687a;
+    --icon-colors-3: #f0a8b8;
+    --icon-colors-4: #c44e62;
+    --icon-colors-5: #ec9ca8;
+    --icon-colors-6: #f5c0cc;
+    --icon-colors-7: #a83d50;
+    --icon-colors-8: #e0a0ae;
+    --icon-glyph-color: #ffffff;
+    --icon-label-color: #5e3038;
+    --icon-wallpaper: linear-gradient(135deg, #fef0f2 0%, #fde0e6 50%, #f8d0d8 100%);
+  }
+  :root[data-icon-theme="charcoal-gray"] {
+    --accent: #374151;
+    --accent2: #6b7280;
+    --bg: #f5f5f7;
+    --screen-bg: #f5f5f7;
+    --ink: #1a1a1e;
+    --muted: #8e8e93;
+    --surface: rgba(0,0,0,0.04);
+    --surface-solid: #ffffff;
+    --border: #d8dbe0;
+    --app-page-bg: #f5f5f7;
+    --app-header-bg: rgba(245,245,247,0.94);
+    --chat-input-bg: rgba(245,245,247,0.94);
+    --icon-label-shadow: none;
+    --post-content-color: #3a3a3c;
+    --moment-img-bg: #d8dbe0;
+    --body-bg: #f0f1f3;
+    --phone-shadow-outer: 0 0 0 12px #d1d1d6, 0 20px 60px rgba(0,0,0,0.15);
+    --phone-shadow-inner: 0 20px 60px rgba(0,0,0,0.15);
+    --loading-border: rgba(0,0,0,0.1);
+    --statusbar-ink: #1a1a1e;
+    --icon-colors-1: #6b7280;
+    --icon-colors-2: #4b5563;
+    --icon-colors-3: #9ca3af;
+    --icon-colors-4: #374151;
+    --icon-colors-5: #7c8495;
+    --icon-colors-6: #b0b8c4;
+    --icon-colors-7: #1f2937;
+    --icon-colors-8: #8891a0;
+    --icon-glyph-color: #ffffff;
+    --icon-label-color: #374151;
+    --icon-wallpaper: linear-gradient(135deg, #f0f1f3 0%, #e4e6ea 50%, #d8dbe0 100%);
+  }
+  :root[data-icon-theme="rose-gold"] {
+    --accent: #946058;
+    --accent2: #c4928a;
+    --bg: #fdf8f6;
+    --screen-bg: #fdf8f6;
+    --ink: #3a1a15;
+    --muted: #b08075;
+    --surface: rgba(0,0,0,0.04);
+    --surface-solid: #ffffff;
+    --border: #ead0ca;
+    --app-page-bg: #fdf8f6;
+    --app-header-bg: rgba(253,248,246,0.94);
+    --chat-input-bg: rgba(253,248,246,0.94);
+    --icon-label-shadow: none;
+    --post-content-color: #4a3028;
+    --moment-img-bg: #ead0ca;
+    --body-bg: #faf0ed;
+    --phone-shadow-outer: 0 0 0 12px #d1d1d6, 0 20px 60px rgba(0,0,0,0.15);
+    --phone-shadow-inner: 0 20px 60px rgba(0,0,0,0.15);
+    --loading-border: rgba(0,0,0,0.1);
+    --statusbar-ink: #3a1a15;
+    --icon-colors-1: #c4928a;
+    --icon-colors-2: #a8756c;
+    --icon-colors-3: #d8b0a8;
+    --icon-colors-4: #946058;
+    --icon-colors-5: #cc9e96;
+    --icon-colors-6: #e8c8c0;
+    --icon-colors-7: #804e46;
+    --icon-colors-8: #c09890;
+    --icon-glyph-color: #ffffff;
+    --icon-label-color: #5e3a32;
+    --icon-wallpaper: linear-gradient(135deg, #faf0ed 0%, #f2e0db 50%, #ead0ca 100%);
+  }
+  :root[data-icon-theme="mint-teal"] {
+    --accent: #26897e;
+    --accent2: #4db6ac;
+    --bg: #f0fcfa;
+    --screen-bg: #f0fcfa;
+    --ink: #1a302e;
+    --muted: #6a9a94;
+    --surface: rgba(0,0,0,0.04);
+    --surface-solid: #ffffff;
+    --border: #c0e6e0;
+    --app-page-bg: #f0fcfa;
+    --app-header-bg: rgba(240,252,250,0.94);
+    --chat-input-bg: rgba(240,252,250,0.94);
+    --icon-label-shadow: none;
+    --post-content-color: #2a403e;
+    --moment-img-bg: #c0e6e0;
+    --body-bg: #e8f6f4;
+    --phone-shadow-outer: 0 0 0 12px #d1d1d6, 0 20px 60px rgba(0,0,0,0.15);
+    --phone-shadow-inner: 0 20px 60px rgba(0,0,0,0.15);
+    --loading-border: rgba(0,0,0,0.1);
+    --statusbar-ink: #1a302e;
+    --icon-colors-1: #4db6ac;
+    --icon-colors-2: #339e92;
+    --icon-colors-3: #72cec4;
+    --icon-colors-4: #26897e;
+    --icon-colors-5: #5cc4ba;
+    --icon-colors-6: #98ded6;
+    --icon-colors-7: #1a7068;
+    --icon-colors-8: #68c0b6;
+    --icon-glyph-color: #ffffff;
+    --icon-label-color: #2a5048;
+    --icon-wallpaper: linear-gradient(135deg, #e8f6f4 0%, #d4ede8 50%, #c0e6e0 100%);
+  }
+
+  /* ===== 图标主题样式覆写（实心方块 iOS aesthetic 风格） ===== */
+  .app-icon[data-icon-theme="active"] .icon-bg {
+    border-radius: 16px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+    font-size: 26px;
+    width: 58px;
+    height: 58px;
+  }
+  .app-icon[data-icon-theme="active"] .icon-label {
+    color: var(--icon-label-color, var(--ink));
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ===== 桌面 Widget 组件 ===== */
+  .desk-widget {
+    position: absolute;
+    border-radius: 22px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s;
+  }
+  .desk-widget:active { transform: scale(0.97); }
+  .desk-widget.clock-widget {
+    background: linear-gradient(160deg, var(--accent2) 0%, var(--accent) 100%);
+    color: #fff;
+    padding: 16px 18px;
+    justify-content: center;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .desk-widget.clock-widget::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 80px; height: 80px;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .desk-widget.clock-widget::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: -20px;
+    width: 60px; height: 60px;
+    border: 1.5px solid rgba(255,255,255,0.06);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .desk-widget.clock-widget .widget-time {
+    font-size: 44px;
+    font-weight: 200;
+    letter-spacing: 2px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+  .desk-widget.clock-widget .widget-date {
+    font-size: 12px;
+    opacity: 0.7;
+    white-space: nowrap;
+    text-align: center;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
+  }
+  .desk-widget.clock-widget .widget-date::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: rgba(255,255,255,0.25);
+    margin: 0 auto 8px;
+    border-radius: 1px;
+  }
+  .desk-widget.photo-widget {
+    background: var(--surface-solid);
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+  .desk-widget.photo-widget img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .desk-widget.weather-widget {
+    background: linear-gradient(180deg, var(--accent2) 0%, var(--accent) 100%);
+    color: #fff;
+    padding: 10px 18px;
+    justify-content: center;
+  }
+  .desk-widget.weather-widget .widget-temp {
+    font-size: 36px;
+    font-weight: 300;
+  }
+  .desk-widget.weather-widget .widget-condition {
+    font-size: 14px;
+    opacity: 0.95;
+    font-weight: 400;
+  }
+  .desk-widget.memo-widget {
+    background: linear-gradient(135deg, var(--surface-solid) 0%, var(--border) 100%);
+    color: var(--ink);
+    padding: 14px 16px;
+  }
+  .desk-widget.memo-widget .widget-memo-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    opacity: 0.7;
+  }
+  .desk-widget.memo-widget .widget-memo-text {
+    font-size: 14px;
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  /* 主题预览色块 */
+  .icon-theme-preview {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+  .icon-theme-preview .preview-swatch {
+    width: 14px; height: 14px;
+    border-radius: 4px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -104,26 +483,63 @@
     flex-direction: column;
   }
 
-  /* 状态栏 */
-  #status-bar {
-    height: 44px;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px;
-    color: var(--statusbar-ink);
+  /* 顶部状态信息栏 */
+  #top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 24px 0;
+    z-index: 100;
+    pointer-events: none;
     font-size: 14px;
     font-weight: 600;
-    z-index: 100;
-    position: relative;
-    transition: opacity 0.3s, height 0.3s;
+    color: #000;
   }
-  #status-bar.hidden {
-    height: 0;
-    opacity: 0;
-    overflow: hidden;
-    pointer-events: none;
+  .top-bar-time {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.3px;
   }
-  #status-bar .time { font-variant-numeric: tabular-nums; }
-  #status-bar .icons { display: flex; gap: 4px; align-items: center; }
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .top-bar-signal, .top-bar-wifi {
+    opacity: 0.85;
+  }
+  .top-bar-battery {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    opacity: 0.85;
+  }
+  .battery-body {
+    width: 22px;
+    height: 10px;
+    border: 1.2px solid currentColor;
+    border-radius: 2.5px;
+    padding: 1px;
+    display: flex;
+    align-items: flex-end;
+  }
+  .battery-level {
+    width: 80%;
+    height: 100%;
+    background: currentColor;
+    border-radius: 1px;
+  }
+  .battery-cap {
+    width: 1.5px;
+    height: 4px;
+    background: currentColor;
+    border-radius: 0 1px 1px 0;
+    opacity: 0.5;
+  }
 
   /* 桌面容器 */
   #desktop-container {
@@ -213,13 +629,35 @@
     user-select: none;
     position: absolute;
     touch-action: none;
-    width: 64px;
+    width: 80px;
+    transition: left 0.25s ease, top 0.25s ease;
   }
   .app-icon.dragging {
     opacity: 0.8;
     z-index: 1000;
     position: fixed;
     pointer-events: none;
+  }
+
+  /* 长按拖拽状态：抖动 + 缩放 + 投影 */
+  @keyframes icon-drag-shake {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(0.8deg); }
+    50% { transform: rotate(0deg); }
+    75% { transform: rotate(-0.8deg); }
+    100% { transform: rotate(0deg); }
+  }
+
+  .app-icon.dragging-longpress {
+    opacity: 0.92 !important;
+    z-index: 10000 !important;
+    position: fixed !important;
+    pointer-events: none !important;
+    transform: scale(1.1) !important;
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.35));
+    animation: icon-drag-shake 0.3s infinite ease-in-out !important;
+    will-change: transform;
+    transition: none !important;
   }
   .app-icon .icon-bg {
     width: 60px; height: 60px;
@@ -240,6 +678,91 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     text-align: center;
+  }
+  .app-icon[data-icon-theme="freedom"] .icon-bg {
+    border-radius: 40% 60% 50% 50% / 50% 40% 60% 50%;
+    border: 2px solid rgba(80,60,40,0.2);
+    box-shadow: 2px 3px 0 rgba(80,60,40,0.08);
+    transform: rotate(-1deg);
+  }
+  .app-icon[data-icon-theme="freedom"]:nth-child(odd) .icon-bg {
+    transform: rotate(1.5deg);
+    border-radius: 50% 40% 60% 50% / 40% 50% 40% 60%;
+  }
+
+  /* 手绘风格主题名称 */
+  .theme-name-handdrawn {
+    font-family: 'Comic Sans MS', 'STXingkai', 'KaiTi', 'Ma Shan Zheng', 'ZCOOL KuaiLe', cursive, sans-serif;
+    display: inline-block;
+    transform: rotate(-2deg);
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.08);
+  }
+
+  /* 主题背景操作按钮 */
+  .theme-bg-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+  }
+  .theme-bg-actions button {
+    flex: 1;
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  /* 应用图标管理器 */
+  .icon-manager-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    color: var(--ink);
+  }
+  .icon-manager-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .icon-manager-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 8px 4px;
+    border-radius: 12px;
+    background: var(--surface-solid);
+    transition: transform 0.15s;
+  }
+  .icon-manager-item:active { transform: scale(0.96); }
+  .icon-manager-item .img-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    font-size: 24px;
+  }
+  .icon-manager-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .icon-manager-item .name {
+    font-size: 12px;
+    color: var(--ink);
+    text-align: center;
+  }
+  .icon-manager-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+  }
+  .icon-manager-actions button {
+    flex: 1;
   }
 
   /* 页面指示器 */
@@ -296,7 +819,7 @@
     height: 56px;
     display: flex; align-items: center;
     padding: 0 16px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1.5px solid var(--accent);
     background: var(--app-header-bg);
     backdrop-filter: blur(20px);
     z-index: 10;
@@ -324,6 +847,7 @@
     color: var(--accent);
     font-size: 22px;
     cursor: pointer;
+    pointer-events: auto;
   }
 
   /* 内容区 */
@@ -406,13 +930,43 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    --chat-font-size: 17px;
+    --chat-bubble-line-height: 1.4;
+    --chat-bubble-padding-y: 10px;
+    --chat-avatar-size: calc(var(--chat-font-size) * var(--chat-bubble-line-height) + var(--chat-bubble-padding-y) * 2);
+  }
+  .chat-message-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .chat-message-row.me {
+    flex-direction: row-reverse;
+  }
+  .chat-avatar {
+    width: var(--chat-avatar-size);
+    height: var(--chat-avatar-size);
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .chat-avatar-placeholder {
+    width: var(--chat-avatar-size);
+    height: var(--chat-avatar-size);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+    font-size: calc(var(--chat-font-size) * 0.8);
   }
   .chat-bubble {
     max-width: 75%;
-    padding: 10px 14px;
+    padding: var(--chat-bubble-padding-y) 14px;
     border-radius: 18px;
-    font-size: 15px;
-    line-height: 1.4;
+    font-size: var(--chat-font-size);
+    line-height: var(--chat-bubble-line-height);
     word-break: break-word;
   }
   .chat-bubble.sent {
@@ -431,7 +985,7 @@
   .chat-messages.full-width .chat-bubble {
     max-width: 100%;
     width: 100%;
-    padding: 10px 16px;
+    padding: var(--chat-bubble-padding-y) 16px;
   }
   .chat-input-area {
     display: flex;
@@ -537,6 +1091,122 @@
     flex-direction: column;
   }
 
+  /* 群聊 */
+  .groupchat-item {
+    background: var(--surface-solid);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .groupchat-item:active { background: var(--surface); }
+  .groupchat-item .group-avatar {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; color: #fff; flex-shrink: 0;
+  }
+  .groupchat-item .group-info { flex: 1; min-width: 0; }
+  .groupchat-item .group-name { font-size: 16px; font-weight: 600; }
+  .groupchat-item .group-desc { font-size: 13px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .groupchat-item .group-meta { font-size: 12px; color: var(--muted); flex-shrink: 0; text-align: right; }
+  .groupchat-item .group-meta .member-count { margin-top: 2px; }
+  .groupchat-member-name {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    margin: 2px;
+  }
+  .group-bubble-name {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .group-bubble-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+  .group-bubble-row.me {
+    flex-direction: row-reverse;
+  }
+  .group-bubble-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .group-bubble-avatar-placeholder {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #fff; flex-shrink: 0;
+  }
+  .group-bubble-body { max-width: 75%; }
+  .group-bubble-msg {
+    background: var(--surface-solid);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .group-bubble-row.me .group-bubble-msg {
+    background: var(--accent);
+    color: #fff;
+  }
+  .group-create-dialog {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--screen-bg);
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .group-create-dialog .dialog-header {
+    display: flex; align-items: center;
+    padding: 10px 16px;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .group-create-dialog .dialog-body {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+  }
+  .group-create-dialog .dialog-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .contact-checkbox-item {
+    display: flex; align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .contact-checkbox-item label {
+    display: flex; align-items: center; gap: 10px;
+    flex: 1; cursor: pointer; font-size: 15px;
+  }
+  .contact-checkbox-item input[type="checkbox"] {
+    width: 20px; height: 20px;
+    accent-color: var(--accent);
+  }
+
   /* 论坛帖子 */
   .post-card {
     background: var(--surface-solid);
@@ -572,6 +1242,17 @@
     margin-bottom: 8px;
   }
   .moment-card .moment-header .avatar { width: 36px; height: 36px; font-size: 16px; }
+  .moment-card .moment-header { position: relative; }
+  .moment-card .moment-delete-btn {
+    margin-left: auto;
+    font-size: 15px;
+    padding: 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s, background 0.2s;
+  }
+  .moment-card .moment-delete-btn:hover { opacity: 1; background: var(--surface); }
   .moment-card .moment-text { font-size: 17px; line-height: 1.6; margin-bottom: 8px; }
   .moment-card .moment-images {
     display: grid;
@@ -579,16 +1260,150 @@
     gap: 4px;
     margin-bottom: 8px;
   }
+  .moment-card .moment-images.single { grid-template-columns: 1fr; }
   .moment-card .moment-images .img-placeholder {
     aspect-ratio: 1;
     background: var(--moment-img-bg);
     border-radius: 4px;
+  }
+  .moment-card .moment-images .moment-img {
+    aspect-ratio: 1;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+    background: var(--moment-img-bg);
+    cursor: pointer;
+  }
+  .moment-card .moment-images.single .moment-img {
+    aspect-ratio: auto;
+    max-height: 220px;
   }
   .moment-card .moment-footer {
     font-size: 14px;
     color: var(--muted);
     display: flex; justify-content: space-between;
   }
+  .moment-card .moment-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+  .moment-card .moment-action-btns {
+    display: flex;
+    gap: 4px;
+    background: var(--app-page-bg);
+    border-radius: 6px;
+    padding: 2px;
+  }
+  .moment-card .moment-action-btns span {
+    font-size: 13px;
+    color: var(--ink);
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+  }
+  .moment-card .moment-action-btns span:active { background: rgba(0,0,0,0.05); }
+  .moment-card .moment-action-btns span.liked { color: #ff3b30; }
+  .moment-card .moment-social {
+    margin-top: 10px;
+    background: var(--app-page-bg);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .moment-card .moment-likes {
+    color: #576b95;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+  }
+  .moment-card .moment-likes:empty { display: none; }
+  .moment-card .moment-likes:empty + .moment-comments { border-top: none; }
+  .moment-card .moment-comment {
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .moment-card .moment-comment:last-child { margin-bottom: 0; }
+  .moment-card .moment-comment b {
+    color: #576b95;
+    font-weight: 500;
+  }
+
+  /* 朋友圈发布弹窗 */
+  .moment-post-form textarea {
+    min-height: 100px;
+    margin-bottom: 12px;
+  }
+  .moment-post-images {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .moment-post-images img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 6px;
+    background: var(--moment-img-bg);
+    cursor: pointer;
+  }
+  .moment-post-add {
+    aspect-ratio: 1;
+    border: 1.5px dashed var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: var(--muted);
+    cursor: pointer;
+    background: var(--app-page-bg);
+  }
+  .moment-post-add:active { background: var(--surface); }
+  .moment-post-tip {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* 朋友圈图片操作菜单 */
+  .image-action-menu {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    z-index: 600;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .image-action-menu.active { display: flex; }
+  .image-action-content {
+    background: var(--surface-solid);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 280px;
+    overflow: hidden;
+  }
+  .image-action-item {
+    padding: 16px;
+    text-align: center;
+    font-size: 16px;
+    color: var(--ink);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+  }
+  .image-action-item:last-child { border-bottom: none; }
+  .image-action-item.danger { color: #ff3b30; }
+  .image-action-item:active { background: var(--surface); }
 
   /* 模态框 */
   .modal-overlay {
@@ -802,7 +1617,7 @@
 <body>
 
 <!-- 锁屏界面 -->
-<div id="lock-screen" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:linear-gradient(180deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:60px 30px 30px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;transition:transform 0.5s ease,opacity 0.5s ease;">
+<div id="lock-screen" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;background:linear-gradient(180deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:60px 30px 30px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;transition:transform 0.5s ease;">
   <div style="text-align:center;color:#fff;">
     <div id="lock-time" style="font-size:72px;font-weight:200;letter-spacing:2px;font-variant-numeric:tabular-nums;">12:00</div>
     <div id="lock-date" style="font-size:18px;font-weight:400;margin-top:8px;opacity:0.9;">1月1日 星期一</div>
@@ -839,16 +1654,19 @@
 
 <div id="phone-case">
   <div id="screen">
-    <!-- 状态栏 -->
-    <div id="status-bar">
-      <span class="time" id="clock">12:00</span>
-      <div class="icons">
-        <span>📶</span>
-        <span>📡</span>
-        <span>🔋</span>
+    <!-- 顶部状态信息栏（浮在桌面上） -->
+    <div id="top-bar">
+      <span class="top-bar-time" id="top-clock">12:00</span>
+      <div class="top-bar-right">
+        <svg class="top-bar-signal" viewBox="0 0 17 12" width="17" height="12"><rect x="0" y="8" width="3" height="4" rx="0.5" fill="currentColor"/><rect x="4.5" y="5" width="3" height="7" rx="0.5" fill="currentColor"/><rect x="9" y="2" width="3" height="10" rx="0.5" fill="currentColor"/><rect x="13.5" y="0" width="3" height="12" rx="0.5" fill="currentColor" opacity="0.3"/></svg>
+        <div class="top-bar-battery">
+          <div class="battery-body">
+            <div class="battery-level" id="battery-level"></div>
+          </div>
+          <div class="battery-cap"></div>
+        </div>
       </div>
     </div>
-
     <!-- 桌面 -->
     <div id="desktop-container">
       <div id="desktop-pages"></div>
@@ -881,6 +1699,11 @@
   </div>
   <div class="app-content">
     <input type="hidden" id="contact-id">
+    <div class="ai-setting-row" style="text-align:center;">
+      <div id="contact-avatar-preview" style="width:72px;height:72px;border-radius:50%;background:var(--surface-solid);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;border:2px solid var(--border);">👤</div>
+      <button class="btn" onclick="uploadContactAvatar()" style="padding:6px 16px;font-size:13px;">上传头像</button>
+      <input type="hidden" id="contact-avatar">
+    </div>
     <div class="ai-setting-row">
       <label>名字</label>
       <input type="text" id="contact-name" placeholder="输入名字">
@@ -892,6 +1715,10 @@
     <div class="ai-setting-row">
       <label>备注</label>
       <input type="text" id="contact-note" placeholder="备注信息">
+    </div>
+    <div class="ai-setting-row" style="display:flex;align-items:center;justify-content:space-between;">
+      <label style="margin:0;">活人感模式<br><span style="font-size:12px;color:var(--muted);font-weight:normal;">开启后AI会模仿真人微信聊天风格（标点、口语化），不延迟发送</span></label>
+      <div class="toggle" id="toggle-alive-feel" onclick="toggleAliveFeel()"></div>
     </div>
     <button class="btn btn-danger" onclick="deleteContact()" id="btn-delete-contact" style="width:100%;margin-top:20px;display:none;">删除联系人</button>
   </div>
@@ -925,6 +1752,71 @@
       <div class="chat-input-area">
         <textarea id="chat-input" placeholder="输入消息..." rows="1" oninput="autoResizeChatInput(this)" onkeydown="handleChatInputKeydown(event)"></textarea>
         <button class="btn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 世界书 -->
+<div class="app-page" id="app-groupchat">
+  <div class="app-header">
+    <div class="back-btn" onclick="closeApp()">←</div>
+    <div class="title">群聊</div>
+    <div class="right-btn" onclick="openCreateGroupDialog()" style="font-size:20px;">＋</div>
+  </div>
+  <div class="app-content" id="groupchat-list"></div>
+</div>
+
+<!-- 群聊管理对话框（编辑/删除） -->
+<div id="gc-manage-dialog" class="group-create-dialog" style="display:none;">
+  <div class="dialog-header">
+    <span style="cursor:pointer;font-size:18px;" onclick="closeGroupManageDialog()">←</span>
+    <span style="font-weight:600;font-size:17px;" id="gc-manage-title">编辑群聊</span>
+    <span></span>
+  </div>
+  <div class="dialog-body">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div id="gc-manage-avatar-preview" style="width:72px;height:72px;border-radius:16px;background:var(--surface);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden;border:2px solid var(--border);cursor:pointer;" onclick="uploadGroupAvatar()">👥</div>
+      <button class="btn" onclick="uploadGroupAvatar()" style="padding:4px 14px;font-size:12px;">更换头像</button>
+      <input type="hidden" id="gc-manage-avatar">
+      <input type="file" id="gc-avatar-upload" accept="image/*" style="display:none;">
+    </div>
+    <div class="ai-setting-row">
+      <label>群名称</label>
+      <input type="text" id="gc-manage-name" placeholder="输入群名称" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-solid);color:var(--ink);font-size:15px;">
+    </div>
+    <div class="ai-setting-row">
+      <label>群设定</label>
+      <textarea id="gc-manage-setting" placeholder="输入群聊的设定/背景..." style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-solid);color:var(--ink);font-size:15px;min-height:60px;resize:vertical;"></textarea>
+    </div>
+    <div class="ai-setting-row">
+      <label>我的身份</label>
+      <textarea id="gc-manage-my-identity" placeholder="描述你在群里的身份..." style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-solid);color:var(--ink);font-size:15px;min-height:50px;resize:vertical;"></textarea>
+    </div>
+    <div style="font-size:15px;font-weight:600;margin:12px 0 8px;">群成员</div>
+    <div id="gc-manage-member-list"></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:6px;">可取消勾选移除成员，也可新增勾选</div>
+  </div>
+  <div class="dialog-footer" style="display:flex;gap:10px;">
+    <button class="btn" onclick="deleteGroupFromManage()" style="flex:1;padding:12px;font-size:15px;background:#ff3b30;color:#fff;">删除群聊</button>
+    <button class="btn" onclick="saveGroupManage()" style="flex:2;padding:12px;font-size:15px;">保存</button>
+  </div>
+</div>
+
+<div class="app-page" id="app-groupchat-chat">
+  <div class="app-header">
+    <div class="back-btn" onclick="showApp('app-groupchat')">←</div>
+    <div class="title" id="groupchat-chat-title">群聊</div>
+    <div class="right-btn" style="gap:5px;width:auto;">
+      <span onclick="deleteCurrentGroupChat()" style="font-size:13px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="删除群聊">🗑️</span>
+    </div>
+  </div>
+  <div class="app-content" style="padding:0;display:flex;flex-direction:column;">
+    <div class="chat-container">
+      <div class="chat-messages" id="groupchat-messages"></div>
+      <div class="chat-input-area">
+        <textarea id="groupchat-input" placeholder="输入消息..." rows="1" oninput="autoResizeGroupChatInput(this)" onkeydown="handleGroupChatInputKeydown(event)"></textarea>
+        <button class="btn" onclick="sendGroupMessage()">➤</button>
       </div>
     </div>
   </div>
@@ -983,22 +1875,27 @@
         </div>
         <div class="toggle" id="toggle-border"></div>
       </div>
-      <div class="setting-item" onclick="toggleStatusBar()">
-        <div class="setting-icon" style="background:#ff9500;">📊</div>
+      <div class="setting-item" onclick="toggleTopBar()">
+        <div class="setting-icon" style="background:#007aff;">📶</div>
         <div class="setting-info">
-          <div class="label">隐藏状态栏</div>
-          <div class="desc">隐藏顶部时间和信号图标</div>
+          <div class="label">隐藏顶部状态栏</div>
+          <div class="desc">隐藏时间、信号和电池图标</div>
         </div>
-        <div class="toggle" id="toggle-statusbar"></div>
+        <div class="toggle" id="toggle-topbar"></div>
       </div>
-      <div class="setting-item" onclick="toggleTheme()">
-        <div class="setting-icon" style="background:#ffcc00;">🌙</div>
+    </div>
+    <div class="setting-group">
+      <div style="padding:14px 16px 4px;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:0.3px;">美化</div>
+      <div class="setting-item" onclick="showIconThemeSettings()">
+        <div class="setting-icon" style="background:#34c759;">🎨</div>
         <div class="setting-info">
-          <div class="label">夜间模式</div>
-          <div class="desc">切换日间/夜间主题</div>
+          <div class="label">主题</div>
+          <div class="desc" id="icon-theme-desc">默认</div>
         </div>
-        <div class="toggle" id="toggle-theme"></div>
+        <span class="arrow">›</span>
       </div>
+    </div>
+    <div class="setting-group">
       <div class="setting-item" onclick="toggleAITime()">
         <div class="setting-icon" style="background:#5856d6;">🕐</div>
         <div class="setting-info">
@@ -1049,11 +1946,38 @@
         </div>
         <span class="arrow">›</span>
       </div>
-      <div class="setting-item" onclick="addHomePage()">
-        <div class="setting-icon" style="background:#34c759;">➕</div>
+
+      <div class="setting-item" onclick="resetAllAppIcons()">
+        <div class="setting-icon" style="background:#ff9500;">🖼️</div>
         <div class="setting-info">
-          <div class="label">添加主页</div>
-          <div class="desc">新增一个桌面页面</div>
+          <div class="label">恢复所有应用图标</div>
+          <div class="desc">重置所有自定义应用图标为默认</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+      <div class="setting-item" onclick="resetAllThemeBackgroundsAndPhotos()">
+        <div class="setting-icon" style="background:#5856d6;">🎨</div>
+        <div class="setting-info">
+          <div class="label">恢复主题背景与桌面照片</div>
+          <div class="desc">重置所有主题背景和桌面照片为初始状态</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+      <div class="setting-item" onclick="resetLayout()">
+        <div class="setting-icon" style="background:#ff3b30;">🔄</div>
+        <div class="setting-info">
+          <div class="label">恢复默认布局</div>
+          <div class="desc">重置图标、组件位置及自定义背景/图标</div>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-item" onclick="clearAllCache()" style="color:#ff3b30;">
+        <div class="setting-icon" style="background:#ff3b30;">🗑️</div>
+        <div class="setting-info">
+          <div class="label">清除所有缓存（数据）</div>
+          <div class="desc">清除所有本地数据并恢复初始状态</div>
         </div>
         <span class="arrow">›</span>
       </div>
@@ -1158,14 +2082,11 @@
   </div>
   <div class="app-content">
     <div class="ai-setting-row">
-      <label>记忆条数：<span id="context-size-value">50</span>条</label>
-      <input type="range" id="context-size-slider" min="50" max="500" step="10" value="50" oninput="onContextSizeChange(this.value)">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px;">
-        <span>50</span><span>500</span>
-      </div>
+      <label>记忆条数（留空则不限制）</label>
+      <input type="number" id="context-size-input" placeholder="例如：50" min="1" oninput="onContextSizeChange(this.value)">
     </div>
     <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:20px;">
-      AI会记住最近N条对话作为上下文，帮助保持对话连贯性。数值越大，AI对历史对话的记忆越完整，但会消耗更多Token。
+      AI会记住最近N条对话作为上下文，帮助保持对话连贯性。数值越大，AI对历史对话的记忆越完整，但会消耗更多Token。留空则不限制记忆条数。
     </div>
   </div>
 </div>
@@ -1180,7 +2101,7 @@
   <div class="app-content">
     <div class="ai-setting-row">
       <label>最大字数（留空则不限制）</label>
-      <input type="number" id="max-tokens-input" placeholder="例如：200" min="50" oninput="onMaxTokensChange(this.value)">
+      <input type="number" id="max-tokens-input" placeholder="例如：200" min="1" oninput="onMaxTokensChange(this.value)">
     </div>
     <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:20px;">
       限制AI每次回复的最大字数。数值越小，AI回复越简短；留空则不限制。适用于V信聊天和奔现场景。
@@ -1216,10 +2137,28 @@
       <textarea id="mask-identity" placeholder="例如：一个充满好奇心的程序员，喜欢探索新技术" rows="6"></textarea>
     </div>
     <div class="ai-setting-row">
+      <label>头像</label>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="mask-avatar-preview" style="width:56px;height:56px;border-radius:50%;background:var(--surface-solid);display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden;">🎭</div>
+        <button class="btn" onclick="uploadMaskAvatar()" style="padding:6px 14px;font-size:13px;">上传头像</button>
+      </div>
+      <input type="hidden" id="mask-avatar">
+    </div>
+    <div class="ai-setting-row">
       <label>底色</label>
       <input type="color" id="mask-color" value="#007aff">
     </div>
   </div>
+</div>
+
+<!-- 图标主题选择 -->
+<div class="app-page" id="app-icon-theme-settings">
+  <div class="app-header">
+    <div class="back-btn" onclick="showApp('app-settings')">←</div>
+    <div class="title">主题</div>
+    <div class="right-btn"></div>
+  </div>
+  <div class="app-content" id="icon-theme-list" style="padding:12px 16px;"></div>
 </div>
 
 <!-- 备忘录 -->
@@ -1270,7 +2209,10 @@
   <div class="app-header">
     <div class="back-btn" onclick="closeApp()">←</div>
     <div class="title">论坛</div>
-    <div class="right-btn" onclick="refreshForum()">↻</div>
+    <div class="right-btn" style="display:flex;gap:5px;width:auto;">
+      <span onclick="refreshForum()" style="font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="刷新">↻</span>
+      <span onclick="clearForumData()" style="font-size:13px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="清空论坛数据">🧹</span>
+    </div>
   </div>
   <div class="app-content" id="forum-list"></div>
 </div>
@@ -1290,9 +2232,43 @@
   <div class="app-header">
     <div class="back-btn" onclick="closeApp()">←</div>
     <div class="title">朋友圈</div>
-    <div class="right-btn" onclick="refreshMoments()">↻</div>
+    <div class="right-btn" style="display:flex;gap:5px;width:auto;">
+      <span onclick="openPostMomentDialog()" style="font-size:18px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="发朋友圈">＋</span>
+      <span onclick="refreshMoments()" style="font-size:14px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="刷新">↻</span>
+      <span onclick="clearMomentsData()" style="font-size:13px;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surface);" title="清空朋友圈数据">🧹</span>
+    </div>
   </div>
   <div class="app-content" id="moments-list"></div>
+</div>
+
+<!-- 发朋友圈弹窗 -->
+<div class="modal-overlay" id="moment-post-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>发朋友圈</h3>
+      <span onclick="closePostMomentDialog()" style="cursor:pointer;font-size:22px;color:var(--muted);">×</span>
+    </div>
+    <div class="modal-body moment-post-form">
+      <textarea id="moment-post-text" placeholder="分享新鲜事..."></textarea>
+      <div class="moment-post-images" id="moment-post-image-preview">
+        <div class="moment-post-add" onclick="document.getElementById('moment-post-file').click()">＋</div>
+      </div>
+      <div class="moment-post-tip">最多选择 9 张图片，点击图片可移除</div>
+      <input type="file" id="moment-post-file" accept="image/*" multiple style="display:none;" onchange="handleMomentImageSelect(this)">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closePostMomentDialog()">取消</button>
+      <button class="btn" onclick="publishMoment()">发布</button>
+    </div>
+  </div>
+</div>
+
+<!-- 朋友圈图片操作菜单 -->
+<div class="image-action-menu" id="image-action-menu" onclick="closeImageActionMenu(event)">
+  <div class="image-action-content">
+    <div class="image-action-item danger" onclick="confirmDeleteMomentImage()">删除图片</div>
+    <div class="image-action-item" onclick="closeImageActionMenu()">取消</div>
+  </div>
 </div>
 
 <!-- 游戏中心 -->
@@ -1317,7 +2293,7 @@
       <span>⏱ <span id="ms-timer">0</span>s</span>
       <span>💣 <span id="ms-mines">10</span></span>
     </div>
-    <div id="minesweeper-board" style="display:grid;gap:1px;background:#999;padding:2px;border-radius:4px;"></div>
+    <div id="minesweeper-board" style="display:grid;gap:1px;background:var(--border);padding:2px;border-radius:4px;"></div>
   </div>
 </div>
 
@@ -1359,7 +2335,7 @@
   </div>
   <div class="app-content" style="display:flex;flex-direction:column;align-items:center;padding-top:10px;">
     <div style="font-size:16px;margin-bottom:8px;">得分: <span id="snake-score">0</span></div>
-    <canvas id="snake-canvas" width="300" height="300" style="background:#1a1a2e;border:2px solid var(--border);border-radius:4px;"></canvas>
+    <canvas id="snake-canvas" width="300" height="300" style="background:var(--screen-bg);border:2px solid var(--border);border-radius:4px;"></canvas>
     <div style="margin-top:10px;display:grid;grid-template-columns:repeat(3,50px);grid-template-rows:repeat(2,50px);gap:4px;">
       <div></div>
       <button class="btn" style="width:50px;height:50px;padding:0;font-size:20px;" onclick="snakeDir='up'">⬆️</button>
@@ -1427,7 +2403,7 @@
   </div>
   <div class="app-content" style="display:flex;flex-direction:column;align-items:center;padding-top:10px;">
     <div style="font-size:16px;margin-bottom:8px;">得分: <span id="breakout-score">0</span> | 生命: <span id="breakout-lives">3</span></div>
-    <canvas id="breakout-canvas" width="340" height="280" style="background:#1a1a2e;border:2px solid var(--border);border-radius:4px;touch-action:none;"></canvas>
+    <canvas id="breakout-canvas" width="340" height="280" style="background:var(--screen-bg);border:2px solid var(--border);border-radius:4px;touch-action:none;"></canvas>
     <div style="margin-top:8px;font-size:12px;color:var(--muted);">左右滑动或点击屏幕移动挡板</div>
   </div>
 </div>
@@ -1576,7 +2552,7 @@
       <span>得分: <span id="thunder-score">0</span></span>
       <span>生命: <span id="thunder-lives">3</span></span>
     </div>
-    <canvas id="thunder-canvas" width="340" height="480" style="background:#000;border-radius:8px;touch-action:none;"></canvas>
+    <canvas id="thunder-canvas" width="340" height="480" style="background:var(--app-page-bg);border-radius:8px;touch-action:none;"></canvas>
     <div style="margin-top:8px;font-size:13px;color:var(--muted);text-align:center;">
       拖动或触摸移动战机，自动射击<br>击毁敌机得分，被击中减生命
     </div>
@@ -1585,6 +2561,39 @@
 
 <script>
 // ==================== 全局状态 ====================
+
+// ==================== 桌面网格系统 ====================
+const GRID = {
+  COLS: 4,
+  ROWS: 8,
+  CELL_W: 80,
+  CELL_H: 78,
+  GAP_X: 5,
+  GAP_Y: 5,
+  MARGIN_X: 20,
+  START_Y: 48
+};
+function getGrid() {
+  return GRID;
+}
+function gridToPixel(col, row, w, h) {
+  const g = getGrid();
+  w = w || 1; h = h || 1;
+  return {
+    x: g.MARGIN_X + col * (g.CELL_W + g.GAP_X),
+    y: g.START_Y + row * (g.CELL_H + g.GAP_Y),
+    w: w * g.CELL_W + (w - 1) * g.GAP_X,
+    h: h * g.CELL_H + (h - 1) * g.GAP_Y
+  };
+}
+function pixelToGrid(x, y) {
+  const g = getGrid();
+  return {
+    col: Math.round((x - g.MARGIN_X) / (g.CELL_W + g.GAP_X)),
+    row: Math.round((y - g.START_Y) / (g.CELL_H + g.GAP_Y))
+  };
+}
+
 let currentPage = 0;
 let totalPages = 2;
 let pagesData = [];
@@ -1593,8 +2602,15 @@ let dragStartX = 0;
 let dragCurrentX = 0;
 let dragIcon = null;
 let dragIconData = null;
+let dragWidget = null;
+let dragWidgetData = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
+let dragLongPressTimer = null;
+let dragLongPressTriggered = false;
+let dragCurrentPageScrollTimer = null;
+let dragLongPressStartX = 0;
+let dragLongPressStartY = 0;
 let currentChatContact = null;
 let timerInterval = null;
 let timerSeconds = 25 * 60;
@@ -1649,16 +2665,17 @@ const defaultContacts = [
 const defaultApps = [
   { id: 'contacts', name: '通讯录', icon: '📇', color: '#007aff', page: 0 },
   { id: 'wechat', name: 'V信', icon: '💬', color: '#07c160', page: 0 },
+  { id: 'groupchat', name: '群聊', icon: '👥', color: '#5856d6', page: 0 },
   { id: 'worldbook', name: '世界书', icon: '📖', color: '#5856d6', page: 0 },
   { id: 'check', name: '查岗', icon: '🔍', color: '#ff9500', page: 0 },
   { id: 'settings', name: '设置', icon: '⚙️', color: '#8e8e93', page: 0 },
   { id: 'memo', name: '备忘录', icon: '📝', color: '#ffcc00', page: 0 },
-  { id: 'tomato', name: '番茄钟', icon: '🍅', color: '#ff3b30', page: 0 },
-  { id: 'forum', name: '论坛', icon: '🌐', color: '#5ac8fa', page: 0 },
-  { id: 'moments', name: '朋友圈', icon: '📸', color: '#34c759', page: 0 },
-  { id: 'minesweeper', name: '扫雷', icon: '💣', color: '#555', page: 0 },
+  { id: 'tomato', name: '番茄钟', icon: '🍅', color: '#ff3b30', page: 1 },
+  { id: 'forum', name: '论坛', icon: '🌐', color: '#5ac8fa', page: 1 },
+  { id: 'moments', name: '朋友圈', icon: '📸', color: '#34c759', page: 1 },
+  { id: 'minesweeper', name: '扫雷', icon: '💣', color: '#555', page: 1 },
   { id: 'guessnum', name: '猜数字', icon: '🔢', color: '#ff9500', page: 0 },
-  { id: 'game2048', name: '2048', icon: '🔲', color: '#e6a23c', page: 0 },
+  { id: 'game2048', name: '2048', icon: '🔲', color: '#e6a23c', page: 1 },
   { id: 'snake', name: '贪吃蛇', icon: '🐍', color: '#67c23a', page: 1 },
   { id: 'memory', name: '记忆翻牌', icon: '🃏', color: '#909399', page: 1 },
   { id: 'tictactoe', name: '井字棋', icon: '⭕', color: '#409eff', page: 1 },
@@ -1670,6 +2687,588 @@ const defaultApps = [
   { id: 'benxian', name: '奔现', icon: '🤝', color: '#e91e8c', page: 1 },
   { id: 'thunder', name: '雷电', icon: '⚡', color: '#ff9800', page: 1 }
 ];
+
+// ==================== 图标主题定义 ====================
+const iconThemes = [
+  {
+    id: 'sage-green',
+    name: '鼠尾草绿',
+    desc: '清新自然的森系风格',
+    previewColors: ['#7c9070','#5d7a4a','#8fa982','#4a6741','#6b8e5a','#a3b899','#3e5735','#94a88a'],
+    wallpaper: 'linear-gradient(135deg, #e8ede5 0%, #d4ddd0 50%, #c8d4c2 100%)',
+    widgets: [
+      { type: 'clock', page: 0, gridCol: 0, gridRow: 0, gridW: 2, gridH: 2 },
+      { type: 'photo', page: 0, gridCol: 2, gridRow: 0, gridW: 2, gridH: 2, emoji: '🎈', bg: 'linear-gradient(135deg,#d4e0cc,#b8c8ae)' },
+      { type: 'photo', page: 0, gridCol: 0, gridRow: 2, gridW: 2, gridH: 2, emoji: '🌿', bg: 'linear-gradient(135deg,#c8d4be,#a8b898)' },
+      { type: 'memo', page: 0, gridCol: 2, gridRow: 2, gridW: 2, gridH: 2 },
+      { type: 'weather', page: 1, gridCol: 0, gridRow: 0, gridW: 4, gridH: 1 }
+    ]
+  },
+  {
+    id: 'sunset-orange',
+    name: '日落橙',
+    desc: '温暖热情的暖色调',
+    previewColors: ['#e07b4a','#d45d2b','#f0a07a','#c44b1e','#e89060','#f5bfa0','#a83d15','#d88a68'],
+    wallpaper: 'linear-gradient(135deg, #fef0e6 0%, #fde0cc 50%, #f8cdb8 100%)',
+    widgets: [
+      { type: 'clock', page: 0, gridCol: 0, gridRow: 0, gridW: 2, gridH: 2 },
+      { type: 'photo', page: 0, gridCol: 2, gridRow: 0, gridW: 2, gridH: 2, emoji: '🌅', bg: 'linear-gradient(135deg,#f5c8a0,#e8a878)' },
+      { type: 'photo', page: 0, gridCol: 0, gridRow: 2, gridW: 2, gridH: 2, emoji: '🍊', bg: 'linear-gradient(135deg,#f0b890,#d89060)' },
+      { type: 'memo', page: 0, gridCol: 2, gridRow: 2, gridW: 2, gridH: 2 },
+      { type: 'weather', page: 1, gridCol: 0, gridRow: 0, gridW: 4, gridH: 1 }
+    ]
+  },
+  {
+    id: 'lavender-purple',
+    name: '薰衣草紫',
+    desc: '优雅梦幻的紫色系',
+    previewColors: ['#9b8ec4','#7e6ba8','#b8aee0','#6b5596','#a898d0','#cfc8e8','#55407e','#b0a4d4'],
+    wallpaper: 'linear-gradient(135deg, #f0ecf5 0%, #e4ddf0 50%, #d8d0e6 100%)',
+    widgets: [
+      { type: 'clock', page: 0, gridCol: 0, gridRow: 0, gridW: 2, gridH: 2 },
+      { type: 'photo', page: 0, gridCol: 2, gridRow: 0, gridW: 2, gridH: 2, emoji: '💜', bg: 'linear-gradient(135deg,#d8c8e8,#c0b0d8)' },
+      { type: 'photo', page: 0, gridCol: 0, gridRow: 2, gridW: 2, gridH: 2, emoji: '🔮', bg: 'linear-gradient(135deg,#e0d0f0,#c8b8e0)' },
+      { type: 'memo', page: 0, gridCol: 2, gridRow: 2, gridW: 2, gridH: 2 },
+      { type: 'weather', page: 1, gridCol: 0, gridRow: 0, gridW: 4, gridH: 1 }
+    ]
+  },
+  {
+    id: 'ocean-blue',
+    name: '海洋蓝',
+    desc: '深邃宁静的蓝色系',
+    previewColors: ['#5a9cbf','#3d7da6','#7db8d8','#2e6a8e','#6aaac8','#a0cce5','#1e5578','#88b8d4'],
+    wallpaper: 'linear-gradient(135deg, #e8f2f8 0%, #d5e6f0 50%, #c0daea 100%)',
+    widgets: [
+      { type: 'clock', page: 0, gridCol: 0, gridRow: 0, gridW: 2, gridH: 2 },
+      { type: 'photo', page: 0, gridCol: 2, gridRow: 0, gridW: 2, gridH: 2, emoji: '🌊', bg: 'linear-gradient(135deg,#b8d8e8,#98c8d8)' },
+      { type: 'photo', page: 0, gridCol: 0, gridRow: 2, gridW: 2, gridH: 2, emoji: '🐚', bg: 'linear-gradient(135deg,#c8e0f0,#a8d0e8)' },
+      { type: 'memo', page: 0, gridCol: 2, gridRow: 2, gridW: 2, gridH: 2 },
+      { type: 'weather', page: 1, gridCol: 0, gridRow: 0, gridW: 4, gridH: 1 }
+    ]
+  },
+  {
+    id: 'sakura-pink',
+    name: '樱花粉',
+    desc: '温柔浪漫的粉色系',
+    previewColors: ['#e8899a','#d4687a','#f0a8b8','#c44e62','#ec9ca8','#f5c0cc','#a83d50','#e0a0ae'],
+    wallpaper: 'linear-gradient(135deg, #fef0f2 0%, #fde0e6 50%, #f8d0d8 100%)',
+    widgets: [
+      { type: 'clock', page: 0, gridCol: 0, gridRow: 0, gridW: 2, gridH: 2 },
+      { type: 'photo', page: 0, gridCol: 2, gridRow: 0, gridW: 2, gridH: 2, emoji: '🌸', bg: 'linear-gradient(135deg,#f8d0d8,#f0b8c8)' },
+      { type: 'photo', page: 0, gridCol: 0, gridRow: 2, gridW: 2, gridH: 2, emoji: '🎀', bg: 'linear-gradient(135deg,#f8d8e0,#f0c0cc)' },
+      { type: 'memo', page: 0, gridCol: 2, gridRow: 2, gridW: 2, gridH: 2 },
+      { type: 'weather', page: 1, gridCol: 0, gridRow: 0, gridW: 4, gridH: 1 }
+    ]
+  },
+  {
+    id: 'charcoal-gray',
+    name: '碳灰',
+    desc: '简约低调的灰色系',
+    previewColors: ['#6b7280','#4b5563','#9ca3af','#374151','#7c8495','#b0b8c4','#1f2937','#8891a0'],
+    wallpaper: 'linear-gradient(135deg, #f0f1f3 0%, #e4e6ea 50%, #d8dbe0 100%)',
+    widgets: [
+      { type: 'clock', page: 0, gridCol: 0, gridRow: 0, gridW: 2, gridH: 2 },
+      { type: 'photo', page: 0, gridCol: 2, gridRow: 0, gridW: 2, gridH: 2, emoji: '📷', bg: 'linear-gradient(135deg,#c8ccd0,#b0b8c0)' },
+      { type: 'photo', page: 0, gridCol: 0, gridRow: 2, gridW: 2, gridH: 2, emoji: '🖼', bg: 'linear-gradient(135deg,#b8bcc4,#a0a8b4)' },
+      { type: 'memo', page: 0, gridCol: 2, gridRow: 2, gridW: 2, gridH: 2 },
+      { type: 'weather', page: 1, gridCol: 0, gridRow: 0, gridW: 4, gridH: 1 }
+    ]
+  },
+  {
+    id: 'mint-teal',
+    name: '薄荷青',
+    desc: '清爽干净的薄荷色调',
+    previewColors: ['#4db6ac','#339e92','#72cec4','#26897e','#5cc4ba','#98ded6','#1a7068','#68c0b6'],
+    wallpaper: 'linear-gradient(135deg, #e8f6f4 0%, #d4ede8 50%, #c0e6e0 100%)',
+    widgets: [
+      { type: 'clock', page: 0, gridCol: 0, gridRow: 0, gridW: 2, gridH: 2 },
+      { type: 'photo', page: 0, gridCol: 2, gridRow: 0, gridW: 2, gridH: 2, emoji: '🍃', bg: 'linear-gradient(135deg,#b8e8e0,#98d8d0)' },
+      { type: 'photo', page: 0, gridCol: 0, gridRow: 2, gridW: 2, gridH: 2, emoji: '🌱', bg: 'linear-gradient(135deg,#c8f0e8,#a8e0d8)' },
+      { type: 'memo', page: 0, gridCol: 2, gridRow: 2, gridW: 2, gridH: 2 },
+      { type: 'weather', page: 1, gridCol: 0, gridRow: 0, gridW: 4, gridH: 1 }
+    ]
+  },
+  {
+    id: 'freedom',
+    name: '自由模式',
+    desc: '手绘风格，自由定制图标和背景',
+    previewColors: ['#f4a460','#dda0dd','#98fb98','#f0e68c','#ffb6c1','#87ceeb','#d2b48c','#ffc0cb'],
+    wallpaper: 'linear-gradient(135deg, #faf8f5 0%, #f5f0e8 50%, #ebe5d8 100%)',
+    widgets: [
+      { type: 'clock', page: 0, gridCol: 0, gridRow: 0, gridW: 2, gridH: 2 },
+      { type: 'photo', page: 0, gridCol: 2, gridRow: 0, gridW: 2, gridH: 2, emoji: '🎨', bg: 'linear-gradient(135deg,#f0e0d0,#e0d0c0)' },
+      { type: 'photo', page: 0, gridCol: 0, gridRow: 2, gridW: 2, gridH: 2, emoji: '🖌️', bg: 'linear-gradient(135deg,#e8d8c8,#d8c8b8)' },
+      { type: 'memo', page: 0, gridCol: 2, gridRow: 2, gridW: 2, gridH: 2 },
+      { type: 'weather', page: 1, gridCol: 0, gridRow: 0, gridW: 4, gridH: 1 }
+    ]
+  }
+];
+
+// 获取当前图标主题（返回 null 表示默认）
+function getCurrentIconTheme() {
+  const themeId = localStorage.getItem('iconTheme') || 'sage-green';
+  return iconThemes.find(t => t.id === themeId) || null;
+}
+
+// 根据图标主题获取应用图标的替换颜色
+function getThemedIconColor(app, index) {
+  const theme = getCurrentIconTheme();
+  if (!theme) return null;
+  // 根据index循环使用主题的8个颜色
+  const colors = theme.previewColors;
+  return colors[index % colors.length];
+}
+
+// 显示图标主题设置页
+function showIconThemeSettings() {
+  const container = document.getElementById('icon-theme-list');
+  const currentThemeId = localStorage.getItem('iconTheme') || 'sage-green';
+
+  let html = '<div style="font-size:14px;color:var(--muted);margin-bottom:16px;line-height:1.5;">选择主题，改变整体界面配色、图标风格和桌面壁纸</div>';
+
+  iconThemes.forEach(t => {
+    const isActive = t.id === currentThemeId;
+    const customBg = localStorage.getItem('themeWallpaper_' + t.id) || (t.id === 'freedom' ? localStorage.getItem('freedomWallpaper') : null);
+    const hasCustomBg = !!customBg;
+    const displayName = t.id === 'freedom' ? `<span class="theme-name-handdrawn">${t.name}</span>` : t.name;
+    html += `
+      <div style="background:var(--surface-solid);border-radius:14px;padding:14px;margin-bottom:12px;cursor:pointer;border:2px solid ${isActive ? 'var(--accent)' : 'transparent'};transition:border-color 0.2s;" onclick="applyIconTheme('${t.id}')">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            <div style="font-size:16px;font-weight:600;">${displayName}</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:2px;">${t.desc}</div>
+          </div>
+          ${isActive ? '<span style="font-size:12px;background:var(--accent);color:#fff;border-radius:10px;padding:3px 10px;">使用中</span>' : ''}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <div style="width:32px;height:32px;border-radius:8px;background:${t.previewColors[0]};display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">📞</div>
+          <div style="width:32px;height:32px;border-radius:8px;background:${t.previewColors[1]};display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">💬</div>
+          <div style="width:32px;height:32px;border-radius:8px;background:${t.previewColors[2]};display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">📖</div>
+          <div style="width:32px;height:32px;border-radius:8px;background:${t.previewColors[3]};display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">🔍</div>
+          <div style="width:32px;height:32px;border-radius:8px;background:${t.previewColors[4]};display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">⚙️</div>
+          <div style="width:32px;height:32px;border-radius:8px;background:${t.previewColors[5]};display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">📝</div>
+          <div style="width:32px;height:32px;border-radius:8px;background:${t.previewColors[6]};display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">🍅</div>
+          <div style="width:32px;height:32px;border-radius:8px;background:${t.previewColors[7]};display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">🌐</div>
+        </div>
+        ${t.wallpaper ? `<div style="margin-top:10px;height:24px;border-radius:8px;background:${hasCustomBg ? 'url(' + customBg + ') center/cover no-repeat' : t.wallpaper};"></div>` : ''}
+        <div class="theme-bg-actions">
+          <button class="btn" onclick="event.stopPropagation();uploadThemeBg('${t.id}')">${hasCustomBg ? '更换背景' : '上传背景'}</button>
+          ${hasCustomBg ? `<button class="btn btn-danger" onclick="event.stopPropagation();resetThemeBg('${t.id}')">恢复默认</button>` : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  // 应用图标管理
+  html += renderIconManagerHTML();
+
+  container.innerHTML = html;
+  showApp('app-icon-theme-settings');
+}
+
+// 应用图标主题
+function applyIconTheme(themeId) {
+  const theme = iconThemes.find(t => t.id === themeId);
+  if (!theme) return;
+
+  // 清除widget位置缓存（切换主题时重置）
+  localStorage.removeItem('widgetPositions');
+
+  localStorage.setItem('iconTheme', themeId);
+
+  // 更新CSS变量 - 统一设置图标主题（同时控制整体UI主题）
+  document.documentElement.setAttribute('data-icon-theme', themeId);
+
+  // 更新设置描述
+  const desc = document.getElementById('icon-theme-desc');
+  if (desc) desc.innerHTML = theme.id === 'freedom' ? `<span class="theme-name-handdrawn">${theme.name}</span>` : theme.name;
+
+  // 更新锁屏和状态栏
+  updateThemeAppearance();
+
+  // 重新渲染桌面
+  renderDesktop();
+  showIconThemeSettings();
+}
+
+function uploadThemeBg(themeId) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.addEventListener('change', function(ev) {
+    const file = ev.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(rev) {
+        // 迁移旧数据：新主题统一使用 themeWallpaper_<id> 存储
+        if (themeId === 'freedom') localStorage.removeItem('freedomWallpaper');
+        localStorage.setItem('themeWallpaper_' + themeId, rev.target.result);
+        renderDesktop();
+        showIconThemeSettings();
+        alert('背景已更换');
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  input.click();
+}
+
+function resetThemeBg(themeId) {
+  if (!confirm('确定要恢复该主题的默认背景吗？')) return;
+  localStorage.removeItem('themeWallpaper_' + themeId);
+  if (themeId === 'freedom') localStorage.removeItem('freedomWallpaper');
+  renderDesktop();
+  showIconThemeSettings();
+}
+
+function renderIconManagerHTML() {
+  const apps = JSON.parse(localStorage.getItem('apps')) || defaultApps;
+  let html = '<div class="icon-manager-title">应用图标管理</div>';
+  html += '<div class="icon-manager-grid">';
+  apps.forEach(app => {
+    const customIcon = localStorage.getItem('appIcon_' + app.id);
+    html += `
+      <div class="icon-manager-item" onclick="uploadAppIcon('${app.id}')">
+        <div class="img-wrap" style="background:${app.color}20;color:${app.color};">
+          ${customIcon ? `<img src="${customIcon}">` : app.icon}
+        </div>
+        <div class="name">${app.name}</div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  html += '<div class="icon-manager-actions">';
+  html += '<button class="btn" onclick="resetAllAppIcons(); showIconThemeSettings();">恢复所有默认图标</button>';
+  html += '</div>';
+  return html;
+}
+
+function uploadAppIcon(appId) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.addEventListener('change', function(ev) {
+    const file = ev.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(rev) {
+        localStorage.setItem('appIcon_' + appId, rev.target.result);
+        renderDesktop();
+        showIconThemeSettings();
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  input.click();
+}
+
+function resetAllAppIcons() {
+  if (!confirm('确定要恢复所有应用图标为默认吗？')) return;
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('appIcon_')) localStorage.removeItem(key);
+  });
+  renderDesktop();
+  alert('所有图标已恢复默认');
+}
+
+function resetAllThemeBackgroundsAndPhotos() {
+  if (!confirm('确定要恢复所有主题背景和桌面照片为初始状态吗？')) return;
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('themeWallpaper_') || key === 'freedomWallpaper' || key.startsWith('photo_')) {
+      localStorage.removeItem(key);
+    }
+  });
+  renderDesktop();
+  alert('所有主题背景和桌面照片已恢复初始状态');
+}
+
+// ==================== 锁屏 & 状态栏主题适配 ====================
+function updateThemeAppearance() {
+  const themeId = localStorage.getItem('iconTheme') || 'sage-green';
+  const theme = iconThemes.find(t => t.id === themeId);
+  const lockScreen = document.getElementById('lock-screen');
+  // 锁屏背景适配（完全不透明）
+  if (theme && theme.previewColors) {
+    const c1 = theme.previewColors[2];
+    const c2 = theme.previewColors[4];
+    const c3 = theme.previewColors[6];
+    lockScreen.style.background = `linear-gradient(180deg, ${c1} 0%, ${c2} 40%, ${c3} 100%)`;
+  } else {
+    lockScreen.style.background = 'linear-gradient(180deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)';
+  }
+}
+
+function updateIconThemeDesc() {
+  const themeId = localStorage.getItem('iconTheme') || 'sage-green';
+  const theme = iconThemes.find(t => t.id === themeId);
+  const desc = document.getElementById('icon-theme-desc');
+  if (desc) desc.innerHTML = theme ? (theme.id === 'freedom' ? `<span class="theme-name-handdrawn">${theme.name}</span>` : theme.name) : '默认';
+}
+
+// ==================== 桌面 Widget 渲染 ====================
+function createWidget(widgetDef, widgetIndex) {
+  const div = document.createElement('div');
+  div.className = 'desk-widget ' + widgetDef.type + '-widget';
+  div.dataset.widgetIndex = widgetIndex !== undefined ? widgetIndex : '0';
+  div.dataset.widgetType = widgetDef.type;
+
+  // 读取保存的widget位置（优先网格坐标）
+  const savedWidgetPos = JSON.parse(localStorage.getItem('widgetPositions') || '{}');
+  const posKey = widgetDef.type + '_' + (widgetIndex !== undefined ? widgetIndex : 0);
+  const savedPos = savedWidgetPos[posKey];
+
+  let gc, gr, gw, gh;
+  if (savedPos && typeof savedPos.gridCol === 'number') {
+    gc = savedPos.gridCol; gr = savedPos.gridRow;
+    gw = savedPos.gridW; gh = savedPos.gridH;
+  } else {
+    gc = widgetDef.gridCol; gr = widgetDef.gridRow;
+    gw = widgetDef.gridW; gh = widgetDef.gridH;
+  }
+
+  const pixel = gridToPixel(gc, gr, gw, gh);
+  div.style.left = pixel.x + 'px';
+  div.style.top = pixel.y + 'px';
+  div.style.width = pixel.w + 'px';
+  div.style.height = pixel.h + 'px';
+
+  // 记录网格坐标到dataset，供拖拽使用
+  div.dataset.gridCol = gc;
+  div.dataset.gridRow = gr;
+  div.dataset.gridW = gw;
+  div.dataset.gridH = gh;
+
+  if (widgetDef.type === 'clock') {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+    const days = ['日','一','二','三','四','五','六'];
+    const dateStr = months[now.getMonth()] + now.getDate() + '日 星期' + days[now.getDay()];
+    div.innerHTML = `
+      <div class="widget-time">${hh}:${mm}</div>
+      <div class="widget-date">${dateStr}</div>
+    `;
+    div.classList.add('clock-widget');
+  } else if (widgetDef.type === 'photo') {
+    const photoKey = 'photo_' + (getCurrentIconTheme()?.id || 'sage-green') + '_' + widgetIndex;
+    const savedPhoto = localStorage.getItem(photoKey);
+
+    div.style.cursor = 'pointer';
+
+    if (savedPhoto) {
+      div.innerHTML = `
+        <img src="${savedPhoto}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">
+        <div style="position:absolute;bottom:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;">✎</div>
+      `;
+    } else {
+      div.innerHTML = `
+        <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:${widgetDef.bg || 'linear-gradient(135deg,#e0e0e0,#c0c0c0)'};border-radius:12px;">
+          <div style="width:44px;height:44px;border-radius:50%;border:2.5px dashed rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;line-height:1;">+</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.85);">点击上传</div>
+        </div>
+      `;
+    }
+
+    // 标记为photo widget，用于单击上传
+    div.dataset.photoUpload = 'true';
+    div.dataset.photoKey = photoKey;
+  } else if (widgetDef.type === 'weather') {
+    const weatherDiv = div;
+    weatherDiv.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;flex:1;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="widget-weather-emoji" style="font-size:36px;">⏳</span>
+          <span class="widget-temp">--°</span>
+        </div>
+        <div class="widget-condition">加载中</div>
+      </div>
+    `;
+
+    // 点击设置天气位置
+    weatherDiv.addEventListener('click', function(e) {
+      if (e.target.closest('[data-drag-trigger]')) return;
+      const current = localStorage.getItem('weatherLocation') || '北京';
+      const loc = prompt('请输入天气城市（具体到县，如：北京海淀、上海浦东）：', current);
+      if (loc && loc.trim()) {
+        localStorage.setItem('weatherLocation', loc.trim());
+        fetchWeatherData(weatherDiv);
+      }
+    });
+
+    // 加载天气
+    fetchWeatherData(weatherDiv);
+
+    // 每30分钟自动刷新
+    const refreshInterval = setInterval(() => fetchWeatherData(weatherDiv), 30 * 60 * 1000);
+    weatherDiv._weatherInterval = refreshInterval;
+  } else if (widgetDef.type === 'memo') {
+    const memos = JSON.parse(localStorage.getItem('memos')) || [];
+    const memo = memos[memos.length - 1];
+    div.innerHTML = `
+      <div class="widget-memo-title">📝 备忘录</div>
+      <div class="widget-memo-text">${memo ? memo.content.substring(0, 80) + (memo.content.length > 80 ? '...' : '') : '暂无备忘录，点击新建'}</div>
+    `;
+    div.onclick = () => { renderMemoList(); showApp('app-memo'); };
+  }
+
+  // Widget 拖拽支持
+  div.addEventListener('touchstart', handleWidgetDragStart, { passive: false });
+  div.addEventListener('mousedown', handleWidgetDragStart);
+
+  return div;
+}
+
+// ==================== Widget 拖动 ====================
+function handleWidgetDragStart(e) {
+  if (e.type === 'mousedown' && e.button !== 0) return;
+  if (dragIcon) return;
+
+  const widget = e.currentTarget;
+  const touch = e.touches ? e.touches[0] : e;
+
+  dragWidget = widget;
+  dragWidgetData = {
+    index: widget.dataset.widgetIndex,
+    type: widget.dataset.widgetType,
+    startX: touch.clientX,
+    startY: touch.clientY,
+    origLeft: parseFloat(widget.style.left),
+    origTop: parseFloat(widget.style.top),
+    origGridCol: parseInt(widget.dataset.gridCol),
+    origGridRow: parseInt(widget.dataset.gridRow),
+    gridW: parseInt(widget.dataset.gridW),
+    gridH: parseInt(widget.dataset.gridH),
+    moved: false
+  };
+
+  document.addEventListener('touchmove', handleWidgetDragMove, { passive: false });
+  document.addEventListener('touchend', handleWidgetDragEnd);
+  document.addEventListener('mousemove', handleWidgetDragMove);
+  document.addEventListener('mouseup', handleWidgetDragEnd);
+}
+
+function handleWidgetDragMove(e) {
+  if (!dragWidget) return;
+  e.preventDefault();
+
+  const touch = e.touches ? e.touches[0] : e;
+  const dx = touch.clientX - dragWidgetData.startX;
+  const dy = touch.clientY - dragWidgetData.startY;
+
+  if (!dragWidgetData.moved && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+    dragWidgetData.moved = true;
+    dragWidget.classList.add('dragging');
+    dragWidget.style.zIndex = '100';
+  }
+
+  if (dragWidgetData.moved) {
+    dragWidget.style.left = (dragWidgetData.origLeft + dx) + 'px';
+    dragWidget.style.top = (dragWidgetData.origTop + dy) + 'px';
+  }
+}
+
+function handleWidgetDragEnd(e) {
+  if (!dragWidget) return;
+
+  // 如果没有移动（单击），触发照片上传
+  if (!dragWidgetData.moved && dragWidget.dataset.photoUpload === 'true') {
+    const photoKey = dragWidget.dataset.photoKey;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.addEventListener('change', function(ev) {
+      const file = ev.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(rev) {
+          localStorage.setItem(photoKey, rev.target.result);
+          renderDesktop();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    input.click();
+    dragWidget = null;
+    dragWidgetData = null;
+    return;
+  }
+
+  if (dragWidgetData.moved) {
+    const touch = e.changedTouches ? e.changedTouches[0] : e;
+    const pages = document.querySelectorAll('.desktop-page');
+    let droppedPage = null;
+
+    pages.forEach((page, idx) => {
+      const rect = page.getBoundingClientRect();
+      if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+          touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        droppedPage = idx;
+      }
+    });
+
+    if (droppedPage !== null) {
+      const page = pages[droppedPage];
+      const pageRect = page.getBoundingClientRect();
+      const relX = touch.clientX - pageRect.left;
+      const relY = touch.clientY - pageRect.top;
+
+      // 吸附到最近网格
+      const gridPos = pixelToGrid(relX, relY);
+      const g = getGrid();
+      const clampedCol = Math.max(0, Math.min(gridPos.col, g.COLS - dragWidgetData.gridW));
+      const clampedRow = Math.max(0, Math.min(gridPos.row, g.ROWS - dragWidgetData.gridH));
+
+      // 保存widget网格位置
+      const savedWidgetPos = JSON.parse(localStorage.getItem('widgetPositions') || '{}');
+      const posKey = dragWidgetData.type + '_' + dragWidgetData.index;
+      savedWidgetPos[posKey] = {
+        gridCol: clampedCol,
+        gridRow: clampedRow,
+        gridW: dragWidgetData.gridW,
+        gridH: dragWidgetData.gridH,
+        page: droppedPage
+      };
+      localStorage.setItem('widgetPositions', JSON.stringify(savedWidgetPos));
+    }
+
+    dragWidget.classList.remove('dragging');
+    dragWidget.style.zIndex = '';
+    dragWidget.style.left = '';
+    dragWidget.style.top = '';
+    renderDesktop();
+  }
+
+  dragWidget = null;
+  dragWidgetData = null;
+  document.removeEventListener('touchmove', handleWidgetDragMove);
+  document.removeEventListener('touchend', handleWidgetDragEnd);
+  document.removeEventListener('mousemove', handleWidgetDragMove);
+  document.removeEventListener('mouseup', handleWidgetDragEnd);
+}
+
+// 计算某页widget占用的最大Y值，用于图标起始位置偏移
+function getWidgetBottomForPage(pageIndex, theme) {
+  if (!theme || !theme.widgets) return 0;
+  const savedWidgetPos = JSON.parse(localStorage.getItem('widgetPositions') || '{}');
+  const pageWidgets = theme.widgets.filter((w, i) => {
+    const posKey = w.type + '_' + i;
+    const savedPos = savedWidgetPos[posKey];
+    const effectivePage = (savedPos && typeof savedPos.page === 'number') ? savedPos.page : w.page;
+    return effectivePage === pageIndex;
+  });
+  if (pageWidgets.length === 0) return 0;
+  return Math.max(...pageWidgets.map((w, i) => {
+    const posKey = w.type + '_' + i;
+    const savedPos = savedWidgetPos[posKey];
+    if (savedPos && typeof savedPos.gridRow === 'number' && typeof savedPos.gridH === 'number') {
+      const pixel = gridToPixel(0, savedPos.gridRow + savedPos.gridH - 1, 1, 1);
+      return pixel.y + pixel.h;
+    }
+    const pixel = gridToPixel(0, w.gridRow + w.gridH - 1, 1, 1);
+    return pixel.y + pixel.h;
+  }));
+}
 
 function initData() {
   if (!localStorage.getItem('contacts')) {
@@ -1720,16 +3319,9 @@ function initData() {
   if (!localStorage.getItem('pagesCount')) {
     localStorage.setItem('pagesCount', '2');
   }
-  if (!localStorage.getItem('theme')) {
-    localStorage.setItem('theme', 'light');
+  if (!localStorage.getItem('hideTopBar')) {
+    localStorage.setItem('hideTopBar', 'false');
   }
-  if (!localStorage.getItem('hideStatusbar')) {
-    localStorage.setItem('hideStatusbar', 'false');
-  }
-  if (!localStorage.getItem('chatContextSize')) {
-    localStorage.setItem('chatContextSize', '50');
-  }
-
   aiConfig = JSON.parse(localStorage.getItem('aiConfig')) || {};
   totalPages = parseInt(localStorage.getItem('pagesCount')) || 2;
 
@@ -1739,17 +3331,11 @@ function initData() {
     document.getElementById('toggle-border').classList.add('on');
   }
 
-  // 应用主题设置
-  const theme = localStorage.getItem('theme') || 'light';
-  document.documentElement.setAttribute('data-theme', theme);
-  if (theme === 'dark') {
-    document.getElementById('toggle-theme').classList.add('on');
-  }
-
-  // 应用隐藏状态栏设置
-  if (localStorage.getItem('hideStatusbar') === 'true') {
-    document.getElementById('status-bar').classList.add('hidden');
-    document.getElementById('toggle-statusbar').classList.add('on');
+  // 应用顶部状态栏隐藏设置
+  if (localStorage.getItem('hideTopBar') === 'true') {
+    const topBar = document.getElementById('top-bar');
+    if (topBar) topBar.style.display = 'none';
+    document.getElementById('toggle-topbar').classList.add('on');
   }
 
   // 应用AI实时时间设置
@@ -1758,9 +3344,9 @@ function initData() {
   }
 
   // 应用上下文记忆设置
-  const ctxSize = parseInt(localStorage.getItem('chatContextSize')) || 50;
+  const ctxSizeVal = localStorage.getItem('chatContextSize');
   const ctxDisplay = document.getElementById('context-size-display');
-  if (ctxDisplay) ctxDisplay.textContent = ctxSize + ' ›';
+  if (ctxDisplay) ctxDisplay.textContent = ctxSizeVal ? ctxSizeVal + '条 ›' : '不限制 ›';
 
   // 应用AI回复长度设置
   const maxTokensVal = localStorage.getItem('maxTokens');
@@ -1769,6 +3355,12 @@ function initData() {
 
   // 应用面具设置
   updateMaskDesc();
+
+  // 应用图标主题设置
+  const iconThemeId = localStorage.getItem('iconTheme') || 'sage-green';
+  document.documentElement.setAttribute('data-icon-theme', iconThemeId);
+  updateIconThemeDesc();
+  updateThemeAppearance();
 
   // 应用锁屏密码设置
   updateLockPasswordDesc();
@@ -1792,11 +3384,35 @@ function renderDesktop() {
   for (let i = 0; i < totalPages; i++) {
     const page = document.createElement('div');
     page.className = 'desktop-page';
-    page.style.backgroundImage = 'url(assets/wallpaper.jpg)';
     page.dataset.pageIndex = i;
 
-    // 第一页顶部：用户头像 + 机主名字 + 相框
-    if (i === 0) {
+    // 壁纸：优先使用自定义主题背景，其次使用图标主题壁纸，否则用默认壁纸
+    const theme = getCurrentIconTheme();
+    const customBg = theme ? (localStorage.getItem('themeWallpaper_' + theme.id) || (theme.id === 'freedom' ? localStorage.getItem('freedomWallpaper') : null)) : null;
+    if (theme && customBg) {
+      page.style.backgroundImage = '';
+      page.style.background = `url(${customBg}) center/cover no-repeat`;
+    } else if (theme && theme.wallpaper) {
+      page.style.backgroundImage = '';
+      page.style.background = theme.wallpaper;
+    } else {
+      page.style.backgroundImage = 'url(assets/wallpaper.jpg)';
+      page.style.background = '';
+    }
+
+    // Widget 渲染（主题模式）
+    const currentTheme = getCurrentIconTheme();
+    const hasWidgets = currentTheme && currentTheme.widgets && currentTheme.widgets.length > 0;
+    const savedWidgetPos = JSON.parse(localStorage.getItem('widgetPositions') || '{}');
+    const pageWidgets = hasWidgets ? currentTheme.widgets.filter((w, wi) => {
+      const posKey = w.type + '_' + wi;
+      const savedPos = savedWidgetPos[posKey];
+      const effectivePage = (savedPos && typeof savedPos.page === 'number') ? savedPos.page : w.page;
+      return effectivePage === i;
+    }) : [];
+
+    // 第一页顶部：用户头像 + 机主名字（仅在默认主题或无widget时显示）
+    if (i === 0 && (!hasWidgets || pageWidgets.length === 0)) {
       const topArea = document.createElement('div');
       topArea.className = 'page-top-area';
       topArea.innerHTML = `
@@ -1820,12 +3436,18 @@ function renderDesktop() {
       page.appendChild(fileInput);
     }
 
+    // 渲染该页widget
+    pageWidgets.forEach((wd, wi) => {
+      page.appendChild(createWidget(wd, wi));
+    });
+
     // 图标：读取保存的位置或使用默认位置
+    const widgetBottom = getWidgetBottomForPage(i, currentTheme);
     const pageApps = apps.filter(a => a.page === i);
     const savedPositions = JSON.parse(localStorage.getItem('iconPositions') || '{}');
     pageApps.forEach((app, idx) => {
       const pos = savedPositions[app.id];
-      const icon = createAppIcon(app, pos, i === 0);
+      const icon = createAppIcon(app, pos, i === 0, idx, widgetBottom);
       page.appendChild(icon);
     });
 
@@ -1839,28 +3461,68 @@ function renderDesktop() {
   updatePagePosition();
 }
 
-function createAppIcon(app, savedPos, isFirstPage) {
+function createAppIcon(app, savedPos, isFirstPage, iconIndex, widgetBottom) {
   const div = document.createElement('div');
   div.className = 'app-icon';
   div.dataset.appId = app.id;
+
+  // 图标主题颜色替换
+  const theme = getCurrentIconTheme();
+  let iconBg, iconColor;
+  if (theme) {
+    const themedColor = theme.previewColors[(iconIndex !== undefined ? iconIndex : 0) % theme.previewColors.length];
+    iconBg = themedColor;
+    iconColor = '#ffffff';
+    div.setAttribute('data-icon-theme', theme.id === 'freedom' ? 'freedom' : 'active');
+  } else {
+    iconBg = app.color + '20';
+    iconColor = app.color;
+  }
+
   div.innerHTML = `
-    <div class="icon-bg" style="background:${app.color}20;color:${app.color};">${app.icon}</div>
+    <div class="icon-bg" style="background:${iconBg};color:${iconColor};">${app.icon}</div>
     <div class="icon-label">${app.name}</div>
   `;
 
-  // 网格常量
-  const iconW = 64;
-  const iconH = 90;
-  const cols = 4;
-  const gapX = 24;
-  const gapY = 10;
-  const marginX = 20;
-  const startY = isFirstPage ? 110 : 20;
+  // 检查是否有自定义图标
+  const customIcon = localStorage.getItem('appIcon_' + app.id);
+  if (customIcon) {
+    const iconBgEl = div.querySelector('.icon-bg');
+    if (iconBgEl) {
+      iconBgEl.innerHTML = `<img src="${customIcon}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`;
+    }
+  }
+
+  // 双击更换图标
+  div.addEventListener('dblclick', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.addEventListener('change', function(ev) {
+      const file = ev.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(rev) {
+          localStorage.setItem('appIcon_' + app.id, rev.target.result);
+          renderDesktop();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    input.click();
+  });
+
+  // 如果有widget，图标从widget底部下方开始排列
+  const baseStartY = isFirstPage ? 110 : 20;
+  const startY = (widgetBottom && widgetBottom > 0) ? (widgetBottom + 12) : baseStartY;
 
   function getGridPosition(col, row) {
+    const g = getGrid();
     return {
-      x: marginX + col * (iconW + gapX),
-      y: startY + row * (iconH + gapY)
+      x: g.MARGIN_X + col * (g.CELL_W + g.GAP_X),
+      y: startY + row * (g.CELL_H + g.GAP_Y)
     };
   }
 
@@ -1871,12 +3533,13 @@ function createAppIcon(app, savedPos, isFirstPage) {
     div.dataset.gridCol = savedPos.col;
     div.dataset.gridRow = savedPos.row;
   } else {
-    // 默认位置：从上到下排列
+    // 默认位置：按4列网格从上到下排列，每个图标占据1×1网格
     const allApps = JSON.parse(localStorage.getItem('apps')) || defaultApps;
     const pageApps = allApps.filter(a => a.page === app.page);
     const idx = pageApps.findIndex(a => a.id === app.id);
-    const col = idx % cols;
-    const row = Math.floor(idx / cols);
+    const g = getGrid();
+    const col = idx % g.COLS;
+    const row = Math.floor(idx / g.COLS);
     const pos = getGridPosition(col, row);
     div.style.left = pos.x + 'px';
     div.style.top = pos.y + 'px';
@@ -1893,20 +3556,72 @@ function createAppIcon(app, savedPos, isFirstPage) {
   return div;
 }
 
+// ==================== 图标拖拽（长按+碰撞推挤+边缘滚动） ====================
+
+// 获取图标所在页面的索引
+function getIconPage(iconEl) {
+  const page = iconEl.closest('.desktop-page');
+  return page ? parseInt(page.dataset.pageIndex) : 0;
+}
+
+// 获取当前页图标的起始Y坐标
+function getIconsStartY(pageIndex) {
+  const theme = getCurrentIconTheme();
+  const widgetBottom = getWidgetBottomForPage(pageIndex, theme);
+  const baseStartY = pageIndex === 0 ? 135 : 45;
+  return (widgetBottom && widgetBottom > 0) ? (widgetBottom + 12 + 25) : baseStartY;
+}
+
+// 根据网格坐标计算像素位置（用于推挤动画更新）
+function getGridPositionEx(col, row, startY) {
+  const g = getGrid();
+  return {
+    x: g.MARGIN_X + col * (g.CELL_W + g.GAP_X),
+    y: startY + row * (g.CELL_H + g.GAP_Y)
+  };
+}
+
 function handleIconDragStart(e) {
   if (e.type === 'mousedown' && e.button !== 0) return;
+  if (dragWidget) return;
 
   const icon = e.currentTarget;
   const touch = e.touches ? e.touches[0] : e;
 
-  dragIcon = icon;
-  dragIconData = {
-    appId: icon.dataset.appId,
-    startX: touch.clientX,
-    startY: touch.clientY,
-    moved: false
-  };
+  // 记录长按起始位置（用于移动取消检测）
+  dragLongPressStartX = touch.clientX;
+  dragLongPressStartY = touch.clientY;
+  dragLongPressTriggered = false;
+  dragLongPressTimer = setTimeout(() => {
+    // 0.5秒后正式触发拖拽
+    dragLongPressTriggered = true;
+    dragIcon = icon;
+    const rect = icon.getBoundingClientRect();
+    dragOffsetX = rect.width / 2;
+    dragOffsetY = rect.height / 2;
 
+    dragIconData = {
+      appId: icon.dataset.appId,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      moved: true,
+      origCol: parseInt(icon.dataset.gridCol),
+      origRow: parseInt(icon.dataset.gridRow),
+      origPage: getIconPage(icon)
+    };
+
+    // 进入拖拽状态：抖动 + 缩放 + 投影
+    icon.classList.add('dragging-longpress');
+    icon.style.left = (touch.clientX - dragOffsetX) + 'px';
+    icon.style.top = (touch.clientY - dragOffsetY) + 'px';
+    // 隐藏原始占位
+    icon.style.opacity = '0.3';
+
+    // 清除图标自身的过渡动画，使被拖拽图标跟随手指
+    icon.style.transition = 'none';
+  }, 500);
+
+  // 注册全局移动/释放监听
   document.addEventListener('touchmove', handleIconDragMove, { passive: false });
   document.addEventListener('touchend', handleIconDragEnd);
   document.addEventListener('mousemove', handleIconDragMove);
@@ -1914,87 +3629,221 @@ function handleIconDragStart(e) {
 }
 
 function handleIconDragMove(e) {
-  if (!dragIcon) return;
   e.preventDefault();
-
   const touch = e.touches ? e.touches[0] : e;
-  const dx = touch.clientX - dragIconData.startX;
-  const dy = touch.clientY - dragIconData.startY;
 
-  if (!dragIconData.moved && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
-    dragIconData.moved = true;
-    dragIcon.classList.add('dragging');
-    const rect = dragIcon.getBoundingClientRect();
-    dragOffsetX = rect.width / 2;
-    dragOffsetY = rect.height / 2;
+  // 长按尚未触发：检测用户是否移动手指（可能是在滑动页面）
+  if (!dragLongPressTriggered) {
+    const dx = Math.abs(touch.clientX - dragLongPressStartX);
+    const dy = Math.abs(touch.clientY - dragLongPressStartY);
+    if (dx > 8 || dy > 8) {
+      clearTimeout(dragLongPressTimer);
+      dragLongPressTimer = null;
+      document.removeEventListener('touchmove', handleIconDragMove);
+      document.removeEventListener('touchend', handleIconDragEnd);
+      document.removeEventListener('mousemove', handleIconDragMove);
+      document.removeEventListener('mouseup', handleIconDragEnd);
+    }
+    return;
   }
 
-  if (dragIconData.moved) {
-    dragIcon.style.left = (touch.clientX - dragOffsetX) + 'px';
-    dragIcon.style.top = (touch.clientY - dragOffsetY) + 'px';
+  if (!dragIcon || !dragIconData) return;
+
+  // ===== 1. 更新被拖拽图标跟随手指 =====
+  dragIcon.style.left = (touch.clientX - dragOffsetX) + 'px';
+  dragIcon.style.top = (touch.clientY - dragOffsetY) + 'px';
+
+  // ===== 2. 碰撞检测 + 推挤算法 =====
+  const g = getGrid();
+  const cols = g.COLS;
+  const iconW = g.CELL_W;
+  const gapX = g.GAP_X;
+  const gapY = g.GAP_Y;
+  const iconH = g.CELL_H;
+  const marginX = g.MARGIN_X;
+  const threshold = iconW * 0.8;
+
+  const page = dragIcon.closest('.desktop-page');
+  if (!page) return;
+  const pageIndex = parseInt(page.dataset.pageIndex);
+  const startY = getIconsStartY(pageIndex);
+  const pageRect = page.getBoundingClientRect();
+  const relX = touch.clientX - pageRect.left;
+  const relY = touch.clientY - pageRect.top;
+
+  // 计算被拖拽图标中心点所悬停的网格位置
+  const hoverCol = Math.round((relX - marginX) / (iconW + gapX));
+  const hoverRow = Math.round((relY - startY) / (iconH + gapY));
+  const clampedCol = Math.max(0, Math.min(hoverCol, cols - 1));
+  const clampedRow = Math.max(0, Math.min(hoverRow, g.ROWS - 1));
+
+  // 如果悬停位置与当前原始位置不同，执行推挤
+  if (clampedCol !== dragIconData.origCol || clampedRow !== dragIconData.origRow) {
+    const targetLinear = clampedRow * cols + clampedCol;
+    const sourceLinear = dragIconData.origRow * cols + dragIconData.origCol;
+
+    if (targetLinear !== sourceLinear) {
+      // 收集本页所有图标的当前网格数据
+      const pageIcons = page.querySelectorAll('.app-icon');
+      const savedPositions = JSON.parse(localStorage.getItem('iconPositions') || '{}');
+      const newPositions = {};
+      const iconsData = [];
+
+      pageIcons.forEach(icon => {
+        const appId = icon.dataset.appId;
+        if (appId !== dragIconData.appId) {
+          const col = parseInt(icon.dataset.gridCol);
+          const row = parseInt(icon.dataset.gridRow);
+          const linear = row * cols + col;
+          iconsData.push({ appId, col, row, linear, element: icon });
+        }
+      });
+
+      iconsData.sort((a, b) => a.linear - b.linear);
+
+      // 核心推挤：在targetLinear处插入，sourceLinear处移除
+      iconsData.forEach(item => {
+        let newLinear = item.linear;
+        if (targetLinear < sourceLinear) {
+          // 朝前推：从target到source-1的图标顺移一格
+          if (item.linear >= targetLinear && item.linear < sourceLinear) {
+            newLinear = item.linear + 1;
+          }
+        } else {
+          // 朝后推：从source+1到target的图标顺移一格
+          if (item.linear > sourceLinear && item.linear <= targetLinear) {
+            newLinear = item.linear - 1;
+          }
+        }
+        const newCol = newLinear % cols;
+        const newRow = Math.floor(newLinear / cols);
+        newPositions[item.appId] = { col: newCol, row: newRow };
+      });
+
+      // 被拖拽图标占据目标位置
+      newPositions[dragIconData.appId] = { col: clampedCol, row: clampedRow };
+
+      // 同步到localStorage
+      Object.keys(newPositions).forEach(appId => {
+        savedPositions[appId] = newPositions[appId];
+      });
+      localStorage.setItem('iconPositions', JSON.stringify(savedPositions));
+
+      // 更新DOM：其他图标平滑移动到新位置（CSS transition自动产生推挤动画）
+      pageIcons.forEach(icon => {
+        const appId = icon.dataset.appId;
+        const pos = newPositions[appId];
+        if (pos) {
+          const gridPos = getGridPositionEx(pos.col, pos.row, startY);
+          icon.style.left = gridPos.x + 'px';
+          icon.style.top = gridPos.y + 'px';
+          icon.dataset.gridCol = pos.col;
+          icon.dataset.gridRow = pos.row;
+        }
+      });
+
+      // 更新被拖拽图标的原始网格位置（用于下次碰撞比较）
+      dragIconData.origCol = clampedCol;
+      dragIconData.origRow = clampedRow;
+    }
+  }
+
+  // ===== 3. 边缘自动滚动检测 =====
+  const screenEl = document.getElementById('screen');
+  const screenRect = screenEl.getBoundingClientRect();
+  const edgeThreshold = 50;
+
+  // 清理之前的滚动定时器
+  if (dragCurrentPageScrollTimer) {
+    clearInterval(dragCurrentPageScrollTimer);
+    dragCurrentPageScrollTimer = null;
+  }
+
+  if (touch.clientY < screenRect.top + edgeThreshold && currentPage > 0) {
+    // 拖到屏幕顶部边缘 → 向上一页
+    dragCurrentPageScrollTimer = setInterval(() => {
+      if (currentPage > 0) {
+        currentPage--;
+        updatePagePosition();
+      }
+    }, 900);
+  } else if (touch.clientY > screenRect.bottom - edgeThreshold && currentPage < totalPages - 1) {
+    // 拖到屏幕底部边缘 → 向下一页
+    dragCurrentPageScrollTimer = setInterval(() => {
+      if (currentPage < totalPages - 1) {
+        currentPage++;
+        updatePagePosition();
+      }
+    }, 900);
   }
 }
 
 function handleIconDragEnd(e) {
-  if (!dragIcon) return;
-
-  if (dragIconData.moved) {
-    const touch = e.changedTouches ? e.changedTouches[0] : e;
-    const pages = document.querySelectorAll('.desktop-page');
-    let droppedPage = null;
-
-    pages.forEach((page, idx) => {
-      const rect = page.getBoundingClientRect();
-      if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
-          touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
-        droppedPage = idx;
-      }
-    });
-
-    // 计算网格对齐
-    if (droppedPage !== null) {
-      const page = pages[droppedPage];
-      const pageRect = page.getBoundingClientRect();
-      const relX = touch.clientX - pageRect.left;
-      const relY = touch.clientY - pageRect.top;
-
-      // 网格常量（必须与createAppIcon保持一致）
-      const iconW = 64;
-      const iconH = 90;
-      const cols = 4;
-      const gapX = 24;
-      const gapY = 10;
-      const marginX = 20;
-      const startY = droppedPage === 0 ? 110 : 20;
-
-      // 计算最近的网格位置
-      const col = Math.round((relX - marginX) / (iconW + gapX));
-      const row = Math.round((relY - startY) / (iconH + gapY));
-      const clampedCol = Math.max(0, Math.min(col, cols - 1));
-      const clampedRow = Math.max(0, Math.min(row, 5));
-
-      // 保存网格位置
-      const savedPositions = JSON.parse(localStorage.getItem('iconPositions') || '{}');
-      savedPositions[dragIconData.appId] = { col: clampedCol, row: clampedRow };
-      localStorage.setItem('iconPositions', JSON.stringify(savedPositions));
-
-      // 如果跨页，更新app的page
-      const apps = JSON.parse(localStorage.getItem('apps')) || defaultApps;
-      const app = apps.find(a => a.id === dragIconData.appId);
-      if (app && app.page !== droppedPage) {
-        app.page = droppedPage;
-        localStorage.setItem('apps', JSON.stringify(apps));
-      }
-    }
-
-    dragIcon.classList.remove('dragging');
-    dragIcon.style.left = '';
-    dragIcon.style.top = '';
-    renderDesktop();
+  // ---- 情况1：长按尚未触发，取消 ----
+  if (!dragLongPressTriggered) {
+    clearTimeout(dragLongPressTimer);
+    dragLongPressTimer = null;
+    document.removeEventListener('touchmove', handleIconDragMove);
+    document.removeEventListener('touchend', handleIconDragEnd);
+    document.removeEventListener('mousemove', handleIconDragMove);
+    document.removeEventListener('mouseup', handleIconDragEnd);
+    return;
   }
 
+  // 清理边缘滚动定时器
+  if (dragCurrentPageScrollTimer) {
+    clearInterval(dragCurrentPageScrollTimer);
+    dragCurrentPageScrollTimer = null;
+  }
+
+  // ---- 情况2：拖拽结束，检查是否跨页 ----
+  const touch = e.changedTouches ? e.changedTouches[0] : e;
+  const pages = document.querySelectorAll('.desktop-page');
+  let droppedPage = null;
+
+  pages.forEach((page, idx) => {
+    const rect = page.getBoundingClientRect();
+    if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+        touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+      droppedPage = idx;
+    }
+  });
+
+  // 如果释放到了不同页面，直接移动应用到目标页
+  if (droppedPage !== null && droppedPage !== dragIconData.origPage) {
+    const apps = JSON.parse(localStorage.getItem('apps')) || defaultApps;
+    const app = apps.find(a => a.id === dragIconData.appId);
+    if (app) {
+      app.page = droppedPage;
+      localStorage.setItem('apps', JSON.stringify(apps));
+    }
+  }
+
+  // ---- 情况3：恢复状态，重排 ----
+  if (dragIcon) {
+    dragIcon.classList.remove('dragging-longpress');
+    dragIcon.style.left = '';
+    dragIcon.style.top = '';
+    dragIcon.style.opacity = '';
+    dragIcon.style.transition = '';
+    dragIcon.style.position = '';
+    dragIcon.style.zIndex = '';
+    dragIcon.style.transform = '';
+    dragIcon.style.filter = '';
+    dragIcon.style.animation = '';
+    dragIcon.style.pointerEvents = '';
+    dragIcon.style.willChange = '';
+  }
+
+  // 最终渲染，完成排序
+  renderDesktop();
+
+  // 重置全部拖拽状态
   dragIcon = null;
   dragIconData = null;
+  dragLongPressTriggered = false;
+  dragLongPressTimer = null;
+
   document.removeEventListener('touchmove', handleIconDragMove);
   document.removeEventListener('touchend', handleIconDragEnd);
   document.removeEventListener('mousemove', handleIconDragMove);
@@ -2026,7 +3875,7 @@ function initDesktopSwipe() {
 }
 
 function handleSwipeStart(e) {
-  if (dragIcon) return;
+  if (dragIcon || dragWidget) return;
   const touch = e.touches ? e.touches[0] : e;
   isDragging = true;
   dragStartX = touch.clientX;
@@ -2034,7 +3883,7 @@ function handleSwipeStart(e) {
 }
 
 function handleSwipeMove(e) {
-  if (!isDragging || dragIcon) return;
+  if (!isDragging || dragIcon || dragWidget) return;
   const touch = e.touches ? e.touches[0] : e;
   dragCurrentX = touch.clientX;
   const diff = dragCurrentX - dragStartX;
@@ -2043,7 +3892,7 @@ function handleSwipeMove(e) {
 }
 
 function handleSwipeEnd(e) {
-  if (!isDragging || dragIcon) return;
+  if (!isDragging || dragIcon || dragWidget) return;
   isDragging = false;
   const diff = dragCurrentX - dragStartX;
   const threshold = 50;
@@ -2076,6 +3925,7 @@ function openApp(appId) {
   const appMap = {
     'contacts': () => { renderContacts(); showApp('app-contacts'); },
     'wechat': () => { renderWechatList(); showApp('app-wechat'); },
+    'groupchat': () => { renderGroupChatList(); showApp('app-groupchat'); },
     'worldbook': () => { renderWorldBook(); showApp('app-worldbook'); },
     'check': () => { renderCheckList(); showApp('app-check'); },
     'settings': () => showApp('app-settings'),
@@ -2206,7 +4056,7 @@ function renderMinesweeper() {
       else if (val === -1) { content = '💣'; bg = '#ff4444'; }
       else if (val === 0) { content = ''; bg = '#eee'; }
       else { content = val; bg = '#eee'; color = ['','#00f','#080','#f00','#008','#800','#088','#000','#888'][val]; }
-      html += `<div onclick="msClick(${r},${c})" oncontextmenu="event.preventDefault();msFlag(${r},${c})" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:${bg};color:${color};font-size:14px;font-weight:bold;cursor:pointer;user-select:none;border:1px solid #999;">${content}</div>`;
+      html += `<div onclick="msClick(${r},${c})" oncontextmenu="event.preventDefault();msFlag(${r},${c})" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:${bg};color:${color};font-size:14px;font-weight:bold;cursor:pointer;user-select:none;border:1px solid var(--border);">${content}</div>`;
     }
   }
   board.innerHTML = html;
@@ -2397,7 +4247,9 @@ function snakeStep() {
 
 function drawSnake() {
   if (!snakeCtx) return;
-  snakeCtx.fillStyle = '#1a1a2e'; snakeCtx.fillRect(0, 0, 300, 300);
+  const rootStyle = getComputedStyle(document.documentElement);
+  const screenBg = rootStyle.getPropertyValue('--screen-bg').trim() || '#1a1a2e';
+  snakeCtx.fillStyle = screenBg; snakeCtx.fillRect(0, 0, 300, 300);
   snakeCtx.fillStyle = '#67c23a';
   snake.forEach((s, i) => { snakeCtx.fillStyle = i === 0 ? '#85ce61' : '#67c23a'; snakeCtx.fillRect(s.x * 15, s.y * 15, 14, 14); });
   snakeCtx.fillStyle = '#f56c6c'; snakeCtx.fillRect(snakeFood.x * 15, snakeFood.y * 15, 14, 14);
@@ -2541,7 +4393,9 @@ function initBreakout() {
 function breakoutLoop() {
   if (!document.getElementById('app-game-breakout').classList.contains('active')) { breakoutAnim = requestAnimationFrame(breakoutLoop); return; }
   const ctx = breakoutCtx, ball = breakoutBall;
-  ctx.fillStyle = '#1a1a2e'; ctx.fillRect(0, 0, 340, 280);
+  const rootStyle = getComputedStyle(document.documentElement);
+  const screenBg = rootStyle.getPropertyValue('--screen-bg').trim() || '#1a1a2e';
+  ctx.fillStyle = screenBg; ctx.fillRect(0, 0, 340, 280);
   breakoutBricks.forEach(b => { if (b.alive) { ctx.fillStyle = b.color; ctx.fillRect(b.x, b.y, b.w, b.h); } });
   ctx.fillStyle = '#fff'; ctx.fillRect(breakoutPaddle.x, 260, breakoutPaddle.w, breakoutPaddle.h);
   ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
@@ -2823,7 +4677,9 @@ function thunderUpdate() {
 }
 
 function thunderDraw() {
-  thunderCtx.fillStyle = '#000';
+  const root = getComputedStyle(document.documentElement);
+  const bgColor = root.getPropertyValue('--app-page-bg').trim();
+  thunderCtx.fillStyle = bgColor || '#000';
   thunderCtx.fillRect(0, 0, 340, 480);
 
   // 星空背景
@@ -2837,7 +4693,8 @@ function thunderDraw() {
   thunderCtx.globalAlpha = 1;
 
   // 玩家战机
-  thunderCtx.fillStyle = '#0a84ff';
+  const accentColor = root.getPropertyValue('--accent').trim();
+  thunderCtx.fillStyle = accentColor || '#0a84ff';
   thunderCtx.beginPath();
   thunderCtx.moveTo(thunderPlayer.x, thunderPlayer.y - 15);
   thunderCtx.lineTo(thunderPlayer.x - 12, thunderPlayer.y + 10);
@@ -3187,11 +5044,11 @@ function renderContacts() {
   }
 
   list.innerHTML = contacts.map(c => `
-    <div class="list-item" onclick="openContactDetail('${c.id}')">
-      <div class="avatar">${c.name.charAt(0)}</div>
+    <div class="list-item" onclick="openContactDetail('${escapeHtml(c.id)}')">
+      ${c.avatar ? `<img src="${c.avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div class="avatar">${escapeHtml(c.name.charAt(0))}</div>`}
       <div class="info">
-        <div class="name">${c.name}</div>
-        <div class="sub">${c.note || ''}</div>
+        <div class="name">${escapeHtml(c.name)}</div>
+        <div class="sub">${escapeHtml(c.note || '')}</div>
       </div>
     </div>
   `).join('');
@@ -3206,6 +5063,15 @@ function openContactDetail(id) {
   document.getElementById('contact-name').value = contact.name;
   document.getElementById('contact-role').value = contact.role || '';
   document.getElementById('contact-note').value = contact.note || '';
+  document.getElementById('contact-avatar').value = contact.avatar || '';
+  const aliveFeelToggle = document.getElementById('toggle-alive-feel');
+  aliveFeelToggle.classList.toggle('on', !!contact.aliveFeel);
+  const preview = document.getElementById('contact-avatar-preview');
+  if (contact.avatar) {
+    preview.innerHTML = `<img src="${contact.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+  } else {
+    preview.textContent = '👤';
+  }
   document.getElementById('contact-detail-title').textContent = contact.name;
   document.getElementById('btn-delete-contact').style.display = 'block';
 
@@ -3217,36 +5083,76 @@ function openContactEdit() {
   document.getElementById('contact-name').value = '';
   document.getElementById('contact-role').value = '';
   document.getElementById('contact-note').value = '';
+  document.getElementById('contact-avatar').value = '';
+  document.getElementById('toggle-alive-feel').classList.remove('on');
+  document.getElementById('contact-avatar-preview').textContent = '👤';
   document.getElementById('contact-detail-title').textContent = '新建联系人';
   document.getElementById('btn-delete-contact').style.display = 'none';
   showApp('app-contact-detail');
 }
 
-function saveContact() {
-  const id = document.getElementById('contact-id').value;
-  const name = document.getElementById('contact-name').value.trim();
-  const role = document.getElementById('contact-role').value.trim();
-  const note = document.getElementById('contact-note').value.trim();
-
-  if (!name) { alert('请输入名字'); return; }
-
-  const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
-
-  if (id) {
-    const idx = contacts.findIndex(c => c.id === id);
-    if (idx >= 0) {
-      contacts[idx] = { ...contacts[idx], name, role, note };
+function uploadContactAvatar() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.addEventListener('change', function(ev) {
+    const file = ev.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(rev) {
+        document.getElementById('contact-avatar').value = rev.target.result;
+        document.getElementById('contact-avatar-preview').innerHTML = `<img src="${rev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+      };
+      reader.readAsDataURL(file);
     }
-  } else {
-    contacts.push({
-      id: 'c' + Date.now(),
-      name, role, note
-    });
-  }
+  });
+  input.click();
+}
 
-  localStorage.setItem('contacts', JSON.stringify(contacts));
-  showApp('app-contacts');
-  renderContacts();
+function toggleAliveFeel() {
+  const toggle = document.getElementById('toggle-alive-feel');
+  toggle.classList.toggle('on');
+}
+
+function saveContact() {
+  try {
+    const id = document.getElementById('contact-id').value;
+    const name = document.getElementById('contact-name').value.trim();
+    const role = document.getElementById('contact-role').value.trim();
+    const note = document.getElementById('contact-note').value.trim();
+    const avatar = document.getElementById('contact-avatar').value;
+    const aliveFeel = document.getElementById('toggle-alive-feel').classList.contains('on');
+
+    if (!name) { alert('请输入名字'); return; }
+
+    const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+
+    if (id) {
+      const idx = contacts.findIndex(c => c.id === id);
+      if (idx >= 0) {
+        contacts[idx] = { ...contacts[idx], name, role, note, avatar, aliveFeel };
+      } else {
+        alert('未找到该联系人，请返回重试');
+        return;
+      }
+    } else {
+      let newId;
+      do {
+        newId = 'c' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      } while (contacts.some(c => c.id === newId));
+      contacts.push({
+        id: newId,
+        name, role, note, avatar, aliveFeel
+      });
+    }
+
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+    showApp('app-contacts');
+    renderContacts();
+  } catch (e) {
+    console.error('保存联系人失败:', e);
+    alert('保存失败：' + e.message);
+  }
 }
 
 function clearCurrentChat() {
@@ -3356,9 +5262,12 @@ function renderWechatList() {
   list.innerHTML = contacts.map(c => {
     const chat = chats[c.id] || [];
     const lastMsg = chat.length > 0 ? chat[chat.length - 1] : null;
+    const avatarHtml = c.avatar
+      ? `<img src="${c.avatar}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+      : `<div class="avatar" style="background:${stringToColor(c.name)};">${c.name.charAt(0)}</div>`;
     return `
       <div class="list-item" onclick="openChat('${c.id}')">
-        <div class="avatar" style="background:${stringToColor(c.name)};">${c.name.charAt(0)}</div>
+        ${avatarHtml}
         <div class="info">
           <div class="name">${c.name}</div>
           <div class="sub">${lastMsg ? lastMsg.content.substring(0, 20) + '...' : '点击开始聊天'}</div>
@@ -3392,11 +5301,28 @@ function renderChatMessages() {
   const messages = chats[currentChatContact.id] || [];
   const size = parseInt(localStorage.getItem('chatFontSize')) || 17;
 
-  container.innerHTML = messages.map(m => `
-    <div class="chat-bubble ${m.sender === 'me' ? 'sent' : 'received'}" style="font-size:${size}px;">
-      ${escapeHtml(m.content)}
-    </div>
-  `).join('');
+  const mask = getActiveMask();
+  const myAvatar = mask && mask.avatar ? mask.avatar : '';
+  const myName = mask && mask.name ? mask.name : '我';
+  const contactAvatar = currentChatContact && currentChatContact.avatar ? currentChatContact.avatar : '';
+  const contactName = currentChatContact ? currentChatContact.name : 'AI';
+
+  container.style.setProperty('--chat-font-size', size + 'px');
+
+  container.innerHTML = messages.map(m => {
+    const isMe = m.sender === 'me';
+    const avatar = isMe ? myAvatar : contactAvatar;
+    const name = isMe ? myName : contactName;
+    const avatarHtml = avatar ? `<img src="${avatar}" class="chat-avatar">` : `<div class="chat-avatar-placeholder" style="background:${isMe ? (mask && mask.color ? mask.color : 'var(--accent)') : 'var(--surface-solid)'};">${name.charAt(0)}</div>`;
+    return `
+      <div class="chat-message-row ${isMe ? 'me' : ''}">
+        ${avatarHtml}
+        <div class="chat-bubble ${isMe ? 'sent' : 'received'}">
+          ${escapeHtml(m.content)}
+        </div>
+      </div>
+    `;
+  }).join('');
 
   applyBubbleMode();
 
@@ -3464,7 +5390,7 @@ async function sendAIReply(userMsg) {
   const maskInfo = mask ? { name: mask.name, identity: mask.identity } : null;
 
   // 传入历史消息和面具信息作为上下文
-  const reply = await callAI(currentChatContact.role, userMsg, history, maskInfo);
+  const reply = await callAI(currentChatContact.role, userMsg, history, maskInfo, { aliveFeel: currentChatContact.aliveFeel });
 
   document.getElementById(loadingId)?.remove();
 
@@ -3476,6 +5402,436 @@ async function sendAIReply(userMsg) {
 
   localStorage.setItem('chats', JSON.stringify(chats));
   renderChatMessages();
+}
+
+// ==================== 群聊 ====================
+let groupChatsData = JSON.parse(localStorage.getItem('groupChatsData')) || [];
+let currentGroupChat = null;
+let isGroupChatGenerating = false;
+
+function saveGroupChats() {
+  localStorage.setItem('groupChatsData', JSON.stringify(groupChatsData));
+}
+
+function renderGroupChatList() {
+  const list = document.getElementById('groupchat-list');
+  if (groupChatsData.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">👥</div><div>暂无群聊，点击右上角＋创建</div></div>';
+    return;
+  }
+  list.innerHTML = groupChatsData.map((g, i) => {
+    const lastMsg = g.messages && g.messages.length > 0 ? g.messages[g.messages.length - 1] : null;
+    const lastMsgText = lastMsg ? (lastMsg.senderName ? lastMsg.senderName + ': ' : '') + lastMsg.content.substring(0, 30) + (lastMsg.content.length > 30 ? '...' : '') : '暂无消息';
+    const avatarHtml = g.avatar ? `<img src="${g.avatar}" style="width:48px;height:48px;border-radius:12px;object-fit:cover;flex-shrink:0;">` : `<div class="group-avatar">👥</div>`;
+    return `
+      <div class="groupchat-item" onclick="openGroupChat(${i})">
+        ${avatarHtml}
+        <div class="group-info">
+          <div class="group-name">${escapeHtml(g.name)}</div>
+          <div class="group-desc">${escapeHtml(lastMsgText)}</div>
+        </div>
+        <div class="group-meta">
+          <div>${lastMsg ? timeAgo(Date.now() - lastMsg.time) : ''}</div>
+          <div class="member-count">${g.members.length + 1}人</div>
+        </div>
+        <span onclick="event.stopPropagation();openGroupManageDialog(${i})" style="font-size:16px;cursor:pointer;padding:4px 6px;flex-shrink:0;color:var(--muted);" title="管理群聊">⋯</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function openGroupChat(index) {
+  currentGroupChat = groupChatsData[index];
+  if (!currentGroupChat) return;
+  document.getElementById('groupchat-chat-title').textContent = currentGroupChat.name + ' (' + (currentGroupChat.members.length + 1) + ')';
+  renderGroupChatMessages();
+  showApp('app-groupchat-chat');
+  const input = document.getElementById('groupchat-input');
+  if (input) input.focus();
+}
+
+function renderGroupChatMessages() {
+  if (!currentGroupChat) return;
+  const container = document.getElementById('groupchat-messages');
+  const mask = getActiveMask();
+  const messages = currentGroupChat.messages || [];
+
+  container.innerHTML = messages.map(m => {
+    const isMe = m.sender === 'me';
+    const avatar = isMe ? (mask && mask.avatar ? mask.avatar : '') : m.senderAvatar || '';
+    const name = isMe ? (mask && mask.name ? mask.name : '我') : (m.senderName || 'AI');
+    const avatarHtml = avatar
+      ? `<img src="${avatar}" class="group-bubble-avatar">`
+      : `<div class="group-bubble-avatar-placeholder" style="background:${isMe ? (mask && mask.color ? mask.color : 'var(--accent)') : stringToColor(name)};">${name.charAt(0)}</div>`;
+
+    if (isMe) {
+      return `
+        <div class="group-bubble-row me">
+          ${avatarHtml}
+          <div class="group-bubble-body" style="text-align:right;">
+            <div class="group-bubble-msg">${escapeHtml(m.content)}</div>
+          </div>
+        </div>`;
+    } else {
+      return `
+        <div class="group-bubble-row">
+          ${avatarHtml}
+          <div class="group-bubble-body">
+            <div class="group-bubble-name">${escapeHtml(name)}</div>
+            <div class="group-bubble-msg">${escapeHtml(m.content)}</div>
+          </div>
+        </div>`;
+    }
+  }).join('');
+
+  container.scrollTop = container.scrollHeight;
+}
+
+function autoResizeGroupChatInput(textarea) {
+  textarea.style.height = 'auto';
+  const maxH = 100;
+  textarea.style.height = Math.min(textarea.scrollHeight, maxH) + 'px';
+}
+
+function handleGroupChatInputKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendGroupMessage();
+  }
+}
+
+async function sendGroupMessage() {
+  const input = document.getElementById('groupchat-input');
+  const content = input.value.trim();
+  if (!content || !currentGroupChat || isGroupChatGenerating) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+
+  if (!currentGroupChat.messages) currentGroupChat.messages = [];
+
+  currentGroupChat.messages.push({
+    sender: 'me',
+    content: content,
+    time: Date.now()
+  });
+  saveGroupChats();
+  renderGroupChatMessages();
+
+  await generateGroupReplies(content);
+}
+
+async function generateGroupReplies(userMsg) {
+  if (isGroupChatGenerating) return;
+  isGroupChatGenerating = true;
+
+  const g = currentGroupChat;
+  const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+  const mask = getActiveMask();
+  const myIdentity = mask ? (mask.name + (mask.identity ? '（' + mask.identity + '）' : '')) : '用户';
+  const myIdentityDetail = g.myIdentity || myIdentity;
+
+  // 构建群内所有成员信息
+  const memberInfos = g.members.map(mid => {
+    const c = contacts.find(cc => cc.id === mid);
+    return c ? { id: c.id, name: c.name, role: c.role || '', avatar: c.avatar || '' } : { id: mid, name: '未知角色', role: '', avatar: '' };
+  });
+
+  // 构建发言历史摘要
+  const historyText = (g.messages || []).slice(-30).map(m => {
+    const name = m.sender === 'me' ? myIdentityDetail : (m.senderName || '未知');
+    return `${name}：${m.content}`;
+  }).join('\n');
+
+  // 构建成员列表描述
+  const membersDesc = memberInfos.map(m => `- ${m.name}（角色设定：${m.role || '普通成员'}）`).join('\n');
+
+  // 构建AI决策提示词
+  const decisionPrompt = `你是一个群聊AI调度系统。当前群聊"${g.name}"有以下设定：
+【群设定】${g.setting || '无特殊设定'}
+【我的身份设定（群内始终记得）】${myIdentityDetail}
+【群成员】${membersDesc}
+
+【近期聊天记录】
+${historyText}
+
+【我的最新消息】${userMsg}
+
+请分析这段对话，决定每个成员是否应该回复、回复什么内容。
+要求：
+1. 不是每个人都要回复，只让内容相关的成员回复
+2. 回复要符合角色性格和角色设定
+3. 回复应该自然、有活人感，像真实群聊
+4. 可以互相回应、吐槽、补充
+5. 回复简短有力，像微信消息而不是长文
+
+请严格按以下JSON格式输出（不要包含任何其他文字，只输出JSON数组）：
+[{"name":"角色名","content":"回复内容"},{"name":"角色名","content":"回复内容"}]
+
+如果没有成员需要回复，输出空数组 []`;
+
+  const container = document.getElementById('groupchat-messages');
+  const loadingDiv = document.createElement('div');
+  const loadingId = 'gc-loading-' + Date.now();
+  loadingDiv.id = loadingId;
+  loadingDiv.className = 'group-bubble-row';
+  loadingDiv.innerHTML = '<div class="group-bubble-msg" style="color:var(--muted);font-size:13px;"><div class="loading"></div> 成员正在输入...</div>';
+  container.appendChild(loadingDiv);
+  container.scrollTop = container.scrollHeight;
+
+  try {
+    const decisionRaw = await callAI(decisionPrompt, '请根据以上对话分析，输出回复决策JSON数组。', []);
+
+    document.getElementById(loadingId)?.remove();
+
+    let replies = [];
+    try {
+      const cleaned = decisionRaw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      replies = JSON.parse(cleaned);
+      if (!Array.isArray(replies)) replies = [];
+    } catch (e) {
+      console.log('群聊回复解析失败:', e, decisionRaw);
+    }
+
+    // 逐条添加AI回复消息，并带延迟模拟真实感
+    for (const reply of replies) {
+      if (!reply.name || !reply.content) continue;
+
+      const memberInfo = memberInfos.find(m => m.name === reply.name);
+
+      g.messages.push({
+        sender: 'member',
+        senderId: memberInfo ? memberInfo.id : '',
+        senderName: reply.name,
+        senderAvatar: memberInfo ? memberInfo.avatar : '',
+        content: reply.content,
+        time: Date.now()
+      });
+
+      saveGroupChats();
+      renderGroupChatMessages();
+    }
+  } catch (e) {
+    document.getElementById(loadingId)?.remove();
+    g.messages.push({
+      sender: 'system',
+      senderName: '系统',
+      content: '消息发送失败，请重试',
+      time: Date.now()
+    });
+    saveGroupChats();
+    renderGroupChatMessages();
+  }
+
+  isGroupChatGenerating = false;
+}
+
+function deleteCurrentGroupChat() {
+  if (!currentGroupChat) return;
+  if (!confirm('确定要删除群聊"' + currentGroupChat.name + '"吗？所有聊天记录将被清除。')) return;
+  const idx = groupChatsData.findIndex(g => g.id === currentGroupChat.id);
+  if (idx >= 0) {
+    groupChatsData.splice(idx, 1);
+    saveGroupChats();
+    currentGroupChat = null;
+    showApp('app-groupchat');
+    renderGroupChatList();
+  }
+}
+
+let gcManagingIndex = -1;
+
+function openGroupManageDialog(index) {
+  gcManagingIndex = index;
+  const g = groupChatsData[index];
+  if (!g) return;
+
+  const dialog = document.getElementById('gc-manage-dialog');
+  document.getElementById('gc-manage-title').textContent = '编辑群聊';
+  document.getElementById('gc-manage-name').value = g.name;
+  document.getElementById('gc-manage-setting').value = g.setting || '';
+  document.getElementById('gc-manage-my-identity').value = g.myIdentity || '';
+  document.getElementById('gc-manage-avatar').value = g.avatar || '';
+
+  const avatarPreview = document.getElementById('gc-manage-avatar-preview');
+  if (g.avatar) {
+    avatarPreview.innerHTML = `<img src="${g.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+  } else {
+    avatarPreview.innerHTML = '👥';
+  }
+
+  // 渲染成员列表（含通讯录所有角色，已加入的勾选）
+  const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+  const memberList = document.getElementById('gc-manage-member-list');
+  memberList.innerHTML = contacts.map(c => {
+    const isMember = g.members.includes(c.id);
+    return `
+      <div class="contact-checkbox-item">
+        <label>
+          <input type="checkbox" value="${c.id}" name="gc-manage-members" ${isMember ? 'checked' : ''}>
+          ${c.avatar ? `<img src="${c.avatar}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">` : `<div class="avatar" style="background:${stringToColor(c.name)};width:32px;height:32px;font-size:14px;">${c.name.charAt(0)}</div>`}
+          <div>
+            <div style="font-weight:500;">${c.name}</div>
+            <div style="font-size:12px;color:var(--muted);">${c.role || '普通角色'}</div>
+          </div>
+        </label>
+      </div>
+    `;
+  }).join('');
+
+  dialog.style.display = 'flex';
+}
+
+function closeGroupManageDialog() {
+  const dialog = document.getElementById('gc-manage-dialog');
+  dialog.style.display = 'none';
+  gcManagingIndex = -1;
+}
+
+function saveGroupManage() {
+  if (gcManagingIndex < 0 || !groupChatsData[gcManagingIndex]) return;
+  const g = groupChatsData[gcManagingIndex];
+
+  const name = document.getElementById('gc-manage-name').value.trim();
+  if (!name) { alert('请输入群名称'); return; }
+
+  const checkboxes = document.querySelectorAll('input[name="gc-manage-members"]:checked');
+  if (checkboxes.length < 2) { alert('请至少选择2个群成员'); return; }
+
+  g.name = name;
+  g.setting = document.getElementById('gc-manage-setting').value.trim();
+  g.myIdentity = document.getElementById('gc-manage-my-identity').value.trim();
+  g.avatar = document.getElementById('gc-manage-avatar').value;
+  g.members = Array.from(checkboxes).map(cb => cb.value);
+
+  saveGroupChats();
+  closeGroupManageDialog();
+  renderGroupChatList();
+}
+
+function deleteGroupFromManage() {
+  if (gcManagingIndex < 0 || !groupChatsData[gcManagingIndex]) return;
+  const g = groupChatsData[gcManagingIndex];
+  if (!confirm('确定要删除群聊"' + g.name + '"吗？所有聊天记录将被清除。')) return;
+  groupChatsData.splice(gcManagingIndex, 1);
+  saveGroupChats();
+  if (currentGroupChat && currentGroupChat.id === g.id) currentGroupChat = null;
+  closeGroupManageDialog();
+  renderGroupChatList();
+}
+
+function uploadGroupAvatar() {
+  const input = document.getElementById('gc-avatar-upload');
+  if (input) input.click();
+}
+
+// 监听头像上传
+(function() {
+  const origOnload = window.onload;
+  window.onload = function() {
+    if (origOnload) origOnload();
+    const avatarInput = document.getElementById('gc-avatar-upload');
+    if (avatarInput) {
+      avatarInput.addEventListener('change', function(ev) {
+        const file = ev.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(rev) {
+            const dataUrl = rev.target.result;
+            document.getElementById('gc-manage-avatar').value = dataUrl;
+            document.getElementById('gc-manage-avatar-preview').innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+  };
+})();
+
+function openCreateGroupDialog() {
+  const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+  if (contacts.length < 2) {
+    alert('至少需要2个通讯录角色才能创建群聊，请先在通讯录中添加角色。');
+    return;
+  }
+
+  const screen = document.getElementById('screen');
+  const dialog = document.createElement('div');
+  dialog.id = 'group-create-dialog';
+  dialog.className = 'group-create-dialog';
+  dialog.innerHTML = `
+    <div class="dialog-header">
+      <span style="cursor:pointer;font-size:18px;" onclick="closeCreateGroupDialog()">←</span>
+      <span style="font-weight:600;font-size:17px;">新建群聊</span>
+      <span></span>
+    </div>
+    <div class="dialog-body">
+      <div class="ai-setting-row">
+        <label>群名称</label>
+        <input type="text" id="gc-name" placeholder="输入群名称" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-solid);color:var(--ink);font-size:15px;">
+      </div>
+      <div class="ai-setting-row">
+        <label>群设定</label>
+        <textarea id="gc-setting" placeholder="输入群聊的设定/背景，如：这是一个公司项目讨论群..." style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-solid);color:var(--ink);font-size:15px;min-height:60px;resize:vertical;"></textarea>
+      </div>
+      <div style="font-size:15px;font-weight:600;margin:16px 0 8px;">选择群成员（至少2人）</div>
+      <div id="gc-member-list">
+        ${contacts.map(c => `
+          <div class="contact-checkbox-item">
+            <label>
+              <input type="checkbox" value="${c.id}" name="gc-members">
+              ${c.avatar ? `<img src="${c.avatar}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">` : `<div class="avatar" style="background:${stringToColor(c.name)};width:32px;height:32px;font-size:14px;">${c.name.charAt(0)}</div>`}
+              <div>
+                <div style="font-weight:500;">${c.name}</div>
+                <div style="font-size:12px;color:var(--muted);">${c.role || '普通角色'}</div>
+              </div>
+            </label>
+          </div>
+        `).join('')}
+      </div>
+      <div style="font-size:15px;font-weight:600;margin:16px 0 8px;">你的身份设定（群内角色始终记得）</div>
+      <div class="ai-setting-row">
+        <textarea id="gc-my-identity" placeholder="描述你在群里的身份，如：我是群主，是一名产品经理，负责这个项目..." style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface-solid);color:var(--ink);font-size:15px;min-height:60px;resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn" onclick="createGroupChat()" style="width:100%;padding:12px;font-size:16px;font-weight:600;">创建群聊</button>
+    </div>
+  `;
+  screen.appendChild(dialog);
+}
+
+function closeCreateGroupDialog() {
+  const dialog = document.getElementById('group-create-dialog');
+  if (dialog) dialog.remove();
+}
+
+function createGroupChat() {
+  const name = document.getElementById('gc-name').value.trim();
+  const setting = document.getElementById('gc-setting').value.trim();
+  const myIdentity = document.getElementById('gc-my-identity').value.trim();
+
+  if (!name) { alert('请输入群名称'); return; }
+
+  const checkboxes = document.querySelectorAll('input[name="gc-members"]:checked');
+  if (checkboxes.length < 2) { alert('请至少选择2个群成员'); return; }
+
+  const memberIds = Array.from(checkboxes).map(cb => cb.value);
+
+  const newGroup = {
+    id: 'gc_' + Date.now(),
+    name: name,
+    setting: setting || '无特殊设定',
+    members: memberIds,
+    myIdentity: myIdentity || '',
+    messages: [],
+    createTime: Date.now()
+  };
+
+  groupChatsData.push(newGroup);
+  saveGroupChats();
+  closeCreateGroupDialog();
+  renderGroupChatList();
 }
 
 // ==================== AI调用 ====================
@@ -3492,7 +5848,8 @@ function getBeijingTimeString() {
   return `${yyyy}年${mm}月${dd}日 星期${week} ${hh}:${mi}`;
 }
 
-async function callAI(systemPrompt, userMessage, historyMessages, maskInfo) {
+async function callAI(systemPrompt, userMessage, historyMessages, maskInfo, options) {
+  options = options || {};
   const config = JSON.parse(localStorage.getItem('aiConfig')) || {};
 
   if (!config.key) {
@@ -3524,13 +5881,32 @@ async function callAI(systemPrompt, userMessage, historyMessages, maskInfo) {
     finalSystemPrompt += `\n\n【当前时间】${getBeijingTimeString()}（北京时间）。你可以根据时间信息来回答与时间相关的问题。`;
   }
 
+  // 如果开启了活人感模式，调整回复风格
+  if (options.aliveFeel) {
+    finalSystemPrompt += `\n\n【活人感模式】你现在是在用真人微信聊天的方式回复。要求：
+1. 完全口语化，像真实朋友一样说话，不要刻板、正式或机械；
+2. 仔细观察并模仿用户消息中的语气、用词、标点、断句和聊天习惯，保持一致的“活人感”；
+3. 适当使用网络流行语、语气词、emoji、颜文字，但要自然不堆砌；
+4. 标点和断句模仿真人微信聊天习惯：短句为主，可以偶尔有错别字或漏字的真实感，但不要影响理解；
+5. 情绪要真实，有起伏，不要过度礼貌或AI腔；
+6. 直接一次性把完整回复发出来，不要模拟“正在输入”或分批发送。`;
+  }
+
+  // 如果设置了字数限制，提醒AI在限制内完整回复，避免截断
+  let maxTokensSetting = localStorage.getItem('maxTokens');
+  if (maxTokensSetting) {
+    const maxTokensNum = parseInt(maxTokensSetting);
+    finalSystemPrompt += `\n\n【回复长度限制】你的回复必须严格控制在${maxTokensNum}字以内，并且必须是一个完整、自然的句子。如果内容说不完，请简要回答并确保结尾完整，绝对不能以逗号、括号、破折号或半句话结尾。`;
+  }
+
   // 构建消息数组
   const messages = [{ role: 'system', content: finalSystemPrompt }];
 
   // 添加历史消息
   if (historyMessages && historyMessages.length > 0) {
-    const contextSize = parseInt(localStorage.getItem('chatContextSize')) || 50;
-    const recentMessages = historyMessages.slice(-contextSize);
+    const contextSizeVal = localStorage.getItem('chatContextSize');
+    const contextSize = contextSizeVal ? parseInt(contextSizeVal) : 0;
+    const recentMessages = contextSize > 0 ? historyMessages.slice(-contextSize) : historyMessages;
     recentMessages.forEach(m => {
       messages.push({
         role: m.sender === 'me' ? 'user' : 'assistant',
@@ -3548,9 +5924,10 @@ async function callAI(systemPrompt, userMessage, historyMessages, maskInfo) {
       messages: messages,
       temperature: 0.8
     };
-    const maxTokensSetting = localStorage.getItem('maxTokens');
     if (maxTokensSetting) {
-      body.max_tokens = parseInt(maxTokensSetting);
+      const userLimit = parseInt(maxTokensSetting);
+      // 给AI略微宽裕的token预算，使其能在字数限制内完整收尾而不被生硬截断
+      body.max_tokens = Math.max(userLimit + 50, Math.ceil(userLimit * 1.2));
     }
 
     const response = await fetch(url, {
@@ -3662,20 +6039,14 @@ function toggleBorder() {
   localStorage.setItem('borderless', isNoBorder ? 'true' : 'false');
 }
 
-function toggleStatusBar() {
-  const statusBar = document.getElementById('status-bar');
-  const toggle = document.getElementById('toggle-statusbar');
-  const isHidden = statusBar.classList.toggle('hidden');
-  toggle.classList.toggle('on', isHidden);
-  localStorage.setItem('hideStatusbar', isHidden ? 'true' : 'false');
-}
-
-function toggleTheme() {
-  const toggle = document.getElementById('toggle-theme');
-  const isDark = toggle.classList.toggle('on');
-  const theme = isDark ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('theme', theme);
+function toggleTopBar() {
+  const topBar = document.getElementById('top-bar');
+  const toggle = document.getElementById('toggle-topbar');
+  const isHidden = toggle.classList.toggle('on');
+  if (topBar) {
+    topBar.style.display = isHidden ? 'none' : '';
+  }
+  localStorage.setItem('hideTopBar', isHidden ? 'true' : 'false');
 }
 
 function showAISettings() {
@@ -3780,8 +6151,8 @@ function onFontSizeChange(value) {
 
 function applyChatFontSize() {
   const size = parseInt(localStorage.getItem('chatFontSize')) || 17;
-  const bubbles = document.querySelectorAll('#chat-messages .chat-bubble');
-  bubbles.forEach(b => b.style.fontSize = size + 'px');
+  const container = document.getElementById('chat-messages');
+  if (container) container.style.setProperty('--chat-font-size', size + 'px');
 }
 
 function toggleBubbleMode() {
@@ -3802,18 +6173,21 @@ function applyBubbleMode() {
 }
 
 function showContextSettings() {
-  const size = parseInt(localStorage.getItem('chatContextSize')) || 50;
-  document.getElementById('context-size-slider').value = size;
-  document.getElementById('context-size-value').textContent = size;
+  const saved = localStorage.getItem('chatContextSize');
+  document.getElementById('context-size-input').value = saved || '';
   showApp('app-context-settings');
 }
 
 function onContextSizeChange(value) {
-  const size = parseInt(value);
-  document.getElementById('context-size-value').textContent = size;
-  localStorage.setItem('chatContextSize', size.toString());
+  const num = parseInt(value);
   const display = document.getElementById('context-size-display');
-  if (display) display.textContent = size + ' ›';
+  if (!value || isNaN(num) || num < 1) {
+    localStorage.removeItem('chatContextSize');
+    if (display) display.textContent = '不限制 ›';
+  } else {
+    localStorage.setItem('chatContextSize', num.toString());
+    if (display) display.textContent = num + '条 ›';
+  }
 }
 
 function toggleAITime() {
@@ -3830,13 +6204,12 @@ function showMaxTokensSettings() {
 
 function onMaxTokensChange(value) {
   const num = parseInt(value);
-  if (!value || isNaN(num) || num < 50) {
+  const display = document.getElementById('max-tokens-display');
+  if (!value || isNaN(num) || num < 1) {
     localStorage.removeItem('maxTokens');
-    const display = document.getElementById('max-tokens-display');
     if (display) display.textContent = '不限制 ›';
   } else {
     localStorage.setItem('maxTokens', num.toString());
-    const display = document.getElementById('max-tokens-display');
     if (display) display.textContent = num + '字 ›';
   }
 }
@@ -3992,7 +6365,6 @@ function lockCancelPassword() {
 function unlockScreen() {
   const lockScreen = document.getElementById('lock-screen');
   lockScreen.style.transform = 'translateY(-100%)';
-  lockScreen.style.opacity = '0';
   setTimeout(() => {
     lockScreen.style.display = 'none';
   }, 500);
@@ -4018,7 +6390,7 @@ function showMaskList() {
       html += `
         <div class="post-card" onclick="showMaskEditor('${m.id}')" style="position:relative;">
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:40px;height:40px;border-radius:50%;background:${m.color || '#007aff'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:16px;flex-shrink:0;">${m.name.charAt(0)}</div>
+            ${m.avatar ? `<img src="${m.avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div style="width:40px;height:40px;border-radius:50%;background:${m.color || '#007aff'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:16px;flex-shrink:0;">${m.name.charAt(0)}</div>`}
             <div style="flex:1;">
               <div style="font-weight:600;font-size:16px;">${m.name}</div>
               <div style="font-size:14px;color:var(--muted);margin-top:2px;">${m.identity || '无身份设定'}</div>
@@ -4047,17 +6419,44 @@ function showMaskEditor(id) {
       document.getElementById('mask-name').value = mask.name || '';
       document.getElementById('mask-identity').value = mask.identity || '';
       document.getElementById('mask-color').value = mask.color || '#007aff';
+      document.getElementById('mask-avatar').value = mask.avatar || '';
+      const preview = document.getElementById('mask-avatar-preview');
+      if (mask.avatar) {
+        preview.innerHTML = `<img src="${mask.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+      } else {
+        preview.textContent = '🎭';
+      }
     }
   } else {
     document.getElementById('mask-name').value = '';
     document.getElementById('mask-identity').value = '';
     document.getElementById('mask-color').value = '#007aff';
+    document.getElementById('mask-avatar').value = '';
+    document.getElementById('mask-avatar-preview').textContent = '🎭';
   }
   showApp('app-mask-editor');
 }
 
 function backFromMaskEditor() {
   showMaskList();
+}
+
+function uploadMaskAvatar() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.addEventListener('change', function(ev) {
+    const file = ev.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(rev) {
+        document.getElementById('mask-avatar').value = rev.target.result;
+        document.getElementById('mask-avatar-preview').innerHTML = `<img src="${rev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  input.click();
 }
 
 function saveMask() {
@@ -4068,14 +6467,15 @@ function saveMask() {
 
   if (!name) { alert('请输入面具名字'); return; }
 
+  const avatar = document.getElementById('mask-avatar').value;
   let masks = JSON.parse(localStorage.getItem('masks')) || [];
 
   if (id) {
     const idx = masks.findIndex(m => m.id === id);
-    if (idx >= 0) masks[idx] = { ...masks[idx], name, identity, color };
+    if (idx >= 0) masks[idx] = { ...masks[idx], name, identity, color, avatar };
   } else {
     const newId = 'mask_' + Date.now();
-    masks.push({ id: newId, name, identity, color });
+    masks.push({ id: newId, name, identity, color, avatar });
   }
 
   localStorage.setItem('masks', JSON.stringify(masks));
@@ -4105,24 +6505,52 @@ function updateMaskDesc() {
   if (desc) desc.textContent = mask ? mask.name : '设置你的身份';
 }
 
-function addHomePage() {
-  totalPages++;
-  localStorage.setItem('pagesCount', totalPages.toString());
-
-  // 添加默认图标到新页面
+// ==================== 恢复默认布局 ====================
+function resetLayout() {
+  if (!confirm('确定要恢复默认布局吗？所有图标、组件位置和自定义背景/图标将被重置。')) return;
+  // 清除保存的位置数据
+  localStorage.removeItem('iconPositions');
+  localStorage.removeItem('widgetPositions');
+  // 重置应用页码为默认
   const apps = JSON.parse(localStorage.getItem('apps')) || defaultApps;
-  const newApps = [
-    { id: 'calendar_' + Date.now(), name: '日历', icon: '📅', color: '#ff3b30', page: totalPages - 1 },
-    { id: 'clock_' + Date.now(), name: '时钟', icon: '⏰', color: '#000', page: totalPages - 1 }
-  ];
-  apps.push(...newApps);
+  const defaultMap = {};
+  defaultApps.forEach(a => defaultMap[a.id] = a.page);
+  apps.forEach(a => {
+    if (defaultMap[a.id] !== undefined) {
+      a.page = defaultMap[a.id];
+    }
+  });
   localStorage.setItem('apps', JSON.stringify(apps));
-
+  // 恢复自定义主题背景（保留用户/角色头像相关数据）
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('themeWallpaper_') || key === 'freedomWallpaper') {
+      localStorage.removeItem(key);
+    }
+  });
+  // 恢复自定义应用图标
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('appIcon_')) {
+      localStorage.removeItem(key);
+    }
+  });
+  // 重新渲染
   renderDesktop();
-  currentPage = totalPages - 1;
-  updatePagePosition();
-  updatePageIndicator();
-  alert('已添加新页面');
+  alert('布局已恢复默认');
+}
+
+// ==================== 清除所有缓存（数据） ====================
+function clearAllCache() {
+  alert('警告：此操作将清除所有本地数据（包括联系人、聊天记录、备忘录、设置、主题、自定义图标等），且无法恢复！');
+  const confirmText = prompt('请输入"我要清除"四个字以确认操作：');
+  if (confirmText !== '我要清除') {
+    alert('输入不正确，已取消清除操作。');
+    return;
+  }
+  if (!confirm('确定要清除所有数据吗？此操作不可恢复！')) return;
+  // 清除所有 localStorage
+  localStorage.clear();
+  alert('所有数据已清除，页面将重新加载。');
+  location.reload();
 }
 
 // ==================== 备忘录 ====================
@@ -4136,11 +6564,22 @@ function renderMemoList() {
   }
 
   list.innerHTML = memos.map(m => `
-    <div class="memo-list-item" onclick="openMemo('${m.id}')">
-      <div class="memo-title">${m.title || '无标题'}</div>
-      <div class="memo-preview">${m.content.substring(0, 50)}${m.content.length > 50 ? '...' : ''}</div>
+    <div class="memo-list-item" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="flex:1;min-width:0;" onclick="openMemo('${m.id}')">
+        <div class="memo-title">${m.title || '无标题'}</div>
+        <div class="memo-preview">${m.content.substring(0, 50)}${m.content.length > 50 ? '...' : ''}</div>
+      </div>
+      <button onclick="event.stopPropagation();deleteMemo('${m.id}')" style="background:none;border:none;font-size:18px;color:var(--ios-red);cursor:pointer;padding:4px 8px;flex-shrink:0;">🗑️</button>
     </div>
   `).join('');
+}
+
+function deleteMemo(id) {
+  if (!confirm('确定要删除这条备忘录吗？')) return;
+  let memos = JSON.parse(localStorage.getItem('memos')) || [];
+  memos = memos.filter(m => m.id !== id);
+  localStorage.setItem('memos', JSON.stringify(memos));
+  renderMemoList();
 }
 
 function newMemo() {
@@ -4250,10 +6689,13 @@ function renderForum() {
 
   let html = isGeneratingForum ? '<div class="refresh-hint">正在刷新</div>' : '';
   forumPostsData.forEach((post, i) => {
+    const avatarHtml = post.authorAvatar
+      ? `<img src="${post.authorAvatar}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;margin:0;">`
+      : `<div class="avatar" style="background:${stringToColor(post.authorName)};">${post.authorName.charAt(0)}</div>`;
     html += `
       <div class="post-card" onclick="openForumPost(${i})">
         <div class="post-header">
-          <div class="avatar" style="background:${stringToColor(post.authorName)};">${post.authorName.charAt(0)}</div>
+          ${avatarHtml}
           <div>
             <div style="font-weight:500;">${post.authorName}</div>
             <div style="font-size:12px;color:var(--muted);">${post.timeStr || timeAgo(Date.now() - i * 3600000)}</div>
@@ -4301,6 +6743,7 @@ async function generateAIForumPosts(count) {
 
     newPosts.push({
       authorName: author.name,
+      authorAvatar: author.avatar || '',
       title: title,
       content: content,
       summary: summary,
@@ -4323,11 +6766,14 @@ function openForumPost(index) {
   if (!post) return;
 
   const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+  const authorAvatarHtml = post.authorAvatar
+    ? `<img src="${post.authorAvatar}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;margin:0;">`
+    : `<div class="avatar" style="background:${stringToColor(post.authorName)};">${post.authorName.charAt(0)}</div>`;
 
   let html = `
     <div class="post-card" style="margin-bottom:20px;">
       <div class="post-header">
-        <div class="avatar" style="background:${stringToColor(post.authorName)};">${post.authorName.charAt(0)}</div>
+        ${authorAvatarHtml}
         <div>
           <div style="font-weight:500;">${post.authorName}</div>
           <div style="font-size:12px;color:var(--muted);">楼主 · ${post.timeStr || '刚刚'}</div>
@@ -4346,10 +6792,13 @@ function openForumPost(index) {
 
   for (let i = 0; i < Math.min(5, contacts.length); i++) {
     const replyAuthor = contacts[(index + i + 1) % contacts.length] || { name: '匿名用户' };
+    const replyAvatarHtml = replyAuthor.avatar
+      ? `<img src="${replyAuthor.avatar}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;margin:0;">`
+      : `<div class="avatar" style="background:${stringToColor(replyAuthor.name)};width:32px;height:32px;font-size:14px;">${replyAuthor.name.charAt(0)}</div>`;
     html += `
       <div class="post-card" style="margin-bottom:10px;">
         <div class="post-header">
-          <div class="avatar" style="background:${stringToColor(replyAuthor.name)};width:32px;height:32px;font-size:14px;">${replyAuthor.name.charAt(0)}</div>
+          ${replyAvatarHtml}
           <div>
             <div style="font-weight:500;font-size:14px;">${replyAuthor.name}</div>
             <div style="font-size:12px;color:var(--muted);">${timeAgo(Date.now() - (i + 1) * 600000)}</div>
@@ -4389,10 +6838,25 @@ function refreshForum() {
 // ==================== 朋友圈 ====================
 let momentsData = JSON.parse(localStorage.getItem('momentsData')) || [];
 let isGeneratingMoments = false;
+let pendingMomentImages = [];
+let currentImageActionTarget = null;
 
 function renderMoments() {
   const list = document.getElementById('moments-list');
   const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+  const currentUserName = localStorage.getItem('userName') || '我';
+
+  // 数据迁移与角色自动评论触发
+  momentsData.forEach((m, i) => {
+    migrateMomentData(m, contacts);
+    if (m.authorName === currentUserName && !m.autoCommentAttempted && (!m.comments || m.comments.length === 0)) {
+      m.autoCommentAttempted = true;
+      if (Math.random() < 0.4) {
+        generateCharacterComment(m, i);
+      }
+    }
+  });
+  localStorage.setItem('momentsData', JSON.stringify(momentsData));
 
   // 如果没有数据，显示提示并生成初始内容
   if (momentsData.length === 0 && !isGeneratingMoments) {
@@ -4403,27 +6867,143 @@ function renderMoments() {
 
   let html = isGeneratingMoments ? '<div class="refresh-hint">正在刷新</div>' : '';
   momentsData.forEach((m, i) => {
-    const author = contacts.find(c => c.name === m.authorName) || { name: m.authorName || '匿名' };
+    const isUser = m.authorName === currentUserName;
+    const authorContact = contacts.find(c => c.name === m.authorName);
+    const author = authorContact || { name: m.authorName || '匿名' };
+    const avatarHtml = getMomentAvatarHtml(m, author);
+    const imagesHtml = renderMomentImages(m, i);
+    const liked = (m.likes || []).some(l => l.name === currentUserName);
+    const likesHtml = renderMomentLikes(m);
+    const commentsHtml = renderMomentComments(m);
+    const hasSocial = (m.likes && m.likes.length > 0) || (m.comments && m.comments.length > 0);
     html += `
       <div class="moment-card">
         <div class="moment-header">
-          <div class="avatar" style="background:${stringToColor(author.name)};">${author.name.charAt(0)}</div>
+          ${avatarHtml}
           <div>
             <div style="font-weight:500;">${author.name}</div>
             <div style="font-size:12px;color:var(--muted);">${m.timeStr || timeAgo(Date.now() - i * 7200000)}</div>
           </div>
+          ${!isUser ? `<span class="moment-delete-btn" onclick="deleteMoment(${i})" title="删除这条朋友圈">🗑️</span>` : ''}
         </div>
         <div class="moment-text">${escapeHtml(m.text)}</div>
-        ${m.hasImages ? `<div class="moment-images"><div class="img-placeholder"></div><div class="img-placeholder"></div><div class="img-placeholder"></div></div>` : ''}
-        <div class="moment-footer">
-          <span>${m.timeStr || timeAgo(Date.now() - i * 7200000)}</span>
-          <span>👍 ${m.likes || Math.floor(Math.random() * 20)} 💬 ${m.comments || Math.floor(Math.random() * 10)}</span>
+        ${imagesHtml}
+        <div class="moment-actions">
+          <span style="font-size:13px;color:var(--muted);">${m.timeStr || timeAgo(Date.now() - i * 7200000)}</span>
+          <div class="moment-action-btns">
+            <span class="${liked ? 'liked' : ''}" onclick="toggleLikeMoment(${i})">${liked ? '❤️' : '🤍'} 赞</span>
+            <span onclick="commentMoment(${i})">💬 评论</span>
+          </div>
         </div>
+        ${hasSocial ? `<div class="moment-social">${likesHtml}${commentsHtml}</div>` : ''}
       </div>
     `;
   });
 
   list.innerHTML = html;
+}
+
+function getMomentAvatarHtml(m, author) {
+  const avatarSrc = m.authorAvatar || author.avatar || '';
+  if (avatarSrc) {
+    return `<img src="${avatarSrc}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">`;
+  }
+  return `<div class="avatar" style="background:${stringToColor(author.name)};">${author.name.charAt(0)}</div>`;
+}
+
+function renderMomentImages(m, index) {
+  let images = m.images || [];
+  if (images.length === 0 && m.hasImages) {
+    images = generatePlaceholderImages(3);
+    m.images = images;
+  }
+  if (images.length === 0) return '';
+
+  const singleClass = images.length === 1 ? 'single' : '';
+  let html = `<div class="moment-images ${singleClass}">`;
+  images.forEach((src, imgIdx) => {
+    html += `<img src="${src}" class="moment-img" onclick="handleMomentImageClick(${index}, ${imgIdx})">`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function renderMomentLikes(m) {
+  if (!m.likes || m.likes.length === 0) return '';
+  const names = m.likes.map(l => `<b>${escapeHtml(l.name)}</b>`).join('，');
+  return `<div class="moment-likes">❤️ ${names}</div>`;
+}
+
+function renderMomentComments(m) {
+  if (!m.comments || m.comments.length === 0) return '';
+  return m.comments.map(c => {
+    const avatarHtml = c.avatar
+      ? `<img src="${c.avatar}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:4px;">`
+      : `<span style="display:inline-flex;width:18px;height:18px;border-radius:50%;background:${stringToColor(c.name)};color:#fff;align-items:center;justify-content:center;font-size:10px;vertical-align:middle;margin-right:4px;">${c.name.charAt(0)}</span>`;
+    return `<div class="moment-comment">${avatarHtml}<b>${escapeHtml(c.name)}</b>：${escapeHtml(c.text)}</div>`;
+  }).join('');
+}
+
+function migrateMomentData(m, contacts) {
+  if (!m.images) {
+    m.images = m.hasImages ? generatePlaceholderImages(3) : [];
+  }
+  if (typeof m.likes === 'number') {
+    m.likes = generateLikeUsers(m.likes, contacts);
+  }
+  if (!m.likes) m.likes = [];
+  if (typeof m.comments === 'number') {
+    m.comments = generateRandomComments(m.comments, contacts);
+  }
+  if (!m.comments) m.comments = [];
+}
+
+function generatePlaceholderImages(count) {
+  const colors = ['#e5e5ea', '#d1d1d6', '#c7c7cc', '#aeaeb2', '#8e8e93'];
+  const arr = [];
+  for (let i = 0; i < count; i++) {
+    arr.push(generateColorImage(colors[i % colors.length]));
+  }
+  return arr;
+}
+
+function generateColorImage(color) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="${color}"/></svg>`;
+  return 'data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(svg)));
+}
+
+function generateLikeUsers(count, contacts) {
+  count = Math.min(parseInt(count) || 0, 10);
+  const arr = [];
+  for (let i = 0; i < count; i++) {
+    const c = contacts[i % contacts.length];
+    arr.push({ name: c ? c.name : '网友' + (i + 1), avatar: c ? c.avatar || '' : '' });
+  }
+  return arr;
+}
+
+function generateRandomComments(count, contacts) {
+  count = Math.min(parseInt(count) || 0, 5);
+  const replies = [
+    '说得太对了！',
+    '厉害了！',
+    '哈哈，确实。',
+    '羡慕了～',
+    '支持！',
+    '学习了。',
+    '点赞！'
+  ];
+  const arr = [];
+  for (let i = 0; i < count; i++) {
+    const c = contacts[(i + 1) % contacts.length];
+    arr.push({
+      name: c ? c.name : '网友',
+      avatar: c ? c.avatar || '' : '',
+      text: replies[Math.floor(Math.random() * replies.length)],
+      time: Date.now() - (i + 1) * 600000
+    });
+  }
+  return arr;
 }
 
 async function generateAIMoments(count) {
@@ -4439,7 +7019,8 @@ async function generateAIMoments(count) {
   for (let i = 0; i < count; i++) {
     const author = contacts[Math.floor(Math.random() * contacts.length)];
     const category = categories[Math.floor(Math.random() * categories.length)];
-    const hasImages = Math.random() > 0.5;
+    const hasImages = false;
+    const images = [];
 
     const systemPrompt = `你是${author.name}，${author.role || '一个普通人'}。请用第一人称发一条朋友圈动态，内容类型是"${category}"类。要求：
 1. 语气自然、真实，像真实朋友圈一样
@@ -4452,11 +7033,14 @@ async function generateAIMoments(count) {
 
     newMoments.push({
       authorName: author.name,
+      authorAvatar: author.avatar || '',
       text: text.trim(),
       hasImages: hasImages,
-      likes: Math.floor(Math.random() * 30) + 5,
-      comments: Math.floor(Math.random() * 15),
+      images: images,
+      likes: generateLikeUsers(Math.floor(Math.random() * 8), contacts),
+      comments: generateRandomComments(Math.floor(Math.random() * 3), contacts),
       timeStr: timeAgo(Math.floor(Math.random() * 86400000)),
+      time: Date.now() - Math.floor(Math.random() * 86400000),
       category: category
     });
   }
@@ -4473,6 +7057,222 @@ function refreshMoments() {
   isGeneratingMoments = true;
   renderMoments();
   generateAIMoments(3);
+}
+
+function clearMomentsData() {
+  if (!confirm('确定清空所有朋友圈数据吗？此操作不可恢复。')) return;
+  momentsData = [];
+  localStorage.removeItem('momentsData');
+  renderMoments();
+}
+
+function deleteMoment(index) {
+  if (!confirm('确定删除这条朋友圈吗？')) return;
+  momentsData.splice(index, 1);
+  localStorage.setItem('momentsData', JSON.stringify(momentsData));
+  renderMoments();
+}
+
+function clearForumData() {
+  if (!confirm('确定清空所有论坛数据吗？此操作不可恢复。')) return;
+  forumPostsData = [];
+  localStorage.removeItem('forumPostsData');
+  renderForum();
+}
+
+// 发朋友圈
+function openPostMomentDialog() {
+  document.getElementById('moment-post-text').value = '';
+  pendingMomentImages = [];
+  renderMomentImagePreview();
+  document.getElementById('moment-post-modal').classList.add('active');
+}
+
+function closePostMomentDialog() {
+  document.getElementById('moment-post-modal').classList.remove('active');
+  pendingMomentImages = [];
+}
+
+function handleMomentImageSelect(input) {
+  const files = Array.from(input.files || []);
+  if (pendingMomentImages.length + files.length > 9) {
+    alert('最多选择 9 张图片');
+    input.value = '';
+    return;
+  }
+  files.forEach(file => {
+    if (file.size > 5 * 1024 * 1024) {
+      alert('单张图片不能超过 5MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      pendingMomentImages.push(ev.target.result);
+      renderMomentImagePreview();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function renderMomentImagePreview() {
+  const container = document.getElementById('moment-post-image-preview');
+  let html = '';
+  pendingMomentImages.forEach((src, idx) => {
+    html += `<img src="${src}" onclick="removePendingMomentImage(${idx})" title="点击移除">`;
+  });
+  if (pendingMomentImages.length < 9) {
+    html += `<div class="moment-post-add" onclick="document.getElementById('moment-post-file').click()">＋</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function removePendingMomentImage(idx) {
+  pendingMomentImages.splice(idx, 1);
+  renderMomentImagePreview();
+}
+
+function publishMoment() {
+  const text = document.getElementById('moment-post-text').value.trim();
+  if (!text && pendingMomentImages.length === 0) {
+    alert('请输入文字或选择图片');
+    return;
+  }
+  const userName = localStorage.getItem('userName') || '我';
+  const userAvatar = localStorage.getItem('userAvatar') || '';
+  const newMoment = {
+    authorName: userName,
+    authorAvatar: userAvatar,
+    text: text,
+    images: [...pendingMomentImages],
+    hasImages: pendingMomentImages.length > 0,
+    likes: [],
+    comments: [],
+    timeStr: '刚刚',
+    time: Date.now(),
+    category: '日常'
+  };
+  momentsData.unshift(newMoment);
+  if (momentsData.length > 100) momentsData = momentsData.slice(0, 100);
+  localStorage.setItem('momentsData', JSON.stringify(momentsData));
+  closePostMomentDialog();
+  renderMoments();
+}
+
+// 点赞与评论
+function toggleLikeMoment(index) {
+  const m = momentsData[index];
+  const currentUserName = localStorage.getItem('userName') || '我';
+  const currentUserAvatar = localStorage.getItem('userAvatar') || '';
+  m.likes = m.likes || [];
+  const existingIdx = m.likes.findIndex(l => l.name === currentUserName);
+  if (existingIdx >= 0) {
+    m.likes.splice(existingIdx, 1);
+  } else {
+    m.likes.push({ name: currentUserName, avatar: currentUserAvatar });
+  }
+  localStorage.setItem('momentsData', JSON.stringify(momentsData));
+  renderMoments();
+}
+
+function commentMoment(index) {
+  const text = prompt('输入评论：');
+  if (!text || !text.trim()) return;
+  const currentUserName = localStorage.getItem('userName') || '我';
+  const currentUserAvatar = localStorage.getItem('userAvatar') || '';
+  const m = momentsData[index];
+  m.comments = m.comments || [];
+  m.comments.push({
+    name: currentUserName,
+    avatar: currentUserAvatar,
+    text: text.trim(),
+    time: Date.now()
+  });
+  localStorage.setItem('momentsData', JSON.stringify(momentsData));
+  renderMoments();
+}
+
+// 删除角色朋友圈图片
+function handleMomentImageClick(momentIndex, imageIndex) {
+  const m = momentsData[momentIndex];
+  const currentUserName = localStorage.getItem('userName') || '我';
+  if (m.authorName === currentUserName) return;
+  currentImageActionTarget = { momentIndex, imageIndex };
+  document.getElementById('image-action-menu').classList.add('active');
+}
+
+function closeImageActionMenu(e) {
+  const menu = document.getElementById('image-action-menu');
+  if (!e || e.target === menu) {
+    menu.classList.remove('active');
+    currentImageActionTarget = null;
+  }
+}
+
+function confirmDeleteMomentImage() {
+  if (!currentImageActionTarget) {
+    closeImageActionMenu();
+    return;
+  }
+  if (!confirm('确定删除这张图片吗？')) {
+    closeImageActionMenu();
+    return;
+  }
+  const m = momentsData[currentImageActionTarget.momentIndex];
+  if (m.images && m.images[currentImageActionTarget.imageIndex]) {
+    m.images.splice(currentImageActionTarget.imageIndex, 1);
+    if (m.images.length === 0) m.hasImages = false;
+    localStorage.setItem('momentsData', JSON.stringify(momentsData));
+    renderMoments();
+  }
+  closeImageActionMenu();
+}
+
+// 角色对用户朋友圈的自动评论
+async function generateCharacterComment(moment, index) {
+  const contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+  if (contacts.length === 0) return;
+  const author = contacts[Math.floor(Math.random() * contacts.length)];
+  const userName = localStorage.getItem('userName') || '机主';
+
+  const systemPrompt = `你是${author.name}，${author.role || '一个普通人'}。请用第一人称对"${userName}"发的朋友圈"${moment.text}"写一条简短真实的评论。要求：1. 语气自然，像真实朋友评论 2. 15字以内 3. 只输出评论内容`;
+  let text = '';
+  try {
+    text = await callAI(systemPrompt, '评论这条朋友圈');
+    if (!text || text.includes('【') || text.includes('AI未配置') || text.includes('网络错误')) {
+      text = getRandomMomentComment();
+    }
+  } catch (e) {
+    text = getRandomMomentComment();
+  }
+  text = (text || '').trim().substring(0, 50);
+
+  moment.comments = moment.comments || [];
+  moment.comments.push({
+    name: author.name,
+    avatar: author.avatar || '',
+    text: text,
+    time: Date.now()
+  });
+  moment.autoCommentAttempted = true;
+  localStorage.setItem('momentsData', JSON.stringify(momentsData));
+  renderMoments();
+}
+
+function getRandomMomentComment() {
+  const replies = [
+    '说得太对了！',
+    '厉害了！',
+    '哈哈，确实。',
+    '羡慕了～',
+    '支持！',
+    '学习了。',
+    '点赞！',
+    '真不错！',
+    '我也是这么觉得。',
+    '期待后续～'
+  ];
+  return replies[Math.floor(Math.random() * replies.length)];
 }
 
 // ==================== 工具函数 ====================
@@ -4497,12 +7297,103 @@ function updateClock() {
   const now = new Date();
   const h = now.getHours().toString().padStart(2, '0');
   const m = now.getMinutes().toString().padStart(2, '0');
-  document.getElementById('clock').textContent = `${h}:${m}`;
+  const topClock = document.getElementById('top-clock');
+  if (topClock) topClock.textContent = `${h}:${m}`;
+
+  // 更新桌面时钟widget
+  const clockWidget = document.querySelector('.clock-widget .widget-time');
+  if (clockWidget) clockWidget.textContent = `${h}:${m}`;
 }
 
 // Home条点击
 function initHomeBar() {
   document.getElementById('home-bar').addEventListener('click', closeApp);
+}
+
+// ==================== 天气服务 (Open-Meteo) ====================
+async function fetchWeatherData(widget) {
+  const location = localStorage.getItem('weatherLocation') || '北京';
+
+  try {
+    // 1. 地理编码：城市名 → 经纬度
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=zh`);
+    const geoData = await geoRes.json();
+
+    if (!geoData.results || geoData.results.length === 0) {
+      updateWeatherUI(widget, null, '未找到城市');
+      return;
+    }
+
+    const { latitude, longitude, name, country } = geoData.results[0];
+
+    // 2. 获取天气
+    const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&timezone=Asia/Shanghai`);
+    const weatherData = await weatherRes.json();
+
+    if (!weatherData.current_weather) {
+      updateWeatherUI(widget, null, '天气不可用');
+      return;
+    }
+
+    const w = weatherData.current_weather;
+    updateWeatherUI(widget, {
+      temp: Math.round(w.temperature),
+      code: w.weathercode,
+      isDay: w.is_day,
+      location: name
+    });
+
+  } catch (err) {
+    console.error('天气获取失败:', err);
+    updateWeatherUI(widget, null, '获取失败');
+  }
+}
+
+function updateWeatherUI(widget, data, errorMsg) {
+  const emojiEl = widget.querySelector('.widget-weather-emoji');
+  const tempEl = widget.querySelector('.widget-temp');
+  const condEl = widget.querySelector('.widget-condition');
+
+  if (!data) {
+    if (emojiEl) emojiEl.textContent = '⚠️';
+    if (tempEl) tempEl.textContent = '--°';
+    if (condEl) condEl.textContent = errorMsg || '错误';
+    return;
+  }
+
+  // WMO天气码映射
+  const weatherMap = {
+    0:  { emoji: '☀️', text: '晴天' },
+    1:  { emoji: '🌤️', text: '大部晴' },
+    2:  { emoji: '⛅', text: '多云' },
+    3:  { emoji: '☁️', text: '阴天' },
+    45: { emoji: '🌫️', text: '雾' },
+    48: { emoji: '🌫️', text: '雾凇' },
+    51: { emoji: '🌦️', text: '小雨' },
+    53: { emoji: '🌧️', text: '中雨' },
+    55: { emoji: '🌧️', text: '大雨' },
+    61: { emoji: '🌧️', text: '小雨' },
+    63: { emoji: '🌧️', text: '中雨' },
+    65: { emoji: '🌧️', text: '大雨' },
+    71: { emoji: '🌨️', text: '小雪' },
+    73: { emoji: '🌨️', text: '中雪' },
+    75: { emoji: '❄️', text: '大雪' },
+    77: { emoji: '🌨️', text: '雪粒' },
+    80: { emoji: '🌦️', text: '阵雨' },
+    81: { emoji: '🌧️', text: '中阵雨' },
+    82: { emoji: '⛈️', text: '大阵雨' },
+    85: { emoji: '🌨️', text: '小阵雪' },
+    86: { emoji: '❄️', text: '大阵雪' },
+    95: { emoji: '⛈️', text: '雷暴' },
+    96: { emoji: '⛈️', text: '雷暴冰雹' },
+    99: { emoji: '⛈️', text: '强雷暴冰雹' }
+  };
+
+  const info = weatherMap[data.code] || { emoji: '🌡️', text: '未知' };
+
+  if (emojiEl) emojiEl.textContent = info.emoji;
+  if (tempEl) tempEl.textContent = data.temp + '°';
+  if (condEl) condEl.textContent = data.location + ' · ' + info.text;
 }
 
 // ==================== 初始化 ====================
