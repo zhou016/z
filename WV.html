@@ -804,14 +804,20 @@
     width: 100%; height: 100%;
     background: var(--app-page-bg);
     z-index: 200;
-    display: none;
+    display: flex;
     flex-direction: column;
-    animation: slideIn 0.25s ease;
+    pointer-events: none;
+    opacity: 0;
   }
-  .app-page.active { display: flex; }
-  @keyframes slideIn {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+  .app-page.active {
+    pointer-events: auto;
+    opacity: 1;
+  }
+  /* 旧页面在上方淡出：仅添加 transition，opacity 由移除 .active 回落到 .app-page 的 0 */
+  .app-page.fade-out {
+    pointer-events: none !important;
+    z-index: 201;
+    transition: opacity 0.15s ease;
   }
 
   /* APP导航栏 */
@@ -2018,7 +2024,7 @@
     </div>
     <button class="btn" onclick="fetchModels()" style="width:100%;margin-bottom:20px;">获取模型列表</button>
     <div style="font-size:13px;color:var(--muted);line-height:1.5;">
-      所有设置仅保存在浏览器本地，不会上传到服务器。
+      各平台的API Key、地址、模型分别独立保存，切换平台不会丢失已有配置。所有设置仅保存在浏览器本地，不会上传到服务器。
     </div>
   </div>
 </div>
@@ -3313,6 +3319,14 @@ function initData() {
   if (!localStorage.getItem('aiConfig')) {
     localStorage.setItem('aiConfig', JSON.stringify({}));
   }
+  // 迁移旧的aiConfig到按平台隔离存储
+  (function migrateAIConfig() {
+    const old = JSON.parse(localStorage.getItem('aiConfig') || '{}');
+    if (old.key && !localStorage.getItem('aiConfig_' + (old.platform || 'deepseek'))) {
+      saveAIConfigForPlatform(old.platform || 'deepseek', old);
+      localStorage.setItem('aiConfig', JSON.stringify({ platform: old.platform || 'deepseek' }));
+    }
+  })();
   if (!localStorage.getItem('borderless')) {
     localStorage.setItem('borderless', 'false');
   }
@@ -3322,7 +3336,9 @@ function initData() {
   if (!localStorage.getItem('hideTopBar')) {
     localStorage.setItem('hideTopBar', 'false');
   }
-  aiConfig = JSON.parse(localStorage.getItem('aiConfig')) || {};
+  const globalAIPlatform = (JSON.parse(localStorage.getItem('aiConfig')) || {}).platform || 'deepseek';
+  const globalAIPlatformData = JSON.parse(localStorage.getItem('aiConfig_' + globalAIPlatform)) || {};
+  aiConfig = { platform: globalAIPlatform, ...globalAIPlatformData };
   totalPages = parseInt(localStorage.getItem('pagesCount')) || 2;
 
   // 应用无边框设置
@@ -3951,13 +3967,59 @@ function openApp(appId) {
   if (appMap[appId]) appMap[appId]();
 }
 
+let _appTransitionTimer = null;
+
 function showApp(appId) {
-  document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
-  document.getElementById(appId).classList.add('active');
+  const target = document.getElementById(appId);
+  if (!target) return;
+
+  const current = document.querySelector('.app-page.active');
+  if (current === target) return;
+
+  // 取消未完成的旧过渡，立即清理
+  if (_appTransitionTimer) {
+    clearTimeout(_appTransitionTimer);
+    _appTransitionTimer = null;
+    document.querySelectorAll('.app-page.fade-out').forEach(p => {
+      p.classList.remove('fade-out');
+      p.classList.remove('active');
+      p.style.zIndex = '';
+    });
+  }
+
+  // 如果有旧页面，把它提到最上层并淡出（新页面在下方已完全不透明）
+  if (current) {
+    current.style.zIndex = '201';
+    current.classList.add('fade-out');
+    current.classList.remove('active');
+
+    _appTransitionTimer = setTimeout(() => {
+      current.classList.remove('fade-out');
+      current.style.zIndex = '';
+      _appTransitionTimer = null;
+    }, 170);
+  }
+
+  // 新页面直接显示，无过渡延迟（瞬间不透明）
+  target.style.zIndex = '';
+  target.classList.add('active');
 }
 
 function closeApp() {
-  document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
+  if (_appTransitionTimer) {
+    clearTimeout(_appTransitionTimer);
+    _appTransitionTimer = null;
+  }
+  const active = document.querySelector('.app-page.active');
+  if (active) {
+    active.style.zIndex = '201';
+    active.classList.add('fade-out');
+    active.classList.remove('active');
+    setTimeout(() => {
+      active.classList.remove('fade-out');
+      active.style.zIndex = '';
+    }, 170);
+  }
 }
 
 // ==================== 游戏中心 ====================
@@ -4348,7 +4410,10 @@ async function textAdvAction() {
   storyDiv.innerHTML += `<div style="margin:8px 0;color:var(--accent);font-weight:500;">> ${action}</div>`;
   storyDiv.scrollTop = storyDiv.scrollHeight;
 
-  const config = JSON.parse(localStorage.getItem('aiConfig')) || {};
+  const globalConfig = JSON.parse(localStorage.getItem('aiConfig')) || {};
+  const platform = globalConfig.platform || 'deepseek';
+  const platformData = JSON.parse(localStorage.getItem('aiConfig_' + platform)) || {};
+  const config = { platform, ...platformData };
   if (!config.key) {
     const responses = {
       '进': '你小心翼翼地走进洞穴。火把照亮了潮湿的岩壁，前方有两条岔路。',
@@ -5850,13 +5915,15 @@ function getBeijingTimeString() {
 
 async function callAI(systemPrompt, userMessage, historyMessages, maskInfo, options) {
   options = options || {};
-  const config = JSON.parse(localStorage.getItem('aiConfig')) || {};
+  const globalConfig = JSON.parse(localStorage.getItem('aiConfig')) || {};
+  const platform = globalConfig.platform || 'deepseek';
+  const platformData = JSON.parse(localStorage.getItem('aiConfig_' + platform)) || {};
+  const config = { platform, ...platformData };
 
   if (!config.key) {
     return `【AI未配置】\n\n请在"设置 > AI接入设置"中配置API Key。\n\n当前角色设定：${systemPrompt || '无'}\n\n你的消息：${userMessage}`;
   }
 
-  const platform = config.platform || 'deepseek';
   const model = config.model || 'deepseek-chat';
   let url = config.url || '';
 
@@ -6049,18 +6116,29 @@ function toggleTopBar() {
   localStorage.setItem('hideTopBar', isHidden ? 'true' : 'false');
 }
 
+function getAIConfigForPlatform(platform) {
+  return JSON.parse(localStorage.getItem('aiConfig_' + platform)) || {};
+}
+
+function saveAIConfigForPlatform(platform, config) {
+  localStorage.setItem('aiConfig_' + platform, JSON.stringify(config));
+}
+
 function showAISettings() {
-  const config = JSON.parse(localStorage.getItem('aiConfig')) || {};
-  document.getElementById('ai-platform').value = config.platform || 'deepseek';
-  document.getElementById('ai-key').value = config.key || '';
-  document.getElementById('ai-url').value = config.url || '';
-  document.getElementById('ai-model').value = config.model || '';
-  document.getElementById('ai-model-custom').value = config.model || '';
+  const globalConfig = JSON.parse(localStorage.getItem('aiConfig')) || {};
+  const platform = globalConfig.platform || 'deepseek';
+  document.getElementById('ai-platform').value = platform;
   onPlatformChange();
+  const platformConfig = getAIConfigForPlatform(platform);
+  document.getElementById('ai-key').value = platformConfig.key || '';
+  document.getElementById('ai-url').value = platformConfig.url || '';
+  document.getElementById('ai-model').value = platformConfig.model || '';
+  document.getElementById('ai-model-custom').value = platformConfig.model || '';
   showApp('app-ai-settings');
 }
 
 function onPlatformChange() {
+  // 保存当前平台配置（在切换前）
   const platform = document.getElementById('ai-platform').value;
   const modelSelect = document.getElementById('ai-model');
 
@@ -6077,6 +6155,13 @@ function onPlatformChange() {
     opt.textContent = m;
     modelSelect.appendChild(opt);
   });
+
+  // 加载该平台已保存的配置
+  const platformConfig = getAIConfigForPlatform(platform);
+  document.getElementById('ai-key').value = platformConfig.key || '';
+  document.getElementById('ai-url').value = platformConfig.url || '';
+  document.getElementById('ai-model').value = platformConfig.model || '';
+  document.getElementById('ai-model-custom').value = platformConfig.model || '';
 }
 
 async function fetchModels() {
@@ -6120,13 +6205,18 @@ async function fetchModels() {
 }
 
 function saveAISettings() {
+  const platform = document.getElementById('ai-platform').value;
   const config = {
-    platform: document.getElementById('ai-platform').value,
+    platform: platform,
     key: document.getElementById('ai-key').value,
     url: document.getElementById('ai-url').value,
     model: document.getElementById('ai-model').value || document.getElementById('ai-model-custom').value
   };
-  localStorage.setItem('aiConfig', JSON.stringify(config));
+  // 按平台隔离保存
+  saveAIConfigForPlatform(platform, config);
+  // 保存当前使用的平台到全局配置
+  localStorage.setItem('aiConfig', JSON.stringify({ platform: platform }));
+  // 更新运行时配置
   aiConfig = config;
   showApp('app-settings');
 }
