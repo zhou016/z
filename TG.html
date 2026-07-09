@@ -1090,6 +1090,55 @@
         .chat-send-btn:disabled {
             opacity: 0.5; cursor: not-allowed;
         }
+        .chat-bubble-wrap {
+            display: flex;
+            flex-direction: column;
+            max-width: calc(100% - 52px);
+            align-items: flex-end;
+        }
+        .chat-bubble-row.ai .chat-bubble-wrap {
+            align-items: flex-start;
+        }
+        .chat-msg-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .chat-bubble-row:hover .chat-msg-actions {
+            opacity: 1;
+        }
+        .chat-action-btn {
+            background: rgba(255,255,255,0.6);
+            border: 1px solid rgba(150,200,240,0.3);
+            border-radius: 10px;
+            font-size: 11px;
+            cursor: pointer;
+            padding: 3px 8px;
+            color: #666;
+            line-height: 1;
+        }
+        .chat-action-btn:active {
+            transform: scale(0.9);
+        }
+        .chat-input-bar textarea {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 20px;
+            border: 2px solid rgba(150,200,240,0.5);
+            background: rgba(255,255,255,0.8);
+            font-size: 14px;
+            outline: none;
+            color: #333;
+            font-family: inherit;
+            resize: none;
+            overflow-y: hidden;
+            min-height: 40px;
+            max-height: 108px;
+            line-height: 1.4;
+        }
+        .chat-input-bar textarea:focus { border-color: rgba(100,180,240,0.7); }
         /* typing indicator */
         .typing-indicator {
             display: flex; gap: 4px; padding: 10px 14px;
@@ -1975,7 +2024,7 @@
             </div>
             <div class="chat-messages" id="chat-messages" style="padding-left:10px;padding-right:10px;"></div>
             <div class="chat-input-bar">
-                <input type="text" id="chat-input" placeholder="输入消息..." onkeydown="if(event.key==='Enter')sendChatMessage()">
+                <textarea id="chat-input" placeholder="输入消息..." rows="1" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendChatMessage();}" oninput="autoResizeChatInput(this)"></textarea>
                 <button class="chat-send-btn" id="chat-send-btn" onclick="sendChatMessage()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 </button>
@@ -3365,7 +3414,7 @@
         var contact = contacts.find(function(c){return c.name === currentChatContactName;});
         var settings = getSettings();
         var userAvatar = settings.userAvatar || '';
-        currentChatMessages.forEach(function(msg) {
+        currentChatMessages.forEach(function(msg, idx) {
             var cls = msg.role === 'user' ? 'user' : 'ai';
             var avatarHtml = '';
             if (cls === 'user') {
@@ -3379,9 +3428,24 @@
                     avatarHtml = '<div class="chat-msg-avatar">' + (contact ? contact.name.charAt(0) : 'AI') + '</div>';
                 }
             }
+            var actionsHtml = '';
+            if (cls === 'user') {
+                actionsHtml = '<div class="chat-msg-actions">'
+                    + '<button class="chat-action-btn" onclick="copyChatMessage(' + idx + ')" title="复制">📋</button>'
+                    + '<button class="chat-action-btn" onclick="editChatMessage(' + idx + ')" title="编辑">✏️</button>'
+                    + '</div>';
+            } else {
+                actionsHtml = '<div class="chat-msg-actions">'
+                    + '<button class="chat-action-btn" onclick="copyChatMessage(' + idx + ')" title="复制">📋</button>'
+                    + '<button class="chat-action-btn" onclick="regenerateChatMessage(' + idx + ')" title="重新生成">🔄</button>'
+                    + '</div>';
+            }
             html += '<div class="chat-bubble-row '+cls+'">'
                 + avatarHtml
+                + '<div class="chat-bubble-wrap">'
                 + '<div class="chat-bubble">' + escHtml(msg.content) + '</div>'
+                + actionsHtml
+                + '</div>'
                 + '</div>';
         });
         container.innerHTML = html;
@@ -3401,6 +3465,8 @@
         // Add user message
         currentChatMessages.push({ role: 'user', content: text });
         input.value = '';
+        input.style.height = 'auto';
+        input.style.overflowY = 'hidden';
         renderChatMessages();
         scrollChatToBottom();
 
@@ -3448,6 +3514,101 @@
         });
     }
     window.sendChatMessage = sendChatMessage;
+
+    function autoResizeChatInput(el) {
+        el.style.height = 'auto';
+        var newHeight = el.scrollHeight;
+        if (newHeight > 108) {
+            el.style.height = '108px';
+            el.style.overflowY = 'auto';
+        } else {
+            el.style.height = newHeight + 'px';
+            el.style.overflowY = 'hidden';
+        }
+    }
+    window.autoResizeChatInput = autoResizeChatInput;
+
+    function copyChatMessage(idx) {
+        var msg = currentChatMessages[idx];
+        if (!msg) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(msg.content).then(function(){});
+        } else {
+            var textarea = document.createElement('textarea');
+            textarea.value = msg.content;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+    }
+    window.copyChatMessage = copyChatMessage;
+
+    function editChatMessage(idx) {
+        if (isSendingMessage) return;
+        var msg = currentChatMessages[idx];
+        if (!msg || msg.role !== 'user') return;
+        var input = document.getElementById('chat-input');
+        input.value = msg.content;
+        autoResizeChatInput(input);
+        currentChatMessages = currentChatMessages.slice(0, idx);
+        renderChatMessages();
+        scrollChatToBottom();
+        try { localStorage.setItem('phone_chat_' + currentChatContactName, JSON.stringify(currentChatMessages)); } catch(e) {}
+    }
+    window.editChatMessage = editChatMessage;
+
+    function regenerateChatMessage(idx) {
+        if (isSendingMessage) return;
+        var userIdx = -1;
+        for (var i = idx - 1; i >= 0; i--) {
+            if (currentChatMessages[i].role === 'user') {
+                userIdx = i;
+                break;
+            }
+        }
+        if (userIdx === -1) return;
+        var userMsg = currentChatMessages[userIdx].content;
+        currentChatMessages = currentChatMessages.slice(0, idx);
+        renderChatMessages();
+        scrollChatToBottom();
+        try { localStorage.setItem('phone_chat_' + currentChatContactName, JSON.stringify(currentChatMessages)); } catch(e) {}
+
+        isSendingMessage = true;
+        document.getElementById('chat-send-btn').disabled = true;
+        var container = document.getElementById('chat-messages');
+        var typingEl = document.createElement('div');
+        typingEl.className = 'chat-bubble-row ai';
+        typingEl.id = 'typing-indicator-row';
+        var contacts = getContacts();
+        var contact = contacts.find(function(c){return c.name === currentChatContactName;});
+        var typAvatar = (contact && contact.avatar)
+            ? '<div class="chat-msg-avatar" style="background:none;"><img src="'+contact.avatar+'" /></div>'
+            : '<div class="chat-msg-avatar">' + (contact ? contact.name.charAt(0) : 'AI') + '</div>';
+        typingEl.innerHTML = typAvatar + '<div class="chat-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
+        container.appendChild(typingEl);
+        scrollChatToBottom();
+
+        callAIChat(userMsg, function(reply) {
+            var tip = document.getElementById('typing-indicator-row');
+            if (tip) tip.remove();
+            currentChatMessages.push({ role: 'assistant', content: reply });
+            renderChatMessages();
+            scrollChatToBottom();
+            try { localStorage.setItem('phone_chat_' + currentChatContactName, JSON.stringify(currentChatMessages)); } catch(e) {}
+            isSendingMessage = false;
+            document.getElementById('chat-send-btn').disabled = false;
+        }, function(errMsg) {
+            var tip = document.getElementById('typing-indicator-row');
+            if (tip) tip.remove();
+            currentChatMessages.push({ role: 'assistant', content: errMsg || '请求失败，请检查设置' });
+            renderChatMessages();
+            scrollChatToBottom();
+            isSendingMessage = false;
+            document.getElementById('chat-send-btn').disabled = false;
+        });
+    }
+    window.regenerateChatMessage = regenerateChatMessage;
 
     /* ======================================== */
     /* 通用AI调用函数                              */
