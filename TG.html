@@ -3344,8 +3344,6 @@
 
         renderChatMessages();
         setTimeout(function(){
-            var input = document.getElementById('chat-input');
-            input.focus();
             scrollChatToBottom();
         }, 200);
     }
@@ -3759,17 +3757,31 @@
 
         generateMomentByAI(contact, function() {
             if (btn) btn.textContent = '🔄';
-            // Have another character comment on a recent moment
+            // Have multiple characters comment on recent moments for liveliness
             setTimeout(function() {
                 var moments = getMoments();
                 var recentMoments = moments.slice(0, 3);
                 var otherContacts = aiContacts.filter(function(c) { return c.name !== contact.name; });
                 if (otherContacts.length > 0 && recentMoments.length > 0) {
-                    var commenter = otherContacts[Math.floor(Math.random() * otherContacts.length)];
-                    var targetMoment = recentMoments[Math.floor(Math.random() * recentMoments.length)];
-                    generateCommentByAI(commenter, targetMoment);
+                    var num = Math.min(otherContacts.length, Math.floor(Math.random() * 2) + 1);
+                    var shuffled = otherContacts.slice().sort(function(){return Math.random()-0.5;});
+                    var commenters = shuffled.slice(0, num);
+                    commenters.forEach(function(c, idx) {
+                        setTimeout(function() {
+                            var targetMoment = recentMoments[Math.floor(Math.random() * recentMoments.length)];
+                            generateCommentByAI(c, targetMoment, function() {
+                                // Chance for comment-reply chain between characters
+                                if (idx < commenters.length - 1 && Math.random() > 0.5) {
+                                    setTimeout(function() {
+                                        var nextC = commenters[idx + 1];
+                                        generateCommentByAI(nextC, targetMoment);
+                                    }, 1000);
+                                }
+                            });
+                        }, idx * 1200);
+                    });
                 }
-            }, 800);
+            }, 600);
         });
     }
     window.refreshMoments = refreshMoments;
@@ -3778,9 +3790,14 @@
         var settings = getSettings();
         if (!settings.apiKey) { if (onDone) onDone(); return; }
 
+        var liveliness = contact.liveliness || 50;
         var sysPrompt = '你是一个名为"' + contact.name + '"的AI角色。角色定位：' + contact.role + '。';
         if (contact.note) sysPrompt += '补充说明：' + contact.note;
-        sysPrompt += '。请根据你的人设，写一条微信朋友圈文案，要像真实用户发朋友圈一样自然、真实、有生活气息。内容不要过长，30-80字左右。只返回朋友圈正文，不要有任何解释、说明或引号。';
+        sysPrompt += '。你的"活人感指数"是' + liveliness + '/100（数值越高行为越接近真人）。请根据你的人设和活人感指数，写一条微信朋友圈文案。要求：';
+        sysPrompt += '1. 要像真实用户发朋友圈一样自然、真实、有生活气息，' + (liveliness >= 70 ? '允许有口语化表达、真实情绪、甚至少量随意断句。' : '保持相对规范但仍有生活感。');
+        sysPrompt += '2. ' + (liveliness >= 60 ? '适当使用emoji让内容更生动。' : '文字为主，可少量使用emoji。');
+        sysPrompt += '3. 内容不要过长，30-80字左右。';
+        sysPrompt += '只返回朋友圈正文，不要有任何解释、说明或引号。';
 
         callAI(sysPrompt, '', function(content) {
             content = content.trim().replace(/^[\"']|[\"']$/g, '');
@@ -3811,9 +3828,15 @@
         var settings = getSettings();
         if (!settings.apiKey) { if (onDone) onDone(); return; }
 
+        var liveliness = contact.liveliness || 50;
         var sysPrompt = '你是一个名为"' + contact.name + '"的AI角色。角色定位：' + contact.role + '。';
         if (contact.note) sysPrompt += '补充说明：' + contact.note;
-        sysPrompt += '。你在微信朋友圈看到"' + moment.author + '"发了一条朋友圈："' + moment.content + '"。请根据你的人设，写一条简短自然的评论（15字以内），像真实微信用户评论一样。只返回评论正文，不要有任何解释、说明或引号。';
+        sysPrompt += '。你的"活人感指数"是' + liveliness + '/100（数值越高行为越接近真人）。你在微信朋友圈看到"' + moment.author + '"发了一条朋友圈："' + moment.content + '"。请根据你的人设和活人感指数写一条评论。要求：';
+        sysPrompt += '1. 像真实微信用户评论一样自然、有情绪、有互动感。';
+        sysPrompt += '2. ' + (liveliness >= 50 ? '可以使用emoji、语气词（如哈哈、嗯嗯、确实啊、卧槽等），让评论更真实。' : '评论简洁得体。');
+        sysPrompt += '3. ' + (liveliness >= 70 ? '评论可以调侃、追问、吐槽、共鸣，像老朋友一样随意，甚至可以发一串"哈哈哈哈哈哈"。' : '评论友好自然。');
+        sysPrompt += '4. 字数控制在5-25字之间。';
+        sysPrompt += '只返回评论正文，不要有任何解释、说明或引号。';
 
         callAI(sysPrompt, '', function(content) {
             content = content.trim().replace(/^[\"']|[\"']$/g, '');
@@ -3840,14 +3863,37 @@
         var moment = moments.find(function(x){return x.id===momentId;});
         if (!moment) return;
 
-        var numComments = Math.floor(Math.random() * 2) + 1;
+        var numComments = Math.floor(Math.random() * 3) + 2;
         var shuffled = aiContacts.slice().sort(function(){return Math.random()-0.5;});
-        var selected = shuffled.slice(0, numComments);
+        var selected = shuffled.slice(0, Math.min(numComments, aiContacts.length));
 
         selected.forEach(function(contact, idx) {
             setTimeout(function() {
-                generateCommentByAI(contact, moment);
-            }, 1500 + idx * 2000);
+                generateCommentByAI(contact, moment, function() {
+                    // Small chance that another character replies to this comment
+                    if (idx < selected.length - 1 && Math.random() > 0.6) {
+                        var replier = selected[idx + 1];
+                        setTimeout(function() {
+                            var sysPrompt = '你是一个名为"' + replier.name + '"的AI角色。角色定位：' + replier.role + '。';
+                            if (replier.note) sysPrompt += '补充说明：' + replier.note;
+                            sysPrompt += '。你在朋友圈看到"' + contact.name + '"评论了"' + moment.author + '"的朋友圈："' + moment.content + '"。' + contact.name + '说："' + (moment.comments && moment.comments.length > 0 ? moment.comments[moment.comments.length-1].content : '') + '"。请根据你的人设，简短自然地回复这条评论（10字以内），像朋友间互动一样。只返回正文。';
+                            callAI(sysPrompt, '', function(content) {
+                                content = content.trim().replace(/^[\"']|[\"']$/g, '');
+                                if (content) {
+                                    var moments2 = getMoments();
+                                    var m2 = moments2.find(function(x){return x.id===momentId;});
+                                    if (m2) {
+                                        if (!m2.comments) m2.comments = [];
+                                        m2.comments.push({ author: replier.name, content: content, replyTo: contact.name });
+                                        saveMoments(moments2);
+                                        renderMomentsFeed();
+                                    }
+                                }
+                            });
+                        }, 1500);
+                    }
+                });
+            }, 1200 + idx * 1800);
         });
     }
     window.autoCommentAfterPublish = autoCommentAfterPublish;
