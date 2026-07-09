@@ -1197,6 +1197,25 @@
         .moment-likes {
             font-size: 12px; color: #e07050; padding-left: 46px; margin-top: 4px;
         }
+        .moment-comments {
+            margin-top: 6px; padding: 8px 12px; background: rgba(240,244,248,0.7); border-radius: 10px; margin-left: 46px;
+        }
+        .moment-comment-item {
+            font-size: 13px; color: #444; line-height: 1.5; padding: 3px 0;
+        }
+        .moment-comment-author {
+            color: #576b95; font-weight: 600; cursor: pointer;
+        }
+        .moment-comment-replyto {
+            color: #333;
+        }
+        .moment-comment-actions {
+            display: flex; gap: 12px; margin-top: 2px; padding-left: 46px;
+        }
+        .moment-comment-actions button {
+            background: none; border: none; font-size: 11px; color: #888; cursor: pointer;
+        }
+        .moment-comment-actions button:active { color: #555; }
 
         /* ===== 设置页面 ===== */
         .settings-section {
@@ -1536,6 +1555,14 @@
             font-size: 13px; color: #444; cursor: pointer;
         }
         .btn-add-sm:active { transform: scale(0.95); }
+
+        /* Toggle switch for time awareness */
+        #settings-time-aware-toggle:checked + span {
+            background: linear-gradient(135deg, rgba(80,200,120,0.6), rgba(60,180,100,0.5));
+        }
+        #settings-time-aware-toggle:checked + span + span {
+            transform: translateX(20px);
+        }
     </style>
 </head>
 <body>
@@ -1963,6 +1990,9 @@
         <div class="page-header">
             <div class="page-back-btn" onclick="closePage('page-moments')">‹</div>
             <div class="page-title">朋友圈</div>
+            <div class="page-header-actions">
+                <button class="btn-page-action" onclick="refreshMoments()" title="刷新朋友圈">🔄</button>
+            </div>
         </div>
         <div class="page-body">
             <div class="moments-publish">
@@ -2010,7 +2040,7 @@
                 <h4>AI 对话设置</h4>
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 4px;margin-bottom:8px;">
                     <span style="font-size:13px;color:#444;">实时感知时间日期</span>
-                    <label style="position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0;">
+                    <label for="settings-time-aware-toggle" style="position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0;cursor:pointer;">
                         <input type="checkbox" id="settings-time-aware-toggle" style="opacity:0;width:0;height:0;" checked>
                         <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,rgba(100,190,240,0.5),rgba(80,160,220,0.4));border-radius:26px;transition:0.3s;border:1.5px solid rgba(255,255,255,0.6);"></span>
                         <span class="toggle-slider-mini" style="position:absolute;content:'';height:20px;width:20px;left:2.5px;bottom:2px;background:#fff;border-radius:50%;transition:0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.15);"></span>
@@ -3499,19 +3529,19 @@
             // User identity
             var userName = settings.userName || localStorage.getItem('phone_user_name') || '用户';
             systemPrompt += '当前与你对话的用户是"' + userName + '"。\n\n';
-            // Time awareness
+            // Time awareness - real-time perception updated every second
             if (settings.timeAware !== false) {
                 var now = new Date();
                 var weekdays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
-                var dateStr = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 ' + weekdays[now.getDay()] + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-                systemPrompt += '[当前时间] ' + dateStr + '\n\n';
+                var dateStr = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日 ' + weekdays[now.getDay()] + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+                systemPrompt += '[系统实时时间] ' + dateStr + '（此时间由系统实时获取，精确到秒，随真实时间流动而变化，不受聊天记录中的消息时间影响）\n\n';
             }
             systemPrompt += '你是一个名为"' + contact.name + '"的AI角色。角色定位：' + contact.role + '。';
             if (contact.note) systemPrompt += '补充说明：' + contact.note;
             if (contact.liveliness) systemPrompt += '。活人感指数：' + contact.liveliness + '/100（数值越高行为越接近真人）';
-            systemPrompt += '。请始终保持这个角色的人设进行对话。';
+            systemPrompt += '。请始终保持这个角色的人设进行对话。注意：这是沉浸式线上微信聊天，你必须完全仿真真实微信用户的聊天方式。回复只能是纯对话文本，绝对禁止输出任何括号内的动作、神态、表情或场景描述（例如"（微笑）"、"（轻叹）"、"（摸了摸头）"等），也不要使用"*动作*"或"【场景】"等格式。你的回复应当像真人发微信消息一样自然、直接。';
         } else {
-            systemPrompt = '你是一个友好的AI助手，请用自然的中文回复。';
+            systemPrompt = '你是一个友好的AI助手，请用自然的中文回复。注意：这是沉浸式线上微信聊天，回复必须是纯对话文本，禁止输出任何括号内的动作、神态、表情或场景描述。';
         }
 
         // Build messages array
@@ -3592,6 +3622,26 @@
             var avatarHtml = (contact && contact.avatar)
                 ? '<div class="moment-avatar" style="background:none;"><img src="' + contact.avatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" /></div>'
                 : '<div class="moment-avatar">' + m.author.charAt(0) + '</div>';
+
+            // Build comments HTML
+            var commentsHtml = '';
+            if (m.comments && m.comments.length > 0) {
+                var cHtml = '';
+                m.comments.forEach(function(c) {
+                    if (typeof c === 'string') {
+                        cHtml += '<div class="moment-comment-item">' + escHtml(c) + '</div>';
+                    } else {
+                        var authorSpan = '<span class="moment-comment-author" onclick="replyToComment(\'' + m.id + '\', \'' + escHtml(c.author) + '\')">' + escHtml(c.author) + '</span>';
+                        var replySpan = '';
+                        if (c.replyTo) {
+                            replySpan = '<span class="moment-comment-replyto"> 回复 </span><span class="moment-comment-author" onclick="replyToComment(\'' + m.id + '\', \'' + escHtml(c.replyTo) + '\')">' + escHtml(c.replyTo) + '</span>';
+                        }
+                        cHtml += '<div class="moment-comment-item">' + authorSpan + replySpan + '<span class="moment-comment-replyto">：' + escHtml(c.content) + '</span></div>';
+                    }
+                });
+                commentsHtml = '<div class="moment-comments">' + cHtml + '</div>';
+            }
+
             html += '<div class="moment-item">'
                 + '<div class="moment-header">'
                 + avatarHtml
@@ -3606,6 +3656,7 @@
                 + '<button onclick="commentMoment(\''+m.id+'\')">&#128172; 评论</button>'
                 + '</div>'
                 + (m.likes && m.likes.length > 0 ? '<div class="moment-likes">&#10084; ' + m.likes.map(escHtml).join(', ') + '</div>' : '')
+                + commentsHtml
                 + '</div>';
         });
         feed.innerHTML = html;
@@ -3633,6 +3684,9 @@
         saveMoments(moments);
         input.value = '';
         renderMomentsFeed();
+
+        // Trigger AI characters to auto-comment
+        autoCommentAfterPublish(newMoment.id);
     }
     window.publishMoment = publishMoment;
 
@@ -3649,18 +3703,154 @@
     }
     window.likeMoment = likeMoment;
 
-    function commentMoment(id) {
-        var text = prompt('输入你的评论：');
+    function commentMoment(id, replyTo) {
+        var placeholder = replyTo ? '回复 ' + replyTo + '：' : '输入你的评论：';
+        var text = prompt(placeholder);
         if (!text || !text.trim()) return;
         var moments = getMoments();
         var m = moments.find(function(x){return x.id===id;});
         if (!m) return;
         if (!m.comments) m.comments = [];
-        m.comments.push('我: ' + text.trim());
+        m.comments.push({ author: '我', content: text.trim(), replyTo: replyTo || null });
         saveMoments(moments);
         renderMomentsFeed();
+
+        // If user replies to a character, that character may reply back
+        if (replyTo && replyTo !== '我') {
+            var contacts = getContacts();
+            var contact = contacts.find(function(c){return c.name === replyTo;});
+            if (contact) {
+                setTimeout(function() {
+                    var sysPrompt = '你是一个名为"' + contact.name + '"的AI角色。角色定位：' + contact.role + '。';
+                    if (contact.note) sysPrompt += '补充说明：' + contact.note;
+                    sysPrompt += '。你在朋友圈评论下，用户回复了你："' + text.trim() + '"。请根据你的人设，写一条简短自然的回复（15字以内），像真实微信用户一样。只返回回复正文，不要解释。';
+                    callAI(sysPrompt, '', function(content) {
+                        content = content.trim().replace(/^["']|["']$/g, '');
+                        if (content) {
+                            var moments2 = getMoments();
+                            var m2 = moments2.find(function(x){return x.id===id;});
+                            if (m2) {
+                                if (!m2.comments) m2.comments = [];
+                                m2.comments.push({ author: contact.name, content: content, replyTo: '我' });
+                                saveMoments(moments2);
+                                renderMomentsFeed();
+                            }
+                        }
+                    });
+                }, 2000);
+            }
+        }
     }
     window.commentMoment = commentMoment;
+
+    function replyToComment(momentId, author) {
+        commentMoment(momentId, author);
+    }
+    window.replyToComment = replyToComment;
+
+    function refreshMoments() {
+        var contacts = getContacts();
+        var aiContacts = contacts.filter(function(c) { return c.name !== '我'; });
+        if (aiContacts.length === 0) { alert('没有可用角色，请先在通讯录添加角色'); return; }
+
+        var contact = aiContacts[Math.floor(Math.random() * aiContacts.length)];
+        var btn = document.querySelector('#page-moments .btn-page-action');
+        if (btn) btn.textContent = '⏳';
+
+        generateMomentByAI(contact, function() {
+            if (btn) btn.textContent = '🔄';
+            // Have another character comment on a recent moment
+            setTimeout(function() {
+                var moments = getMoments();
+                var recentMoments = moments.slice(0, 3);
+                var otherContacts = aiContacts.filter(function(c) { return c.name !== contact.name; });
+                if (otherContacts.length > 0 && recentMoments.length > 0) {
+                    var commenter = otherContacts[Math.floor(Math.random() * otherContacts.length)];
+                    var targetMoment = recentMoments[Math.floor(Math.random() * recentMoments.length)];
+                    generateCommentByAI(commenter, targetMoment);
+                }
+            }, 800);
+        });
+    }
+    window.refreshMoments = refreshMoments;
+
+    function generateMomentByAI(contact, onDone) {
+        var settings = getSettings();
+        if (!settings.apiKey) { if (onDone) onDone(); return; }
+
+        var sysPrompt = '你是一个名为"' + contact.name + '"的AI角色。角色定位：' + contact.role + '。';
+        if (contact.note) sysPrompt += '补充说明：' + contact.note;
+        sysPrompt += '。请根据你的人设，写一条微信朋友圈文案，要像真实用户发朋友圈一样自然、真实、有生活气息。内容不要过长，30-80字左右。只返回朋友圈正文，不要有任何解释、说明或引号。';
+
+        callAI(sysPrompt, '', function(content) {
+            content = content.trim().replace(/^[\"']|[\"']$/g, '');
+            if (content) {
+                var moments = getMoments();
+                var times = ['刚刚','1分钟前','3分钟前','5分钟前','10分钟前','半小时前','1小时前','2小时前'];
+                var randomTime = times[Math.floor(Math.random() * times.length)];
+                moments.unshift({
+                    id: 'm' + Date.now(),
+                    author: contact.name,
+                    content: content,
+                    time: randomTime,
+                    likes: [],
+                    comments: []
+                });
+                if (moments.length > 100) moments = moments.slice(0, 100);
+                saveMoments(moments);
+                renderMomentsFeed();
+            }
+            if (onDone) onDone();
+        }, function(err) {
+            if (onDone) onDone();
+        });
+    }
+    window.generateMomentByAI = generateMomentByAI;
+
+    function generateCommentByAI(contact, moment, onDone) {
+        var settings = getSettings();
+        if (!settings.apiKey) { if (onDone) onDone(); return; }
+
+        var sysPrompt = '你是一个名为"' + contact.name + '"的AI角色。角色定位：' + contact.role + '。';
+        if (contact.note) sysPrompt += '补充说明：' + contact.note;
+        sysPrompt += '。你在微信朋友圈看到"' + moment.author + '"发了一条朋友圈："' + moment.content + '"。请根据你的人设，写一条简短自然的评论（15字以内），像真实微信用户评论一样。只返回评论正文，不要有任何解释、说明或引号。';
+
+        callAI(sysPrompt, '', function(content) {
+            content = content.trim().replace(/^[\"']|[\"']$/g, '');
+            if (content) {
+                if (!moment.comments) moment.comments = [];
+                moment.comments.push({ author: contact.name, content: content, replyTo: null });
+                var moments = getMoments();
+                saveMoments(moments);
+                renderMomentsFeed();
+            }
+            if (onDone) onDone();
+        }, function(err) {
+            if (onDone) onDone();
+        });
+    }
+    window.generateCommentByAI = generateCommentByAI;
+
+    function autoCommentAfterPublish(momentId) {
+        var contacts = getContacts();
+        var aiContacts = contacts.filter(function(c) { return c.name !== '我'; });
+        if (aiContacts.length === 0) return;
+
+        var moments = getMoments();
+        var moment = moments.find(function(x){return x.id===momentId;});
+        if (!moment) return;
+
+        var numComments = Math.floor(Math.random() * 2) + 1;
+        var shuffled = aiContacts.slice().sort(function(){return Math.random()-0.5;});
+        var selected = shuffled.slice(0, numComments);
+
+        selected.forEach(function(contact, idx) {
+            setTimeout(function() {
+                generateCommentByAI(contact, moment);
+            }, 1500 + idx * 2000);
+        });
+    }
+    window.autoCommentAfterPublish = autoCommentAfterPublish;
 
     /* ======================================== */
     /* 7. 设置功能                               */
