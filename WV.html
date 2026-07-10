@@ -848,13 +848,16 @@
     padding-right: 32px;
   }
   .app-header .right-btn {
-    width: 32px; height: 32px;
+    width: 40px; height: 40px;
     display: flex; align-items: center; justify-content: center;
     color: var(--accent);
     font-size: 22px;
     cursor: pointer;
     pointer-events: auto;
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+    border-radius: 50%;
   }
+  .app-header .right-btn:active { background: rgba(0,0,0,0.08); }
 
   /* 内容区 */
   .app-content {
@@ -1618,6 +1621,93 @@
     color: var(--muted);
     margin-bottom: 6px;
   }
+  .ai-setting-row input[type="text"],
+  .ai-setting-row input[type="password"],
+  .ai-setting-row select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-solid);
+    color: var(--ink);
+    box-sizing: border-box;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .ai-setting-row select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238e8e93' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  .ai-model-choice {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .ai-model-choice label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .ai-model-choice input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+  }
+  .ai-btn-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .ai-btn-row .btn {
+    flex: 1;
+    padding: 10px 0;
+    font-size: 14px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+  }
+  .ai-btn-row .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .ai-btn-row .btn-secondary {
+    background: var(--surface);
+    color: var(--ink);
+  }
+  .ai-default-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 12px;
+    background: var(--surface);
+    border-radius: 10px;
+  }
+  .ai-default-row span {
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .ai-default-row .btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: var(--accent);
+    color: #fff;
+  }
+  .ai-default-row .btn-active {
+    background: var(--surface);
+    color: var(--muted);
+  }
 </style>
 </head>
 <body>
@@ -1996,7 +2086,7 @@
   <div class="app-header">
     <div class="back-btn" onclick="showApp('app-settings')">←</div>
     <div class="title">AI接入设置</div>
-    <div class="right-btn" onclick="saveAISettings()">✓</div>
+    <div class="right-btn" id="ai-save-status" style="font-size:13px;color:var(--accent2);font-weight:600;opacity:0;transition:opacity 0.3s;">已保存</div>
   </div>
   <div class="app-content">
     <div class="ai-setting-row">
@@ -2004,27 +2094,41 @@
       <select id="ai-platform" onchange="onPlatformChange()">
         <option value="deepseek">DeepSeek</option>
         <option value="siliconflow">硅基流动</option>
+        <option value="apifast">APIFast</option>
         <option value="custom">自定义</option>
       </select>
     </div>
-    <div class="ai-setting-row">
-      <label>API Key</label>
-      <input type="password" id="ai-key" placeholder="输入API Key">
+    <div class="ai-default-row">
+      <span id="ai-default-label">设为默认平台</span>
+      <button class="btn" id="ai-set-default-btn" onclick="setDefaultPlatform()">设为默认</button>
     </div>
     <div class="ai-setting-row">
-      <label>API地址（自定义平台必填）</label>
-      <input type="text" id="ai-url" placeholder="https://api.example.com/v1/chat/completions">
+      <label>API Base URL</label>
+      <input type="text" id="ai-url" placeholder="https://api.example.com/v1" onchange="autoSaveAISettings()">
+    </div>
+    <div class="ai-setting-row">
+      <label>API Key</label>
+      <input type="password" id="ai-key" placeholder="输入API Key" onchange="autoSaveAISettings()">
     </div>
     <div class="ai-setting-row">
       <label>模型</label>
-      <select id="ai-model">
-        <option value="">请选择或输入模型</option>
-      </select>
-      <input type="text" id="ai-model-custom" placeholder="手动输入模型名" style="margin-top:8px;">
+      <div class="ai-model-choice">
+        <label><input type="radio" name="ai-model-type" value="fetch" onchange="onModelTypeChange();autoSaveAISettings()"> 拉取列表</label>
+        <label><input type="radio" name="ai-model-type" value="manual" onchange="onModelTypeChange();autoSaveAISettings()"> 手动输入</label>
+      </div>
+      <div id="ai-model-fetch-box">
+        <select id="ai-model" onchange="autoSaveAISettings()"></select>
+      </div>
+      <div id="ai-model-manual-box" style="display:none;">
+        <input type="text" id="ai-model-custom" placeholder="输入模型名称，如 gpt-4o" onchange="autoSaveAISettings()">
+      </div>
     </div>
-    <button class="btn" onclick="fetchModels()" style="width:100%;margin-bottom:20px;">获取模型列表</button>
+    <div class="ai-btn-row">
+      <button class="btn btn-secondary" onclick="fetchModels()">获取模型列表</button>
+      <button class="btn btn-primary" onclick="testConnection()">测试连接</button>
+    </div>
     <div style="font-size:13px;color:var(--muted);line-height:1.5;">
-      各平台的API Key、地址、模型分别独立保存，切换平台不会丢失已有配置。所有设置仅保存在浏览器本地，不会上传到服务器。
+      各平台的API Key、Base URL、模型分别独立保存，切换平台不会丢失已有配置。所有设置仅保存在浏览器本地，不会上传到服务器。
     </div>
   </div>
 </div>
@@ -5927,8 +6031,15 @@ async function callAI(systemPrompt, userMessage, historyMessages, maskInfo, opti
   const model = config.model || 'deepseek-chat';
   let url = config.url || '';
 
-  if (platform === 'deepseek') url = 'https://api.deepseek.com/v1/chat/completions';
-  else if (platform === 'siliconflow') url = 'https://api.siliconflow.cn/v1/chat/completions';
+  if (!url) {
+    if (platform === 'deepseek') url = 'https://api.deepseek.com/v1';
+    else if (platform === 'siliconflow') url = 'https://api.siliconflow.cn/v1';
+    else if (platform === 'apifast') url = 'https://api.apifast.tech/v1';
+  }
+
+  if (!url.endsWith('/chat/completions')) {
+    url = url.replace(/\/$/, '') + '/chat/completions';
+  }
 
   // 构建强角色保持提示词
   let finalSystemPrompt = '';
@@ -6124,101 +6235,281 @@ function saveAIConfigForPlatform(platform, config) {
   localStorage.setItem('aiConfig_' + platform, JSON.stringify(config));
 }
 
+function getDefaultPlatform() {
+  return (JSON.parse(localStorage.getItem('aiConfig')) || {}).platform || 'deepseek';
+}
+
 function showAISettings() {
-  const globalConfig = JSON.parse(localStorage.getItem('aiConfig')) || {};
-  const platform = globalConfig.platform || 'deepseek';
-  document.getElementById('ai-platform').value = platform;
-  onPlatformChange();
-  const platformConfig = getAIConfigForPlatform(platform);
-  document.getElementById('ai-key').value = platformConfig.key || '';
-  document.getElementById('ai-url').value = platformConfig.url || '';
-  document.getElementById('ai-model').value = platformConfig.model || '';
-  document.getElementById('ai-model-custom').value = platformConfig.model || '';
+  const defaultPlatform = getDefaultPlatform();
+  const currentPlatformEl = document.getElementById('ai-platform');
+  if (currentPlatformEl.value !== defaultPlatform) {
+    currentPlatformEl.value = defaultPlatform;
+  }
+  // 记录当前编辑的平台
+  const globalCfg = JSON.parse(localStorage.getItem('aiConfig')) || {};
+  globalCfg._lastEditedPlatform = defaultPlatform;
+  localStorage.setItem('aiConfig', JSON.stringify(globalCfg));
+  loadPlatformUI(defaultPlatform);
   showApp('app-ai-settings');
 }
 
+function loadPlatformUI(platform) {
+  const cfg = getAIConfigForPlatform(platform);
+
+  // 更新默认平台按钮状态
+  const defaultPlatform = getDefaultPlatform();
+  const defaultBtn = document.getElementById('ai-set-default-btn');
+  const defaultLabel = document.getElementById('ai-default-label');
+  if (platform === defaultPlatform) {
+    defaultBtn.textContent = '当前默认';
+    defaultBtn.classList.add('btn-active');
+    defaultBtn.disabled = true;
+    defaultLabel.textContent = '当前默认平台';
+  } else {
+    defaultBtn.textContent = '设为默认';
+    defaultBtn.classList.remove('btn-active');
+    defaultBtn.disabled = false;
+    defaultLabel.textContent = '设为默认平台';
+  }
+
+  // 填充输入
+  document.getElementById('ai-url').value = cfg.url || '';
+  document.getElementById('ai-key').value = cfg.key || '';
+
+  // 模型选择方式
+  const modelType = cfg.modelType || 'fetch';
+  const radios = document.getElementsByName('ai-model-type');
+  for (const r of radios) {
+    r.checked = (r.value === modelType);
+  }
+  onModelTypeChange();
+
+  // 模型值
+  if (modelType === 'fetch') {
+    rebuildModelSelect(platform, cfg.model || '');
+  } else {
+    document.getElementById('ai-model-custom').value = cfg.model || '';
+  }
+}
+
 function onPlatformChange() {
-  // 保存当前平台配置（在切换前）
-  const platform = document.getElementById('ai-platform').value;
+  // 切换前先保存旧平台的配置（此时 select 值已变，需手动传入旧平台名）
+  const newPlatform = document.getElementById('ai-platform').value;
+  const globalCfg = JSON.parse(localStorage.getItem('aiConfig')) || {};
+  const oldPlatform = globalCfg._lastEditedPlatform || newPlatform;
+  if (oldPlatform !== newPlatform) {
+    autoSaveAISettings(oldPlatform);
+  }
+  globalCfg._lastEditedPlatform = newPlatform;
+  localStorage.setItem('aiConfig', JSON.stringify(globalCfg));
+  loadPlatformUI(newPlatform);
+}
+
+function onModelTypeChange() {
+  const radios = document.getElementsByName('ai-model-type');
+  let selected = 'fetch';
+  for (const r of radios) {
+    if (r.checked) selected = r.value;
+  }
+  document.getElementById('ai-model-fetch-box').style.display = selected === 'fetch' ? 'block' : 'none';
+  document.getElementById('ai-model-manual-box').style.display = selected === 'manual' ? 'block' : 'none';
+}
+
+function rebuildModelSelect(platform, selectedModel) {
   const modelSelect = document.getElementById('ai-model');
+  const cfg = getAIConfigForPlatform(platform);
+  const fetched = cfg.fetchedModels || [];
 
   const presets = {
     deepseek: ['deepseek-chat', 'deepseek-reasoner'],
     siliconflow: ['deepseek-ai/DeepSeek-V3', 'deepseek-ai/DeepSeek-R1', 'Qwen/Qwen2.5-72B-Instruct'],
+    apifast: [],
     custom: []
   };
 
-  modelSelect.innerHTML = '<option value="">请选择或输入模型</option>';
-  (presets[platform] || []).forEach(m => {
+  modelSelect.innerHTML = '<option value="">请选择模型</option>';
+
+  const allModels = [...new Set([...(presets[platform] || []), ...fetched])];
+
+  allModels.forEach(m => {
     const opt = document.createElement('option');
     opt.value = m;
     opt.textContent = m;
     modelSelect.appendChild(opt);
   });
 
-  // 加载该平台已保存的配置
-  const platformConfig = getAIConfigForPlatform(platform);
-  document.getElementById('ai-key').value = platformConfig.key || '';
-  document.getElementById('ai-url').value = platformConfig.url || '';
-  document.getElementById('ai-model').value = platformConfig.model || '';
-  document.getElementById('ai-model-custom').value = platformConfig.model || '';
+  if (selectedModel) {
+    modelSelect.value = selectedModel;
+  }
 }
 
 async function fetchModels() {
-  const config = {
-    platform: document.getElementById('ai-platform').value,
-    key: document.getElementById('ai-key').value,
-    url: document.getElementById('ai-url').value
-  };
+  const platform = document.getElementById('ai-platform').value;
+  const key = document.getElementById('ai-key').value.trim();
+  let url = document.getElementById('ai-url').value.trim();
 
-  if (!config.key) { alert('请输入API Key'); return; }
+  if (!key) { alert('请输入API Key'); return; }
 
-  let url = config.url;
-  if (config.platform === 'deepseek') url = 'https://api.deepseek.com/v1/models';
-  else if (config.platform === 'siliconflow') url = 'https://api.siliconflow.cn/v1/models';
+  if (!url) {
+    if (platform === 'deepseek') url = 'https://api.deepseek.com/v1';
+    else if (platform === 'siliconflow') url = 'https://api.siliconflow.cn/v1';
+    else if (platform === 'apifast') url = 'https://api.apifast.tech/v1';
+  }
 
-  if (!url) { alert('请输入API地址'); return; }
+  if (!url) { alert('请输入API Base URL'); return; }
+
+  const fetchUrl = url.endsWith('/models') ? url : url.replace(/\/$/, '') + '/models';
 
   try {
-    const response = await fetch(url, {
-      headers: { 'Authorization': `Bearer ${config.key}` }
+    const response = await fetch(fetchUrl, {
+      headers: { 'Authorization': `Bearer ${key}` }
     });
     const data = await response.json();
 
-    const modelSelect = document.getElementById('ai-model');
-    modelSelect.innerHTML = '<option value="">请选择模型</option>';
-
     if (data.data && Array.isArray(data.data)) {
-      data.data.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.id;
-        opt.textContent = m.id;
-        modelSelect.appendChild(opt);
-      });
-      alert(`成功获取 ${data.data.length} 个模型`);
+      const modelIds = data.data.map(m => m.id).filter(Boolean);
+      const cfg = getAIConfigForPlatform(platform);
+      cfg.fetchedModels = modelIds;
+      saveAIConfigForPlatform(platform, cfg);
+
+      rebuildModelSelect(platform, document.getElementById('ai-model').value);
+      autoSaveAISettings();
+      alert(`成功获取 ${modelIds.length} 个模型`);
     } else {
-      alert('获取模型列表失败');
+      alert('获取模型列表失败：接口未返回模型数据');
     }
   } catch (e) {
     alert('获取失败: ' + e.message);
   }
 }
 
-function saveAISettings() {
+async function testConnection() {
   const platform = document.getElementById('ai-platform').value;
-  const config = {
-    platform: platform,
-    key: document.getElementById('ai-key').value,
-    url: document.getElementById('ai-url').value,
-    model: document.getElementById('ai-model').value || document.getElementById('ai-model-custom').value
-  };
-  // 按平台隔离保存
-  saveAIConfigForPlatform(platform, config);
-  // 保存当前使用的平台到全局配置
+  const key = document.getElementById('ai-key').value.trim();
+  let url = document.getElementById('ai-url').value.trim();
+
+  if (!key) { alert('请输入API Key'); return; }
+
+  if (!url) {
+    if (platform === 'deepseek') url = 'https://api.deepseek.com/v1';
+    else if (platform === 'siliconflow') url = 'https://api.siliconflow.cn/v1';
+    else if (platform === 'apifast') url = 'https://api.apifast.tech/v1';
+  }
+
+  if (!url) { alert('请输入API Base URL'); return; }
+
+  const testUrl = url.endsWith('/models') ? url : url.replace(/\/$/, '') + '/models';
+
+  try {
+    const response = await fetch(testUrl, {
+      headers: { 'Authorization': `Bearer ${key}` }
+    });
+    if (response.ok) {
+      alert('连接成功！API Key 和 Base URL 配置正确。');
+    } else {
+      const text = await response.text();
+      alert(`连接失败：HTTP ${response.status}\n${text}`);
+    }
+  } catch (e) {
+    alert('连接失败: ' + e.message);
+  }
+}
+
+function setDefaultPlatform() {
+  const platform = document.getElementById('ai-platform').value;
   localStorage.setItem('aiConfig', JSON.stringify({ platform: platform }));
-  // 更新运行时配置
-  aiConfig = config;
-  showApp('app-settings');
+
+  const defaultBtn = document.getElementById('ai-set-default-btn');
+  const defaultLabel = document.getElementById('ai-default-label');
+  defaultBtn.textContent = '当前默认';
+  defaultBtn.classList.add('btn-active');
+  defaultBtn.disabled = true;
+  defaultLabel.textContent = '当前默认平台';
+
+  const cfg = getAIConfigForPlatform(platform);
+  aiConfig = { platform: platform, ...cfg };
+}
+
+let _aiSaveStatusTimer = null;
+
+function showAutoSaveStatus() {
+  const el = document.getElementById('ai-save-status');
+  if (!el) return;
+  el.textContent = '已保存';
+  el.style.opacity = '1';
+  clearTimeout(_aiSaveStatusTimer);
+  _aiSaveStatusTimer = setTimeout(() => {
+    el.style.opacity = '0';
+  }, 1500);
+}
+
+function autoSaveAISettings(savePlatform) {
+  try {
+    const platform = savePlatform || document.getElementById('ai-platform').value;
+    const radios = document.getElementsByName('ai-model-type');
+    let modelType = 'fetch';
+    for (const r of radios) {
+      if (r.checked) modelType = r.value;
+    }
+
+    const config = {
+      key: document.getElementById('ai-key').value,
+      url: document.getElementById('ai-url').value,
+      modelType: modelType,
+      model: modelType === 'fetch'
+        ? document.getElementById('ai-model').value
+        : document.getElementById('ai-model-custom').value
+    };
+
+    const oldCfg = getAIConfigForPlatform(platform);
+    if (oldCfg.fetchedModels) {
+      config.fetchedModels = oldCfg.fetchedModels;
+    }
+
+    saveAIConfigForPlatform(platform, config);
+
+    const globalCfg = JSON.parse(localStorage.getItem('aiConfig')) || {};
+    aiConfig = { platform: globalCfg.platform || platform, ...config };
+
+    showAutoSaveStatus();
+  } catch (e) {
+    console.error('自动保存失败', e);
+  }
+}
+
+function saveAISettings() {
+  try {
+    const platform = document.getElementById('ai-platform').value;
+    const radios = document.getElementsByName('ai-model-type');
+    let modelType = 'fetch';
+    for (const r of radios) {
+      if (r.checked) modelType = r.value;
+    }
+
+    const config = {
+      key: document.getElementById('ai-key').value,
+      url: document.getElementById('ai-url').value,
+      modelType: modelType,
+      model: modelType === 'fetch'
+        ? document.getElementById('ai-model').value
+        : document.getElementById('ai-model-custom').value
+    };
+
+    const oldCfg = getAIConfigForPlatform(platform);
+    if (oldCfg.fetchedModels) {
+      config.fetchedModels = oldCfg.fetchedModels;
+    }
+
+    saveAIConfigForPlatform(platform, config);
+
+    const globalCfg = JSON.parse(localStorage.getItem('aiConfig')) || {};
+    aiConfig = { platform: globalCfg.platform || platform, ...config };
+
+    alert('保存成功');
+    showApp('app-settings');
+  } catch (e) {
+    alert('保存失败: ' + e.message);
+  }
 }
 
 function showChatFontSizeSettings() {
