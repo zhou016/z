@@ -1,0 +1,2956 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>AI 手机模拟器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#f2f2f7;--card:#fff;--primary:#007aff;--green:#07c160;--red:#ff3b30;
+  --gray:#8e8e93;--gray2:#aeaeb2;--gray3:#c7c7cc;--gray4:#d1d1d6;--gray5:#e5e5ea;
+  --gray6:#f2f2f7;--black:#1c1c1e;--text:#3c3c43;--text2:#8e8e93;
+  --chat-font-size:17px;
+  --radius:12px;--phone-radius:44px;--safe-top:env(safe-area-inset-top,20px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;background:#000;}
+#phone{width:100%;height:100%;max-width:430px;margin:0 auto;position:relative;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;}
+@media(min-width:431px){
+  body{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;overflow:auto;padding:20px 0;}
+  #phone{width:390px;height:844px;max-height:calc(100vh - 40px);border-radius:var(--phone-radius);box-shadow:0 0 0 8px #1a1a1a,0 0 0 10px #333,0 20px 60px rgba(0,0,0,.5);}
+}
+
+/* Status Bar */
+.status-bar{height:54px;padding-top:var(--safe-top);display:flex;align-items:center;justify-content:space-between;padding-left:24px;padding-right:24px;background:var(--bg);position:relative;z-index:100;flex-shrink:0;}
+.status-bar.hidden{display:none;}
+.status-bar .time{font-size:15px;font-weight:600;color:var(--black);}
+.status-bar .icons{display:flex;gap:5px;align-items:center;}
+.status-bar .icons svg{width:16px;height:16px;}
+
+/* Screen & Pages */
+.screen{flex:1;position:relative;overflow:hidden;}
+.page{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.25,.1,.25,1),opacity .35s;overflow:hidden;will-change:transform;}
+.page.hidden{transform:translateX(100%);opacity:0;pointer-events:none;}
+.page.hidden-left{transform:translateX(-30%);opacity:.5;pointer-events:none;}
+.page.active{transform:translateX(0);opacity:1;z-index:10;}
+
+/* Navigation Bar */
+.nav-bar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--bg);flex-shrink:0;border-bottom:0.5px solid var(--gray5);position:relative;z-index:10;}
+.nav-bar .back-btn{background:none;border:none;font-size:17px;color:var(--primary);cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 0;}
+.nav-bar .back-btn svg{width:20px;height:20px;}
+.nav-bar .title{position:absolute;left:50%;transform:translateX(-50%);font-size:17px;font-weight:600;color:var(--black);pointer-events:none;display:flex;align-items:center;justify-content:center;}
+.nav-bar .title .icon-btn{pointer-events:auto;-webkit-tap-highlight-color:transparent;}
+.nav-bar .title .fix-input-btn{padding:6px;margin-left:5px;border-radius:8px;background:rgba(0,0,0,0.04);transition:background .15s;}
+.nav-bar .title .fix-input-btn:active{background:rgba(0,0,0,0.12);}
+.nav-bar .title .fix-input-btn svg{width:18px;height:18px;color:var(--primary);display:block;}
+.nav-bar .actions{display:flex;gap:12px;align-items:center;}
+.nav-bar .actions button{background:none;border:none;color:var(--primary);font-size:16px;cursor:pointer;padding:4px;}
+
+/* Page Content */
+.page-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;}
+.page-content::-webkit-scrollbar{display:none;}
+.page-content.home{padding:20px 16px calc(20px + var(--safe-bottom));}
+
+/* Home Screen */
+.home-screen{min-height:100%;display:flex;flex-direction:column;}
+.home-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding-top:8px;}
+.app-icon{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-user-select:none;user-select:none;}
+.app-icon .icon{width:60px;height:60px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:30px;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.1);transition:transform .1s;}
+.app-icon:active .icon{transform:scale(.9);}
+.app-icon .label{font-size:11px;color:var(--black);text-align:center;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* Dot indicator */
+.page-dots{display:flex;justify-content:center;gap:8px;padding:16px 0;}
+.page-dots .dot{width:8px;height:8px;border-radius:50%;background:var(--gray3);transition:background .3s;}
+.page-dots .dot.active{background:var(--primary);}
+
+/* List Items */
+.list-group{background:var(--card);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.list-item{display:flex;align-items:center;padding:12px 16px;gap:12px;cursor:pointer;position:relative;min-height:44px;}
+.list-item:not(:last-child)::after{content:'';position:absolute;bottom:0;left:56px;right:0;height:0.5px;background:var(--gray5);}
+.list-item:active{background:var(--gray6);}
+.list-item .avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.list-item .info{flex:1;min-width:0;}
+.list-item .name{font-size:16px;color:var(--black);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.list-item .sub{font-size:13px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.list-item .arrow{color:var(--gray3);font-size:14px;}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:var(--radius);font-size:17px;font-weight:600;cursor:pointer;padding:12px 24px;gap:8px;transition:opacity .15s;}
+.btn:active{opacity:.7;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-gray{background:var(--gray5);color:var(--black);}
+.btn-full{width:100%;}
+.btn-sm{font-size:14px;padding:8px 16px;border-radius:8px;}
+
+/* Input */
+.input-group{margin-bottom:16px;}
+.input-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;padding-left:4px;}
+.input-group input,.input-group textarea,.input-group select{width:100%;padding:12px;border:0.5px solid var(--gray5);border-radius:10px;font-size:16px;background:var(--card);color:var(--black);outline:none;transition:border-color .2s;font-family:inherit;}
+.input-group input:focus,.input-group textarea:focus,.input-group select:focus{border-color:var(--primary);}
+.input-group textarea{min-height:100px;resize:vertical;}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.modal-overlay.show{opacity:1;pointer-events:auto;}
+.modal{background:var(--bg);border-radius:16px 16px 0 0;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;transform:translateY(100%);transition:transform .35s cubic-bezier(.25,.1,.25,1);padding:20px 16px;padding-bottom:calc(20px + var(--safe-bottom));}
+.modal-overlay.show .modal{transform:translateY(0);}
+.modal .modal-handle{width:36px;height:4px;border-radius:2px;background:var(--gray4);margin:0 auto 16px;}
+.modal .modal-title{font-size:20px;font-weight:700;color:var(--black);margin-bottom:16px;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-header .title{font-size:18px;font-weight:600;color:var(--black);}
+.modal-header .close-btn,.modal .close-btn{background:none;border:none;font-size:24px;color:var(--text2);cursor:pointer;padding:4px 8px;line-height:1;}
+.modal-body{margin-bottom:16px;}
+.modal-footer{display:flex;gap:10px;}
+.modal-footer .btn{flex:1;}
+
+/* Chat Styles */
+.chat-page-content{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch;background:var(--bg);}
+.chat-messages::-webkit-scrollbar{display:none;}
+.msg-row{display:flex;margin-bottom:12px;gap:8px;animation:msgIn .3s ease-out;}
+.msg-row.self{flex-direction:row-reverse;}
+.msg-avatar{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;align-self:flex-start;}
+.msg-bubble{max-width:70%;padding:10px 14px;border-radius:18px;font-size:var(--chat-font-size);line-height:1.5;word-break:break-word;position:relative;}
+.msg-row:not(.self) .msg-bubble{background:var(--card);color:var(--black);border-top-left-radius:6px;}
+.msg-row.self .msg-bubble{background:var(--primary);color:#fff;border-top-right-radius:6px;}
+.msg-row.self .msg-bubble::after{content:'';position:absolute;right:-6px;top:10px;border:6px solid transparent;border-left-color:var(--primary);}
+.msg-row:not(.self) .msg-bubble::after{content:'';position:absolute;left:-6px;top:10px;border:6px solid transparent;border-right-color:var(--card);}
+/* Full-width mode */
+.chat-full .msg-bubble{max-width:100%;border-radius:12px;}
+.chat-full .msg-row.self .msg-bubble,.chat-full .msg-row:not(.self) .msg-bubble{border-radius:12px;}
+.chat-full .msg-row.self .msg-bubble::after,.chat-full .msg-row:not(.self) .msg-bubble::after{display:none;}
+.msg-name{font-size:12px;color:var(--primary);margin-bottom:2px;font-weight:500;}
+.msg-actions{display:flex;align-items:center;gap:6px;margin-top:6px;opacity:.8;}
+.msg-row.self .msg-actions{justify-content:flex-end;}
+.msg-actions button{background:none;border:none;color:inherit;cursor:pointer;padding:2px;font-size:13px;line-height:1;opacity:.7;display:inline-flex;align-items:center;gap:2px;}
+.msg-actions button:active{opacity:1;}
+.msg-actions .action-label{font-size:11px;}
+@keyframes msgIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* Chat Input */
+.chat-input-bar{display:flex;align-items:flex-end;gap:8px;padding:8px 12px;padding-bottom:calc(8px + var(--safe-bottom));background:var(--bg);border-top:0.5px solid var(--gray5);flex-shrink:0;}
+.chat-input-bar textarea{flex:1;border:0.5px solid var(--gray5);border-radius:20px;padding:10px 16px;font-size:15px;resize:none;min-height:36px;max-height:120px;line-height:1.4;outline:none;background:var(--card);font-family:inherit;}
+.chat-input-bar textarea:focus{border-color:var(--primary);}
+.chat-input-bar .send-btn{width:36px;height:36px;border-radius:50%;background:var(--green);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.chat-input-bar .send-btn:active{opacity:.7;}
+.chat-input-bar .send-btn:disabled{background:var(--gray4);cursor:default;}
+
+/* WeChat Moments */
+.moment-item{padding:16px;border-bottom:0.5px solid var(--gray5);animation:fadeIn .3s;background:var(--card);}
+.moment-item .moment-header{display:flex;gap:10px;margin-bottom:10px;}
+.moment-item .moment-avatar{width:40px;height:40px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.moment-item .moment-name{font-size:15px;font-weight:600;color:var(--primary);}
+.moment-item .moment-time{font-size:12px;color:var(--text2);}
+.moment-item .moment-content{font-size:15px;line-height:1.6;color:var(--black);padding-left:50px;}
+.moment-item .moment-actions{display:flex;gap:20px;padding-left:50px;margin-top:8px;}
+.moment-item .moment-actions button{background:none;border:none;color:var(--text2);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;}
+
+/* Moments comments */
+.moment-comments{padding-left:50px;margin-top:6px;}
+.moment-comments .cmt{font-size:13px;color:var(--black);line-height:1.7;padding:2px 0;}
+.moment-comments .cmt .cn{color:var(--primary);font-weight:500;margin-right:4px;}
+.moment-comments .cmt .ct{color:var(--text1);}
+.moment-cmt-input{display:flex;gap:8px;padding:8px 16px 8px 50px;border-top:0.5px solid var(--gray5);background:var(--card);}
+.moment-cmt-input input{flex:1;border:0.5px solid var(--gray4);border-radius:18px;padding:6px 14px;font-size:13px;outline:none;background:var(--bg);}
+.moment-cmt-input input:focus{border-color:var(--primary);}
+.moment-cmt-input button{background:var(--primary);color:#fff;border:none;border-radius:18px;padding:0 14px;font-size:13px;cursor:pointer;}
+.moment-item .moment-name.me{color:#ff2d55;}
+.moment-item .moment-avatar.me{background:linear-gradient(135deg,#ff2d55,#ff9500);}
+.moment-item .moment-content.expanded{max-height:none;}
+
+/* Moments publish modal */
+.mp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.mp-overlay.show{opacity:1;pointer-events:auto;}
+.mp-sheet{background:var(--bg);border-radius:16px 16px 0 0;width:100%;max-width:430px;max-height:90vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .35s cubic-bezier(.25,.1,.25,1);overflow:hidden;}
+.mp-overlay.show .mp-sheet{transform:translateY(0);}
+.mp-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:0.5px solid var(--gray5);flex-shrink:0;}
+.mp-head .t{font-size:16px;font-weight:600;}
+.mp-head .pub{background:var(--primary);color:#fff;border:none;border-radius:16px;padding:5px 16px;font-size:14px;cursor:pointer;}
+.mp-head .pub:disabled{opacity:.4;}
+.mp-head .x{background:none;border:none;font-size:24px;color:var(--text2);cursor:pointer;line-height:1;}
+.mp-body{flex:1;overflow-y:auto;padding:16px;}
+.mp-body textarea{width:100%;min-height:160px;border:none;font-size:16px;line-height:1.6;resize:none;background:transparent;color:var(--black);outline:none;font-family:inherit;}
+
+/* Memo list */
+.memo-list-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);cursor:pointer;border-bottom:0.5px solid var(--gray5);}
+.memo-list-item:active{background:var(--gray5);}
+.memo-list-item .mi-icon{width:36px;height:36px;border-radius:8px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.memo-list-item .mi-info{flex:1;min-width:0;}
+.memo-list-item .mi-title{font-size:16px;font-weight:500;color:var(--black);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.memo-list-item .mi-sub{font-size:12px;color:var(--text2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.memo-list-item .mi-ops{display:flex;gap:4px;flex-shrink:0;}
+.memo-list-item .mi-ops button{width:30px;height:30px;border-radius:8px;border:none;background:rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text1);padding:0;}
+.memo-list-item .mi-ops button.danger{color:#ff3b30;}
+.memo-list-item .mi-ops svg{width:15px;height:15px;}
+.memo-editor-full{width:100%;flex:1;padding:16px;border:none;font-size:16px;line-height:1.6;resize:none;background:var(--card);color:var(--black);outline:none;font-family:inherit;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+/* Todo */
+.todo-list{background:var(--card);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.todo-item{display:flex;align-items:center;padding:14px 16px;gap:12px;border-bottom:0.5px solid var(--gray5);background:var(--card);}
+.todo-item:last-child{border-bottom:none;}
+.todo-check{width:24px;height:24px;border-radius:50%;border:2px solid var(--gray3);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.todo-check.done{background:var(--green);border-color:var(--green);}
+.todo-check.done::after{content:'✓';color:#fff;font-size:14px;font-weight:700;}
+.todo-text{flex:1;font-size:16px;color:var(--black);}
+.todo-text.done{text-decoration:line-through;color:var(--gray3);}
+
+/* Settings */
+.setting-group{background:var(--card);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.setting-item{display:flex;align-items:center;padding:14px 16px;gap:12px;min-height:44px;}
+.setting-item:not(:last-child){border-bottom:0.5px solid var(--gray5);}
+.setting-item .setting-label{flex:1;font-size:16px;color:var(--black);}
+.setting-item .setting-value{font-size:15px;color:var(--text2);}
+
+/* Toggle */
+.toggle{width:51px;height:31px;border-radius:16px;background:var(--gray5);position:relative;cursor:pointer;transition:background .3s;flex-shrink:0;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .3s;}
+.toggle.on::after{transform:translateX(20px);}
+
+/* Toast */
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.75);color:#fff;padding:12px 24px;border-radius:10px;font-size:15px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+
+/* Loading */
+.loading-dots{display:flex;gap:4px;padding:8px 0;}
+.loading-dots span{width:8px;height:8px;border-radius:50%;background:var(--gray3);animation:dotPulse 1.2s infinite;}
+.loading-dots span:nth-child(2){animation-delay:.2s;}
+.loading-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes dotPulse{0%,80%,100%{opacity:.3;transform:scale(.8);}40%{opacity:1;transform:scale(1);}}
+
+/* Segment Control */
+.segment{display:flex;background:var(--gray5);border-radius:8px;padding:2px;}
+.segment-item{flex:1;text-align:center;padding:8px 12px;border-radius:7px;font-size:14px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .2s;}
+.segment-item.active{background:var(--card);color:var(--black);box-shadow:0 1px 3px rgba(0,0,0,.1);}
+
+/* AI action bar */
+.ai-action-bar{display:flex;gap:8px;padding:12px 16px;background:var(--card);border-bottom:0.5px solid var(--gray5);flex-wrap:wrap;}
+.ai-action-bar button{border:1px solid var(--gray5);border-radius:16px;background:var(--bg);color:var(--primary);font-size:13px;padding:6px 14px;cursor:pointer;transition:all .15s;}
+.ai-action-bar button:active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+/* Group members bar */
+.group-members{display:flex;gap:8px;padding:8px 16px;overflow-x:auto;background:var(--card);border-bottom:0.5px solid var(--gray5);flex-shrink:0;align-items:center;}
+.group-members::-webkit-scrollbar{display:none;}
+.group-member{min-width:36px;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;border:2px solid #fff;flex-shrink:0;position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s;}
+.group-member:active{transform:scale(0.9);}
+.group-member.muted{opacity:0.45;filter:grayscale(0.8);}
+.group-member .mute-badge{position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:50%;background:#ff3b30;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;}
+.group-member .at-dot{position:absolute;left:-2px;top:-2px;width:10px;height:10px;border-radius:50%;background:var(--primary);border:1.5px solid #fff;}
+.group-manage-btn{background:rgba(0,0,0,0.05);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text1);flex-shrink:0;font-size:18px;}
+
+/* Group manage sheet */
+.gm-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.4);z-index:300;opacity:0;pointer-events:none;transition:opacity .25s;}
+.gm-overlay.show{opacity:1;pointer-events:auto;}
+.gm-sheet{position:absolute;left:0;right:0;bottom:0;background:var(--bg);z-index:301;max-height:70%;display:flex;flex-direction:column;border-radius:16px 16px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.25,.1,.25,1);overflow:hidden;}
+.gm-sheet.show{transform:translateY(0);}
+.gm-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:0.5px solid var(--gray5);flex-shrink:0;}
+.gm-header .title{font-size:16px;font-weight:600;}
+.gm-header .close{background:none;border:none;font-size:22px;color:var(--text2);cursor:pointer;padding:4px 8px;line-height:1;}
+.gm-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 0;}
+.gm-row{display:flex;align-items:center;gap:10px;padding:10px 16px;}
+.gm-row .avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;flex-shrink:0;}
+.gm-row .info{flex:1;min-width:0;}
+.gm-row .name{font-size:15px;font-weight:500;color:var(--black);}
+.gm-row .sub{font-size:12px;color:var(--text2);margin-top:2px;}
+.gm-row .ops{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.gm-op{width:32px;height:32px;border-radius:8px;border:none;background:rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text1);padding:0;}
+.gm-op:active{background:rgba(0,0,0,0.12);}
+.gm-op.danger{color:#ff3b30;}
+.gm-op svg{width:16px;height:16px;}
+.gm-row.muted .name{color:var(--text2);}
+
+/* @ mention picker */
+.at-picker{position:absolute;left:0;right:0;bottom:0;background:var(--card);z-index:250;border-top:0.5px solid var(--gray5);max-height:220px;overflow-y:auto;transform:translateY(100%);transition:transform .2s;}
+.at-picker.show{transform:translateY(0);}
+.at-picker-header{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:0.5px solid var(--gray5);position:sticky;top:0;background:var(--card);}
+.at-picker-header .t{font-size:13px;color:var(--text2);}
+.at-picker-header .x{background:none;border:none;font-size:18px;color:var(--text2);cursor:pointer;}
+.at-item{display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;}
+.at-item:active{background:rgba(0,0,0,0.05);}
+.at-item .avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;flex-shrink:0;}
+.at-item .name{font-size:15px;color:var(--black);}
+
+/* Avatar image support */
+.avatar-img{width:100%;height:100%;border-radius:inherit;object-fit:cover;display:block;}
+
+/* Group chat list */
+.gc-list-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);cursor:pointer;position:relative;border-bottom:0.5px solid var(--gray5);}
+.gc-list-item:active{background:var(--gray5);}
+.gc-list-item .gc-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex-shrink:0;overflow:hidden;}
+.gc-list-item .gc-info{flex:1;min-width:0;}
+.gc-list-item .gc-name{font-size:16px;font-weight:500;color:var(--black);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gc-list-item .gc-sub{font-size:13px;color:var(--text2);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gc-list-item .gc-actions{display:flex;gap:4px;flex-shrink:0;}
+.gc-act-btn{width:32px;height:32px;border-radius:8px;border:none;background:rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text1);padding:0;}
+.gc-act-btn:active{background:rgba(0,0,0,0.12);}
+.gc-act-btn.danger{color:#ff3b30;}
+.gc-act-btn svg{width:16px;height:16px;}
+
+/* Send/stop toggle button */
+.send-btn.stop{background:#ff3b30;}
+.send-btn.stop svg{width:18px;height:18px;}
+
+/* User identity cards */
+.uprofile-card{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border-radius:12px;margin-bottom:8px;border:2px solid transparent;cursor:pointer;}
+.uprofile-card.active{border-color:var(--primary);}
+.uprofile-card .pa{width:44px;height:44px;border-radius:50%;background:var(--gray5);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0;}
+.uprofile-card .pi{flex:1;min-width:0;}
+.uprofile-card .pn{font-size:15px;font-weight:500;color:var(--black);}
+.uprofile-card .pd{font-size:12px;color:var(--text2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.uprofile-card .pops{display:flex;gap:4px;flex-shrink:0;}
+.uprofile-card .pops button{width:28px;height:28px;border-radius:8px;border:none;background:rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text1);padding:0;}
+.uprofile-card .pops button.danger{color:#ff3b30;}
+.uprofile-card .pops svg{width:14px;height:14px;}
+.avatar-upload{width:64px;height:64px;border-radius:50%;background:var(--gray5);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;overflow:hidden;position:relative;border:2px dashed var(--gray4);flex-shrink:0;}
+.avatar-upload img{width:100%;height:100%;object-fit:cover;}
+.avatar-upload .hint{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--text2);}
+
+/* Session Panel */
+.session-panel{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:200;display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.25,.1,.25,1);transform:translateX(-100%);}
+.session-panel.show{transform:translateX(0);}
+.session-panel-header{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--bg);border-bottom:0.5px solid var(--gray5);position:relative;z-index:10;flex-shrink:0;}
+.session-panel-header .back-btn{background:none;border:none;font-size:17px;color:var(--primary);cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 0;}
+.session-panel-header .title{position:absolute;left:50%;transform:translateX(-50%);font-size:17px;font-weight:600;color:var(--black);}
+.session-panel-header .actions{display:flex;gap:12px;align-items:center;}
+.session-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px;padding-bottom:calc(80px + var(--safe-bottom));}
+.session-list::-webkit-scrollbar{display:none;}
+.session-panel-footer{position:absolute;bottom:0;left:0;right:0;padding:12px 16px;padding-bottom:calc(12px + var(--safe-bottom));background:var(--bg);border-top:0.5px solid var(--gray5);}
+
+/* Session Item with swipe */
+.session-item-wrap{position:relative;overflow:hidden;border-radius:var(--radius);margin-bottom:10px;background:var(--card);}
+.session-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);position:relative;z-index:2;transition:transform .25s ease-out;cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:pan-y;}
+.session-item.active{background:#e5e5ea;}
+.session-item:active{opacity:.9;}
+.session-item .avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;background:var(--green);color:#fff;}
+.session-item .info{flex:1;min-width:0;}
+.session-item .title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.session-item .title{font-size:16px;font-weight:500;color:var(--black);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.session-item .time{font-size:12px;color:var(--text2);flex-shrink:0;margin-left:8px;}
+.session-item .preview{font-size:13px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.session-actions{position:absolute;top:0;right:0;bottom:0;display:flex;z-index:1;}
+.session-actions button{height:100%;border:none;padding:0 20px;font-size:15px;font-weight:600;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.session-actions .rename{background:var(--primary);}
+.session-actions .delete{background:var(--red);}
+
+/* Memory Panel */
+.memory-panel{position:absolute;top:0;right:0;width:100%;height:100%;background:var(--bg);z-index:210;display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.25,.1,.25,1);transform:translateX(100%);}
+.memory-panel.show{transform:translateX(0);}
+.memory-panel-header{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--bg);border-bottom:0.5px solid var(--gray5);position:relative;z-index:10;flex-shrink:0;}
+.memory-panel-header .back-btn{background:none;border:none;font-size:17px;color:var(--primary);cursor:pointer;display:flex;align-items:center;gap:4px;padding:4px 0;}
+.memory-panel-header .title{position:absolute;left:50%;transform:translateX(-50%);font-size:17px;font-weight:600;color:var(--black);}
+.memory-panel-header .actions{display:flex;gap:12px;align-items:center;}
+.memory-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px;padding-bottom:calc(80px + var(--safe-bottom));}
+.memory-list::-webkit-scrollbar{display:none;}
+.memory-panel-footer{position:absolute;bottom:0;left:0;right:0;padding:12px 16px;padding-bottom:calc(12px + var(--safe-bottom));background:var(--bg);border-top:0.5px solid var(--gray5);}
+.memory-item{background:var(--card);border-radius:var(--radius);padding:12px 16px;margin-bottom:10px;position:relative;}
+.memory-item .content{font-size:15px;color:var(--black);line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+.memory-item .actions{display:flex;justify-content:flex-end;gap:12px;margin-top:8px;}
+.memory-item .actions button{background:none;border:none;color:var(--primary);font-size:14px;cursor:pointer;padding:2px;}
+.memory-edit textarea{width:100%;min-height:80px;padding:10px;border:0.5px solid var(--gray5);border-radius:8px;font-size:15px;background:var(--bg);font-family:inherit;resize:vertical;}
+
+/* Hamburger button */
+.hamburger-btn{background:none;border:none;color:var(--black);cursor:pointer;padding:4px 8px;min-width:36px;display:flex;align-items:center;justify-content:center;}
+.hamburger-btn svg{width:24px;height:24px;}
+
+/* Icon buttons in nav */
+.icon-btn{background:none;border:none;color:var(--primary);cursor:pointer;padding:4px;font-size:18px;display:flex;align-items:center;justify-content:center;}
+
+/* Empty state */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text2);}
+.empty-state .icon{font-size:48px;margin-bottom:16px;}
+.empty-state p{font-size:15px;}
+.empty-state .tip{font-size:13px;margin-top:8px;}
+
+/* Memo textarea */
+.memo-editor{width:100%;min-height:300px;padding:16px;border:none;font-size:16px;line-height:1.6;resize:none;background:var(--card);color:var(--black);outline:none;font-family:inherit;}
+
+/* WorldBook textarea */
+.worldbook-editor{width:100%;min-height:300px;padding:16px;border:none;font-size:16px;line-height:1.6;resize:none;background:var(--card);color:var(--black);outline:none;font-family:inherit;}
+</style>
+</head>
+<body>
+
+<div id="phone">
+  <!-- Status Bar -->
+  <div class="status-bar" id="statusBar">
+    <span class="time" id="statusTime">9:41</span>
+    <div class="icons">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+    </div>
+  </div>
+
+  <!-- Screen -->
+  <div class="screen" id="screen">
+    <!-- Home Page -->
+    <div class="page active" id="homePage">
+      <div class="page-content home">
+        <div class="home-screen">
+          <div class="home-grid">
+            <div class="app-icon" onclick="openApp('contacts')"><div class="icon" style="background:linear-gradient(135deg,#5856d6,#af52de)">👤</div><span class="label">通讯录</span></div>
+            <div class="app-icon" onclick="openApp('wechat')"><div class="icon" style="background:linear-gradient(135deg,#07c160,#34d058)">💬</div><span class="label">V信</span></div>
+            <div class="app-icon" onclick="openApp('worldbook')"><div class="icon" style="background:linear-gradient(135deg,#ff9500,#ffcc00)">📖</div><span class="label">世界书</span></div>
+            <div class="app-icon" onclick="openApp('groupchat')"><div class="icon" style="background:linear-gradient(135deg,#007aff,#5ac8fa)">👥</div><span class="label">群聊</span></div>
+            <div class="app-icon" onclick="openApp('settings')"><div class="icon" style="background:linear-gradient(135deg,#8e8e93,#636366)">⚙️</div><span class="label">设置</span></div>
+            <div class="app-icon" onclick="openApp('memo')"><div class="icon" style="background:linear-gradient(135deg,#ffcc02,#ff9500)">📝</div><span class="label">备忘录</span></div>
+            <div class="app-icon" onclick="openApp('todo')"><div class="icon" style="background:linear-gradient(135deg,#34c759,#30d158)">✅</div><span class="label">待办</span></div>
+            <div class="app-icon" onclick="openApp('moments')"><div class="icon" style="background:linear-gradient(135deg,#ff2d55,#ff375f)">📷</div><span class="label">朋友圈</span></div>
+          </div>
+          <div class="page-dots"><div class="dot active"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contacts Page -->
+    <div class="page hidden" id="contactsPage">
+      <div class="nav-bar">
+        <button class="back-btn" onclick="closeApp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>返回</button>
+        <span class="title">通讯录</span>
+        <div class="actions"><button onclick="showAddContact()">+</button></div>
+      </div>
+      <div class="page-content home" id="contactsList"></div>
+    </div>
+
+    <!-- WeChat Contact List Page -->
+    <div class="page hidden" id="wechatListPage">
+      <div class="nav-bar">
+        <button class="back-btn" onclick="closeApp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>返回</button>
+        <span class="title">V信</span>
+        <div class="actions"></div>
+      </div>
+      <div class="page-content home" id="wechatContactList"></div>
+    </div>
+
+    <!-- WeChat Chat Page -->
+    <div class="page hidden" id="wechatPage">
+      <div class="nav-bar">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <button class="back-btn" onclick="closeWechatChat()" style="padding-right:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>返回</button>
+          <button class="hamburger-btn" onclick="openSessionPanel()" title="会话列表"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        </div>
+        <span class="title" style="display:flex;align-items:center;gap:5px;">
+          <span id="wechatChatTitle">V信</span>
+          <button class="icon-btn fix-input-btn" onclick="fixInputBox()" title="修复输入框" aria-label="修复输入框"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button>
+        </span>
+        <div class="actions">
+          <button class="icon-btn" onclick="openMemoryPanel()" title="会话记忆"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg></button>
+          <button class="icon-btn" onclick="clearCurrentChat()" title="清空会话"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+          <button onclick="toggleChatMode()" id="chatModeBtn" title="切换显示模式">📲</button>
+        </div>
+      </div>
+      <div class="chat-page-content" id="wechatChatContainer">
+        <div class="chat-messages" id="wechatMessages"></div>
+        <div class="chat-input-bar">
+          <textarea id="wechatInput" rows="1" placeholder="输入消息..." oninput="autoResize(this)"></textarea>
+          <button class="send-btn" onclick="sendWechatMsg()">➤</button>
+        </div>
+      </div>
+      <!-- Memory Panel -->
+      <div class="memory-panel" id="memoryPanel">
+        <div class="memory-panel-header">
+          <button class="back-btn" onclick="closeMemoryPanel()">关闭</button>
+          <span class="title">会话记忆</span>
+          <div class="actions"></div>
+        </div>
+        <div class="memory-list" id="memoryList"></div>
+        <div class="memory-panel-footer">
+          <button class="btn btn-primary btn-full" onclick="addMemory()">+ 新增记忆</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session List Panel -->
+    <div class="session-panel" id="sessionPanel">
+      <div class="session-panel-header">
+        <button class="back-btn" onclick="closeSessionPanel()">关闭</button>
+        <span class="title">会话列表</span>
+        <div class="actions"></div>
+      </div>
+      <div class="session-list" id="sessionList"></div>
+      <div class="session-panel-footer">
+        <button class="btn btn-primary btn-full" onclick="createNewSession()">+ 新会话</button>
+      </div>
+    </div>
+
+    <!-- World Book Page -->
+    <div class="page hidden" id="worldbookPage">
+      <div class="nav-bar">
+        <button class="back-btn" onclick="closeApp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>返回</button>
+        <span class="title">世界书</span>
+        <div class="actions"><button onclick="saveWorldBook()">保存</button></div>
+      </div>
+      <div class="page-content">
+        <div class="input-group" style="padding:16px 16px 0;">
+          <label>世界名称</label>
+          <input id="worldName" placeholder="为这个世界起个名字...">
+        </div>
+        <textarea id="worldDesc" class="worldbook-editor" placeholder="描述这个世界的一切...&#10;&#10;例如：这是一个未来的赛博朋克城市，人类与AI共存..."></textarea>
+      </div>
+    </div>
+
+    <!-- Group Chat List Page -->
+    <div class="page hidden" id="groupListPage">
+      <div class="nav-bar">
+        <button class="back-btn" onclick="goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>返回</button>
+        <span class="title">群聊</span>
+        <div class="actions"><button class="icon-btn" onclick="openNewGroupSetup()" title="新建群聊"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      </div>
+      <div class="page-content home" id="groupListContainer"></div>
+    </div>
+
+    <!-- Group Chat Setup Page -->
+    <div class="page hidden" id="groupSetupPage">
+      <div class="nav-bar">
+        <button class="back-btn" onclick="backToGroupList()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>返回</button>
+        <span class="title" id="groupSetupTitle">新建群聊</span>
+        <div class="actions"><button onclick="saveGroupSetup()">保存</button></div>
+      </div>
+      <div class="page-content home">
+        <div class="input-group">
+          <label>群聊名称</label>
+          <input id="groupNameInput" placeholder="输入群名...">
+        </div>
+        <div class="input-group">
+          <label>群聊主题 / 定义</label>
+          <textarea id="groupTopicInput" rows="3" placeholder="例如：这是四个老友周末约饭的群，大家随性吐槽、互相调侃，气氛轻松热烈..."></textarea>
+        </div>
+        <div class="input-group">
+          <label>我的身份（群内昵称）</label>
+          <input id="groupUserIdentityInput" placeholder="例如：小明 / 阿强">
+        </div>
+        <div class="input-group">
+          <label>我的身份说明（可选）</label>
+          <textarea id="groupUserDescInput" rows="2" placeholder="例如：群里最活跃的气氛组，爱开玩笑..."></textarea>
+        </div>
+        <div class="input-group">
+          <label>选择群成员（至少2人）</label>
+        </div>
+        <div id="groupMemberSelect"></div>
+      </div>
+    </div>
+
+    <!-- Group Chat Page -->
+    <div class="page hidden" id="groupchatPage">
+      <div class="nav-bar">
+        <button class="back-btn" onclick="closeGroupChat()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>返回</button>
+        <span class="title" style="display:flex;align-items:center;gap:5px;">
+          <span id="groupchatTitle">群聊</span>
+          <button class="icon-btn fix-input-btn" onclick="fixGroupInputBox()" title="修复输入框" aria-label="修复输入框"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button>
+        </span>
+        <div class="actions">
+          <button onclick="forceNextMsg()" id="nextBtn" title="下一句：强制AI继续对话" style="font-size:12px;height:28px;width:auto;padding:0 10px;border-radius:8px;background:var(--primary);color:#fff;border:none;cursor:pointer;">下一句</button>
+          <button onclick="openGroupManage()" title="成员管理" style="background:none;border:none;color:var(--primary);cursor:pointer;padding:4px;font-size:18px;">⚙</button>
+        </div>
+      </div>
+      <div class="group-members" id="groupMembersBar"></div>
+      <div class="chat-page-content" id="groupchatContainer">
+        <div class="chat-messages" id="groupMessages"></div>
+        <div class="chat-input-bar">
+          <textarea id="groupInput" rows="1" placeholder="输入消息（@点名 或 点上方头像）..." oninput="autoResize(this)"></textarea>
+          <button class="send-btn" id="groupSendBtn" onclick="onGroupSendClick()" title="发送"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg></button>
+        </div>
+        <div class="at-picker" id="groupAtPicker">
+          <div class="at-picker-header"><span class="t">@ 选择成员</span><button class="x" onclick="closeGroupAtPicker()">×</button></div>
+          <div id="groupAtList"></div>
+        </div>
+      </div>
+      <!-- Group manage sheet -->
+      <div class="gm-overlay" id="gmOverlay" onclick="closeGroupManage()"></div>
+      <div class="gm-sheet" id="gmSheet">
+        <div class="gm-header"><span class="title">成员管理</span><button class="close" onclick="closeGroupManage()">×</button></div>
+        <div class="gm-list" id="gmList"></div>
+      </div>
+    </div>
+
+    <!-- Moments Page -->
+    <div class="page hidden" id="momentsPage">
+      <div class="nav-bar">
+        <button class="back-btn" onclick="goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>返回</button>
+        <span class="title">朋友圈</span>
+        <div class="actions">
+          <button class="icon-btn" onclick="openMomentPublish()" title="发朋友圈"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
+          <button class="icon-btn" onclick="refreshMoments()" title="刷新" style="margin-left:2px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+        </div>
+      </div>
+      <div class="page-content" id="momentsList"></div>
+    </div>
+
+    <!-- Moments Publish Overlay -->
+    <div class="mp-overlay" id="momentPublishOverlay" onclick="if(event.target===this)closeMomentPublish()">
+      <div class="mp-sheet">
+        <div class="mp-head">
+          <button class="x" onclick="closeMomentPublish()">×</button>
+          <span class="t">发表朋友圈</span>
+          <button class="pub" id="momentPubBtn" onclick="publishMoment()">发表</button>
+        </div>
+        <div class="mp-body">
+          <textarea id="momentPubInput" placeholder="这一刻的想法..." oninput="document.getElementById('momentPubBtn').disabled = !this.value.trim()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div class="page hidden" id="settingsPage">
+      <div class="nav-bar">
+        <button class="back-btn" onclick="closeApp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>返回</button>
+        <span class="title">设置</span>
+        <div class="actions"></div>
+      </div>
+      <div class="page-content home">
+        <div style="font-size:13px;color:var(--text2);padding:8px 4px;margin-top:4px;">AI 接入设置</div>
+        <div class="setting-group">
+          <div class="setting-item">
+            <span class="setting-label">选择平台</span>
+            <select id="aiPlatform" onchange="onPlatformChange()" style="width:140px;padding:8px;border:0.5px solid var(--gray5);border-radius:8px;font-size:14px;background:var(--bg);">
+              <option value="">请选择</option>
+              <option value="deepseek">DeepSeek</option>
+              <option value="siliconflow">硅基流动</option>
+              <option value="custom">自定义平台</option>
+            </select>
+          </div>
+          <div class="setting-item" id="customUrlRow" style="display:none;">
+            <span class="setting-label">API URL</span>
+            <input id="aiUrl" placeholder="https://api.example.com" style="width:180px;padding:8px;border:0.5px solid var(--gray5);border-radius:8px;font-size:13px;background:var(--bg);">
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">API Key</span>
+            <input id="aiKey" type="password" placeholder="输入Key" style="width:180px;padding:8px;border:0.5px solid var(--gray5);border-radius:8px;font-size:13px;background:var(--bg);">
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text2);padding:8px 4px;">模型选择</div>
+        <div class="setting-group">
+          <div class="setting-item" style="padding:8px 16px;">
+            <div class="segment" id="modelSelectMode" style="width:100%;">
+              <div class="segment-item active" onclick="switchModelMode('fetch')">自动获取</div>
+              <div class="segment-item" onclick="switchModelMode('manual')">手动输入</div>
+            </div>
+          </div>
+          <div class="setting-item" id="modelFetchRow">
+            <span class="setting-label">模型</span>
+            <div style="flex:1;display:flex;gap:8px;">
+              <button class="btn btn-sm btn-primary" onclick="fetchModels()" id="fetchModelsBtn" style="font-size:13px;padding:6px 12px;white-space:nowrap;">获取模型</button>
+              <select id="aiModel" style="flex:1;padding:8px;border:0.5px solid var(--gray5);border-radius:8px;font-size:14px;background:var(--bg);"></select>
+            </div>
+          </div>
+          <div class="setting-item" id="modelManualRow" style="display:none;">
+            <span class="setting-label">模型名称</span>
+            <input id="aiModelManual" placeholder="例如: deepseek-chat" style="width:180px;padding:8px;border:0.5px solid var(--gray5);border-radius:8px;font-size:13px;background:var(--bg);">
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text2);padding:8px 4px;">对话设置</div>
+        <div class="setting-group">
+          <div class="setting-item">
+            <span class="setting-label">聊天上下文记忆条数</span>
+            <input id="aiContextLimit" type="number" min="1" placeholder="不限制" style="width:100px;padding:8px;border:0.5px solid var(--gray5);border-radius:8px;font-size:14px;background:var(--bg);text-align:right;">
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">输出 Token 限制</span>
+            <input id="aiOutputTokenLimit" type="number" min="1" placeholder="不限制" style="width:100px;padding:8px;border:0.5px solid var(--gray5);border-radius:8px;font-size:14px;background:var(--bg);text-align:right;">
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">对话字号 <span id="fontSizeValue" style="color:var(--text2);font-size:13px;">17px</span></span>
+            <input id="aiFontSize" type="range" min="14" max="24" value="17" style="width:140px;" oninput="document.getElementById('fontSizeValue').textContent=this.value+'px'">
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text2);padding:8px 4px;">用户身份</div>
+        <div class="setting-group" style="padding:8px 12px;">
+          <div id="userProfileList"></div>
+          <button class="btn btn-gray btn-full" style="margin-top:8px;" onclick="addUserProfile()">+ 新增面具</button>
+        </div>
+        <div style="font-size:13px;color:var(--text2);padding:8px 4px;">其他设置</div>
+        <div class="setting-group">
+          <div class="setting-item">
+            <span class="setting-label">AI感知北京时间</span>
+            <div class="toggle on" id="timeAwareToggle" onclick="toggleTimeAware(this)"></div>
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">显示状态栏</span>
+            <div class="toggle" id="statusBarToggle" onclick="toggleStatusBar(this)"></div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" style="margin-top:24px;" onclick="saveSettings()">保存设置</button>
+      </div>
+    </div>
+
+    <!-- Memo List Page -->
+    <div class="page hidden" id="memoPage">
+      <div class="nav-bar">
+        <button class="back-btn" onclick="goHome()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>返回</button>
+        <span class="title">备忘录</span>
+        <div class="actions"><button class="icon-btn" onclick="openMemoEditor(null)" title="新建备忘录"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      </div>
+      <div class="page-content" id="memoList"></div>
+    </div>
+
+    <!-- Memo Editor Page (full-screen) -->
+    <div class="page hidden" id="memoEditorPage">
+      <div class="nav-bar">
+        <button class="back-btn" onclick="backToMemoList()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>返回</button>
+        <span class="title" id="memoEditorTitle">新建备忘录</span>
+        <div class="actions">
+          <button class="icon-btn" onclick="aiMemoAction('polish')" title="润色" style="font-size:14px;">✨</button>
+          <button class="icon-btn" onclick="aiMemoAction('expand')" title="扩写" style="font-size:14px;">📝</button>
+          <button class="icon-btn" onclick="aiMemoAction('shorten')" title="缩写" style="font-size:14px;">✂️</button>
+          <button onclick="saveCurrentMemo()" style="font-size:14px;">完成</button>
+        </div>
+      </div>
+      <div class="chat-page-content" style="display:flex;flex-direction:column;">
+        <textarea id="memoContent" class="memo-editor-full" placeholder="开始记录这一刻的想法..."></textarea>
+      </div>
+    </div>
+
+    <!-- Todo Page -->
+    <div class="page hidden" id="todoPage">
+      <div class="nav-bar">
+        <button class="back-btn" onclick="closeApp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>返回</button>
+        <span class="title">待办</span>
+        <div class="actions"><button onclick="showAddTodo()">+</button></div>
+      </div>
+      <div class="page-content home" id="todoList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Overlay -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modalContent" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== State ==========
+const STORAGE_KEY = 'ai_phone_sim_v2';
+let state = {
+  contacts: [],
+  worldBook: { name: '', desc: '' },
+  moments: [],
+  memos: [],
+  todos: [],
+  chatSessions: {},
+  groupChats: [],
+  userProfiles: [],
+  currentUserProfileId: null,
+  settings: {
+    platform: '', url: '', key: '', model: '', modelManual: '', modelMode: 'fetch',
+    timeAware: true, contextLimit: '', outputTokenLimit: '', fontSize: 17,
+    statusBarVisible: false
+  }
+};
+
+let currentChat = null;
+let currentGroupChat = null;
+let editingGroupId = null;
+let groupAbortController = null;
+let groupIsGenerating = false;
+let chatMode = 'normal';
+let pageStack = ['homePage'];
+let groupSelectedMembers = new Set();
+
+// ========== Persistence ==========
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state = { ...state, ...parsed };
+      if (!state.settings) state.settings = { platform: '', url: '', key: '', model: '', modelManual: '', modelMode: 'fetch', timeAware: true, contextLimit: '', outputTokenLimit: '', fontSize: 17 };
+      if (state.settings.contextLimit === undefined) state.settings.contextLimit = '';
+      if (state.settings.outputTokenLimit === undefined) state.settings.outputTokenLimit = '';
+      if (state.settings.fontSize === undefined) state.settings.fontSize = 17;
+      if (state.settings.statusBarVisible === undefined) state.settings.statusBarVisible = false;
+      if (!state.groupChats) state.groupChats = [];
+      if (!state.userProfiles) state.userProfiles = [];
+      if (state.currentUserProfileId === undefined) state.currentUserProfileId = null;
+      if (!state.contacts) state.contacts = [];
+      state.contacts.forEach(c => { if (c.avatar === undefined) c.avatar = ''; });
+      // migrate old single-string memo to array
+      if (typeof state.memos === 'string') {
+        if (state.memos.trim()) state.memos = [{ id: Date.now(), title: state.memos.slice(0, 20), content: state.memos, updatedAt: Date.now() }];
+        else state.memos = [];
+      }
+      // ensure moment comments array
+      state.moments.forEach(m => { if (!m.comments) m.comments = []; if (m.isUser === undefined) m.isUser = false; });
+    }
+  } catch(e) { console.error('Load error:', e); }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e) { console.error('Save error:', e); }
+}
+
+// ========== Time ==========
+function updateStatusTime() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2, '0');
+  const m = now.getMinutes().toString().padStart(2, '0');
+  document.getElementById('statusTime').textContent = `${h}:${m}`;
+}
+
+function getBeijingTime() {
+  const now = new Date();
+  const date = now.toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const weekday = ['日', '一', '二', '三', '四', '五', '六'][now.getDay()];
+  const time = now.toLocaleTimeString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return `${date} 星期${weekday} ${time}（北京时间）`;
+}
+
+// ========== Toast ==========
+function showToast(msg, duration = 1500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ========== Navigation ==========
+function openApp(appId) {
+  const pageMap = {
+    contacts: 'contactsPage', wechat: 'wechatListPage', worldbook: 'worldbookPage',
+    groupchat: 'groupListPage', moments: 'momentsPage', settings: 'settingsPage',
+    memo: 'memoPage', todo: 'todoPage'
+  };
+  const pageId = pageMap[appId];
+  if (!pageId) return;
+
+  if (appId === 'contacts') renderContacts();
+  if (appId === 'wechat') renderWechatContacts();
+  if (appId === 'worldbook') loadWorldBook();
+  if (appId === 'groupchat') renderGroupList();
+  if (appId === 'moments') renderMoments();
+  if (appId === 'settings') loadSettingsUI();
+  if (appId === 'memo') renderMemoList();
+  if (appId === 'todo') renderTodos();
+
+  showPage(pageId);
+}
+
+function closeApp() {
+  if (pageStack.length > 1) {
+    pageStack.pop();
+    const prevId = pageStack[pageStack.length - 1];
+    navigateTo(prevId, true);
+  }
+}
+
+// 直接返回首页并重置页面栈
+function goHome() {
+  pageStack = ['homePage'];
+  navigateTo('homePage', true);
+}
+
+function showPage(pageId) {
+  pageStack.push(pageId);
+  navigateTo(pageId, false);
+}
+
+function navigateTo(pageId, isBack) {
+  const pages = document.querySelectorAll('.screen > .page');
+  const target = document.getElementById(pageId);
+  if (!target) return;
+
+  pages.forEach(p => {
+    if (p === target) {
+      p.classList.remove('hidden', 'hidden-left');
+      p.classList.add('active');
+    } else {
+      p.classList.remove('active');
+      if (isBack) {
+        p.classList.add('hidden');
+        p.classList.remove('hidden-left');
+      } else {
+        if (p.classList.contains('active') || p.classList.contains('hidden-left')) {
+          p.classList.remove('hidden');
+          p.classList.add('hidden-left');
+        } else {
+          p.classList.add('hidden');
+          p.classList.remove('hidden-left');
+        }
+      }
+    }
+  });
+}
+
+// ========== Modal ==========
+function showModal(html) {
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+// ========== AI API ==========
+function getAIConfig() {
+  const s = state.settings;
+  let baseUrl = s.url || '';
+  const platform = s.platform;
+
+  if (platform === 'deepseek') baseUrl = 'https://api.deepseek.com';
+  else if (platform === 'siliconflow') baseUrl = 'https://api.siliconflow.cn';
+  else if (platform === 'custom') baseUrl = s.url || '';
+
+  const model = s.modelMode === 'manual' ? s.modelManual : s.model;
+  return { baseUrl, key: s.key, model: model || 'deepseek-chat', platform };
+}
+
+async function callAI(messages, systemPrompt = '', options = {}) {
+  const config = getAIConfig();
+  if (!config.key || !config.baseUrl) {
+    showToast('请先在设置中配置AI平台、URL和Key');
+    return null;
+  }
+
+  let sysMsgs = [];
+  if (state.settings.timeAware) {
+    sysMsgs.push({ role: 'system', content: `当前时间信息：${getBeijingTime()}` });
+  }
+  if (systemPrompt) {
+    sysMsgs.push({ role: 'system', content: systemPrompt });
+  }
+  let contextMsgs = messages;
+  const ctxLimit = state.settings.contextLimit;
+  if (ctxLimit !== '' && ctxLimit > 0) {
+    contextMsgs = messages.slice(-ctxLimit);
+  }
+  const allMsgs = [...sysMsgs, ...contextMsgs];
+
+  const body = {
+    model: config.model,
+    messages: allMsgs,
+    temperature: 0.8
+  };
+  const outLimit = state.settings.outputTokenLimit;
+  if (outLimit !== '' && outLimit > 0) {
+    body.max_tokens = outLimit;
+  }
+
+  try {
+    const fetchOpts = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.key}`
+      },
+      body: JSON.stringify(body)
+    };
+    if (options.signal) fetchOpts.signal = options.signal;
+    const resp = await fetch(`${config.baseUrl}/v1/chat/completions`, fetchOpts);
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      if (!options.signal?.aborted) showToast(`API错误: ${resp.status}`);
+      console.error('AI Error:', errText);
+      return null;
+    }
+
+    const data = await resp.json();
+    return data.choices?.[0]?.message?.content || '';
+  } catch (e) {
+    if (e.name === 'AbortError') return null;
+    showToast('网络请求失败');
+    console.error('AI fetch error:', e);
+    return null;
+  }
+}
+
+// ========== Contacts ==========
+function renderContacts() {
+  const list = document.getElementById('contactsList');
+  if (state.contacts.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">👤</div><p>暂无联系人</p><p class="tip">点击右上角 + 添加</p></div>`;
+    return;
+  }
+  let html = '<div class="list-group">';
+  state.contacts.forEach((c, i) => {
+    const colors = ['#5856d6','#ff2d55','#ff9500','#34c759','#007aff','#af52de','#ff3b30','#5ac8fa'];
+    const color = colors[i % colors.length];
+    const avInner = c.avatar ? `<img class="avatar-img" src="${c.avatar}" alt="">` : escHtml(c.emoji || c.name[0]);
+    html += `<div class="list-item" onclick="showContactDetail(${i})">
+      <div class="avatar" style="background:${color};overflow:hidden;">${avInner}</div>
+      <div class="info">
+        <div class="name">${escHtml(c.name)}</div>
+        <div class="sub">${escHtml(c.role || '')}</div>
+      </div>
+      <span class="arrow">›</span>
+    </div>`;
+  });
+  html += '</div>';
+  list.innerHTML = html;
+}
+
+function showAddContact(editIdx = null) {
+  const c = editIdx !== null ? state.contacts[editIdx] : { name: '', role: '', note: '', emoji: '🤖', avatar: '' };
+  const title = editIdx !== null ? '编辑联系人' : '新增联系人';
+  const emojis = ['🤖','👩','👨','🧑','👴','👵','🧔','👩‍💻','👨‍💻','🧙','🧛','🧝','🧞','👸','🤴','🧸','🐱','🐶','🦊','🐼'];
+  let emojiHtml = emojis.map(e => `<span style="font-size:24px;cursor:pointer;padding:4px;border-radius:8px;${e===c.emoji?'background:var(--gray5);':''}" onclick="selectEmoji(this,'${e}')">${e}</span>`).join('');
+  const avPreview = c.avatar ? `<img src="${c.avatar}" alt="">` : '📷';
+
+  showModal(`
+    <div class="modal-title">${title}</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:14px;">
+      <div class="avatar-upload" id="contactAvatarUpload" onclick="document.getElementById('contactAvatarInput').click()">${avPreview}</div>
+      <div style="font-size:12px;color:var(--text2);">点击上传头像（可选，优先于表情）</div>
+      <input type="file" accept="image/*" id="contactAvatarInput" style="display:none;" onchange="onContactAvatarPick(this)">
+    </div>
+    <div class="input-group"><label>选择头像</label><div style="display:flex;flex-wrap:wrap;gap:4px;" id="emojiPicker">${emojiHtml}</div><input type="hidden" id="contactEmoji" value="${c.emoji}"></div>
+    <div class="input-group"><label>名字</label><input id="contactName" value="${escHtml(c.name)}" placeholder="角色名字"></div>
+    <div class="input-group"><label>角色定义</label><textarea id="contactRole" rows="3" placeholder="描述角色的性格、身份、说话风格...">${escHtml(c.role)}</textarea></div>
+    <div class="input-group"><label>备注</label><input id="contactNote" value="${escHtml(c.note)}" placeholder="备注信息"></div>
+    <div style="display:flex;gap:12px;margin-top:16px;">
+      <button class="btn btn-gray" style="flex:1;" onclick="closeModal()">取消</button>
+      ${editIdx !== null ? `<button class="btn btn-danger" style="flex:1;" onclick="deleteContact(${editIdx})">删除</button>` : ''}
+      <button class="btn btn-primary" style="flex:1;" onclick="saveContact(${editIdx})">保存</button>
+    </div>
+  `);
+}
+
+let _contactAvatarData = '';
+function onContactAvatarPick(input) {
+  const file = input.files[0];
+  if (!file) return;
+  _contactAvatarData = '';
+  resizeImageToBase64(file, 256, (data) => {
+    if (data) {
+      _contactAvatarData = data;
+      const el = document.getElementById('contactAvatarUpload');
+      if (el) el.innerHTML = `<img src="${data}" alt="">`;
+    } else {
+      showToast('图片加载失败');
+    }
+  });
+}
+
+function selectEmoji(el, emoji) {
+  document.getElementById('contactEmoji').value = emoji;
+  document.querySelectorAll('#emojiPicker span').forEach(s => { s.style.background = ''; s.style.border = 'none'; });
+  el.style.background = 'var(--gray5)';
+}
+
+function saveContact(editIdx) {
+  const name = document.getElementById('contactName').value.trim();
+  const role = document.getElementById('contactRole').value.trim();
+  const note = document.getElementById('contactNote').value.trim();
+  const emoji = document.getElementById('contactEmoji').value;
+  if (!name) { showToast('请输入名字'); return; }
+  const uploadEl = document.getElementById('contactAvatarUpload');
+  const avatar = _contactAvatarData || (uploadEl?.querySelector('img')?.src || '');
+
+  if (editIdx !== null) {
+    state.contacts[editIdx] = { ...state.contacts[editIdx], name, role, note, emoji, avatar };
+  } else {
+    state.contacts.push({ name, role, note, emoji, avatar });
+  }
+  _contactAvatarData = '';
+  saveState();
+  renderContacts();
+  closeModal();
+  showToast(editIdx !== null ? '已更新' : '已添加');
+}
+
+function deleteContact(idx) {
+  state.contacts.splice(idx, 1);
+  saveState();
+  renderContacts();
+  closeModal();
+  showToast('已删除');
+}
+
+function showContactDetail(idx) {
+  const c = state.contacts[idx];
+  const avInner = c.avatar ? `<img src="${c.avatar}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" alt="">` : `<span style="font-size:36px;">${escHtml(c.emoji || '🤖')}</span>`;
+  showModal(`
+    <div class="modal-title" style="display:flex;align-items:center;gap:12px;">
+      ${avInner}${escHtml(c.name)}
+    </div>
+    <div class="list-group">
+      <div class="setting-item"><span class="setting-label">角色定义</span></div>
+      <div style="padding:4px 16px 12px;font-size:14px;color:var(--text);line-height:1.6;white-space:pre-wrap;">${escHtml(c.role || '未设置')}</div>
+    </div>
+    <div class="list-group">
+      <div class="setting-item"><span class="setting-label">备注</span><span class="setting-value">${escHtml(c.note || '无')}</span></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:16px;">
+      <button class="btn btn-gray" style="flex:1;" onclick="closeModal()">关闭</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="closeModal();showAddContact(${idx})">编辑</button>
+    </div>
+  `);
+}
+
+// ========== WeChat ==========
+function renderWechatContacts() {
+  const list = document.getElementById('wechatContactList');
+  if (state.contacts.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">💬</div><p>暂无联系人</p><p class="tip">请先在通讯录中添加</p></div>`;
+    return;
+  }
+  let html = '<div class="list-group">';
+  state.contacts.forEach((c, i) => {
+    const avInner = c.avatar ? `<img class="avatar-img" src="${c.avatar}" alt="">` : escHtml(c.emoji || c.name[0]);
+    html += `<div class="list-item" onclick="openWechatChat(${i})">
+      <div class="avatar" style="background:var(--green);overflow:hidden;">${avInner}</div>
+      <div class="info">
+        <div class="name">${escHtml(c.name)}</div>
+        <div class="sub">点击开始聊天</div>
+      </div>
+      <span class="arrow">›</span>
+    </div>`;
+  });
+  html += '</div>';
+  list.innerHTML = html;
+}
+
+function getOrCreateSessions(contactIdx) {
+  if (!state.chatSessions[contactIdx]) {
+    state.chatSessions[contactIdx] = [];
+  }
+  return state.chatSessions[contactIdx];
+}
+
+function getSession(contactIdx, sessionId) {
+  const sessions = getOrCreateSessions(contactIdx);
+  return sessions.find(s => s.id === sessionId) || null;
+}
+
+function createSession(contactIdx, title) {
+  const sessions = getOrCreateSessions(contactIdx);
+  const now = Date.now();
+  const session = {
+    id: now,
+    title: title || `新对话 ${formatSessionTime(now)}`,
+    updatedAt: now,
+    messages: [],
+    memories: []
+  };
+  sessions.push(session);
+  saveState();
+  return session;
+}
+
+function saveCurrentSession() {
+  if (!currentChat) return;
+  const session = getSession(currentChat.contactIdx, currentChat.sessionId);
+  if (session) {
+    session.messages = currentChat.messages;
+    session.memories = currentChat.memories;
+    session.updatedAt = Date.now();
+    saveState();
+  }
+}
+
+function loadSessionMessages(session) {
+  const container = document.getElementById('wechatMessages');
+  container.innerHTML = '';
+  const contact = state.contacts[currentChat.contactIdx];
+  session.messages.forEach((m, idx) => {
+    if (m.role === 'user') {
+      addChatMessage(m.content, container, true, '', '😊', idx, true);
+    } else if (m.role === 'assistant') {
+      addChatMessage(m.content, container, false, contact.name, contact.emoji, idx, true);
+    }
+  });
+}
+
+function formatSessionTime(timestamp) {
+  const d = new Date(timestamp);
+  const m = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, '0');
+  const h = d.getHours().toString().padStart(2, '0');
+  const min = d.getMinutes().toString().padStart(2, '0');
+  return `${m}-${day} ${h}:${min}`;
+}
+
+function openWechatChat(contactIdx, sessionId = null) {
+  const contact = state.contacts[contactIdx];
+  const sessions = getOrCreateSessions(contactIdx);
+
+  // Save current session before switching
+  saveCurrentSession();
+
+  let session;
+  if (sessionId) {
+    session = getSession(contactIdx, sessionId);
+  }
+  if (!session) {
+    if (sessions.length === 0) {
+      session = createSession(contactIdx, '新对话');
+    } else {
+      session = sessions.slice().sort((a, b) => b.updatedAt - a.updatedAt)[0];
+    }
+  }
+
+  currentChat = { contactIdx, sessionId: session.id, messages: JSON.parse(JSON.stringify(session.messages || [])), memories: session.memories || [] };
+  chatMode = 'normal';
+  document.getElementById('wechatChatTitle').textContent = contact.name;
+  loadSessionMessages(session);
+  const container = document.getElementById('wechatChatContainer');
+  container.classList.remove('chat-full');
+  document.getElementById('chatModeBtn').textContent = '📲';
+  showPage('wechatPage');
+}
+
+function closeWechatChat() {
+  saveCurrentSession();
+  closeApp();
+}
+
+function toggleChatMode() {
+  chatMode = chatMode === 'normal' ? 'full' : 'normal';
+  const container = document.getElementById('wechatChatContainer');
+  container.classList.toggle('chat-full', chatMode === 'full');
+  document.getElementById('chatModeBtn').textContent = chatMode === 'normal' ? '📲' : '💻';
+}
+
+// ========== Session Panel ==========
+function openSessionPanel() {
+  renderSessionList();
+  document.getElementById('sessionPanel').classList.add('show');
+}
+
+function closeSessionPanel() {
+  document.getElementById('sessionPanel').classList.remove('show');
+}
+
+function renderSessionList() {
+  if (!currentChat) return;
+  const contactIdx = currentChat.contactIdx;
+  const contact = state.contacts[contactIdx];
+  const sessions = getOrCreateSessions(contactIdx).slice().sort((a, b) => b.updatedAt - a.updatedAt);
+  const list = document.getElementById('sessionList');
+
+  if (sessions.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">💬</div><p>暂无会话</p><p class="tip">点击底部按钮创建新会话</p></div>`;
+    return;
+  }
+
+  let html = '';
+  sessions.forEach((s, idx) => {
+    const isActive = s.id === currentChat.sessionId;
+    const lastMsg = s.messages && s.messages.length > 0 ? s.messages[s.messages.length - 1] : null;
+    const preview = lastMsg ? (lastMsg.role === 'user' ? '我: ' : `${contact.name}: `) + lastMsg.content : '还没有消息';
+    const timeStr = formatSessionTime(s.updatedAt);
+    html += `
+      <div class="session-item-wrap" id="sessionWrap_${s.id}">
+        <div class="session-actions">
+          <button class="rename" onclick="renameSession(${s.id})">重命名</button>
+          <button class="delete" onclick="deleteSession(${s.id})">删除</button>
+        </div>
+        <div class="session-item${isActive ? ' active' : ''}" id="sessionItem_${s.id}" onclick="switchSession(${s.id})" ontouchstart="sessionTouchStart(event, ${s.id})" ontouchmove="sessionTouchMove(event, ${s.id})" ontouchend="sessionTouchEnd(event, ${s.id})" onmousedown="sessionMouseDown(event, ${s.id})" onmousemove="sessionMouseMove(event, ${s.id})" onmouseup="sessionMouseUp(event, ${s.id})" onmouseleave="sessionMouseLeave(event, ${s.id})">
+          <div class="avatar">${contact.emoji || contact.name[0]}</div>
+          <div class="info">
+            <div class="title-row">
+              <span class="title">${escHtml(s.title)}</span>
+              <span class="time">${timeStr}</span>
+            </div>
+            <div class="preview">${escHtml(preview)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  list.innerHTML = html;
+}
+
+function createNewSession() {
+  if (!currentChat) return;
+  saveCurrentSession();
+  const contactIdx = currentChat.contactIdx;
+  const session = createSession(contactIdx);
+  switchSession(session.id);
+  closeSessionPanel();
+}
+
+function switchSession(sessionId) {
+  if (!currentChat || currentChat.sessionId === sessionId) {
+    closeSessionPanel();
+    return;
+  }
+  saveCurrentSession();
+  openWechatChat(currentChat.contactIdx, sessionId);
+  closeSessionPanel();
+  renderSessionList();
+}
+
+function renameSession(sessionId) {
+  const session = getSession(currentChat.contactIdx, sessionId);
+  if (!session) return;
+  const newName = prompt('请输入新会话名称', session.title);
+  if (newName && newName.trim()) {
+    session.title = newName.trim();
+    saveState();
+    renderSessionList();
+  }
+  closeAllSwipedSessions();
+}
+
+function deleteSession(sessionId) {
+  if (!confirm('确定要删除这个会话吗？')) return;
+  const sessions = getOrCreateSessions(currentChat.contactIdx);
+  const idx = sessions.findIndex(s => s.id === sessionId);
+  if (idx === -1) return;
+
+  sessions.splice(idx, 1);
+  saveState();
+
+  if (currentChat.sessionId === sessionId) {
+    if (sessions.length > 0) {
+      const next = sessions.slice().sort((a, b) => b.updatedAt - a.updatedAt)[0];
+      currentChat = { contactIdx: currentChat.contactIdx, sessionId: next.id, messages: JSON.parse(JSON.stringify(next.messages || [])) };
+      loadSessionMessages(next);
+    } else {
+      const newSession = createSession(currentChat.contactIdx, '新对话');
+      currentChat = { contactIdx: currentChat.contactIdx, sessionId: newSession.id, messages: [] };
+      document.getElementById('wechatMessages').innerHTML = '';
+    }
+  }
+  renderSessionList();
+  closeAllSwipedSessions();
+}
+
+// Swipe handling
+let sessionSwipeState = {};
+const SWIPE_THRESHOLD = 120;
+
+function sessionTouchStart(e, sessionId) {
+  const t = e.touches[0];
+  sessionSwipeState[sessionId] = { startX: t.clientX, startY: t.clientY, currentX: 0, swiped: false };
+}
+
+function sessionTouchMove(e, sessionId) {
+  if (!sessionSwipeState[sessionId]) return;
+  const t = e.touches[0];
+  const state = sessionSwipeState[sessionId];
+  const dx = t.clientX - state.startX;
+  const dy = t.clientY - state.startY;
+  if (Math.abs(dy) > Math.abs(dx)) return; // vertical scroll
+  if (dx < 0) {
+    e.preventDefault();
+    const item = document.getElementById(`sessionItem_${sessionId}`);
+    if (item) {
+      const x = Math.max(dx, -160);
+      item.style.transform = `translateX(${x}px)`;
+      state.currentX = x;
+    }
+  }
+}
+
+function sessionTouchEnd(e, sessionId) {
+  if (!sessionSwipeState[sessionId]) return;
+  const state = sessionSwipeState[sessionId];
+  const item = document.getElementById(`sessionItem_${sessionId}`);
+  if (item) {
+    if (state.currentX <= -SWIPE_THRESHOLD) {
+      item.style.transform = 'translateX(-160px)';
+      state.swiped = true;
+      closeOtherSwipedSessions(sessionId);
+    } else {
+      item.style.transform = 'translateX(0)';
+      state.swiped = false;
+    }
+  }
+}
+
+// Mouse fallback for desktop testing
+let sessionMouseState = {};
+function sessionMouseDown(e, sessionId) {
+  sessionMouseState[sessionId] = { startX: e.clientX, dragging: true };
+}
+function sessionMouseMove(e, sessionId) {
+  if (!sessionMouseState[sessionId]?.dragging) return;
+  const dx = e.clientX - sessionMouseState[sessionId].startX;
+  if (dx < 0) {
+    const item = document.getElementById(`sessionItem_${sessionId}`);
+    if (item) item.style.transform = `translateX(${Math.max(dx, -160)}px)`;
+  }
+}
+function sessionMouseUp(e, sessionId) {
+  if (!sessionMouseState[sessionId]?.dragging) return;
+  sessionMouseState[sessionId].dragging = false;
+  const dx = e.clientX - sessionMouseState[sessionId].startX;
+  const item = document.getElementById(`sessionItem_${sessionId}`);
+  if (item) {
+    if (dx <= -SWIPE_THRESHOLD) {
+      item.style.transform = 'translateX(-160px)';
+      closeOtherSwipedSessions(sessionId);
+    } else {
+      item.style.transform = 'translateX(0)';
+    }
+  }
+}
+function sessionMouseLeave(e, sessionId) {
+  if (sessionMouseState[sessionId]?.dragging) {
+    sessionMouseState[sessionId].dragging = false;
+    const item = document.getElementById(`sessionItem_${sessionId}`);
+    if (item) item.style.transform = 'translateX(0)';
+  }
+}
+
+function closeOtherSwipedSessions(exceptId) {
+  Object.keys(sessionSwipeState).forEach(id => {
+    if (parseInt(id) !== exceptId && sessionSwipeState[id].swiped) {
+      const item = document.getElementById(`sessionItem_${id}`);
+      if (item) item.style.transform = 'translateX(0)';
+      sessionSwipeState[id].swiped = false;
+    }
+  });
+}
+
+function closeAllSwipedSessions() {
+  Object.keys(sessionSwipeState).forEach(id => {
+    const item = document.getElementById(`sessionItem_${id}`);
+    if (item) item.style.transform = 'translateX(0)';
+    sessionSwipeState[id].swiped = false;
+  });
+}
+
+function stripMarkdown(md) {
+  if (!md) return '';
+  return md
+    .replace(/\r\n/g, '\n')
+    .replace(/```([\s\S]*?)```/g, (_, code) => code.replace(/```/g, '').trim())
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/^>\s*/gm, '')
+    .trim();
+}
+
+function addChatMessage(msg, container, isSelf = false, name = '', emoji = '', index = null, withActions = false) {
+  const div = document.createElement('div');
+  div.className = `msg-row${isSelf ? ' self' : ''}`;
+  if (index !== null) div.dataset.index = index;
+  const displayMsg = (!isSelf && withActions) ? stripMarkdown(msg) : msg;
+  let nameHtml = !isSelf && name ? `<div class="msg-name">${escHtml(name)}</div>` : '';
+  const copyIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+  const editIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+  const regenIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>`;
+  let actionsHtml = '';
+  if (withActions) {
+    if (isSelf) {
+      actionsHtml = `<div class="msg-actions"><button onclick="copyMsgByIndex(${index})" title="复制">${copyIcon}<span class="action-label">复制</span></button><button onclick="editUserMsg(${index})" title="编辑">${editIcon}<span class="action-label">编辑</span></button></div>`;
+    } else {
+      actionsHtml = `<div class="msg-actions"><button onclick="copyMsgByIndex(${index})" title="复制">${copyIcon}<span class="action-label">复制</span></button><button onclick="regenerateAssistantMsg(${index})" title="重新生成">${regenIcon}<span class="action-label">重新生成</span></button></div>`;
+    }
+  }
+  div.innerHTML = `
+    <div class="msg-avatar" style="background:${isSelf ? 'var(--primary)' : '#e5e5ea'}">${isSelf ? '😊' : (emoji || '🤖')}</div>
+    <div class="msg-bubble">${nameHtml}${escHtml(displayMsg).replace(/\n/g, '<br>')}${actionsHtml}</div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function addLoadingDots(container) {
+  const div = document.createElement('div');
+  div.className = 'msg-row';
+  div.id = 'loadingDots';
+  div.innerHTML = `<div class="msg-avatar" style="background:#e5e5ea">🤖</div><div class="msg-bubble"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeLoadingDots(container) {
+  const dots = document.getElementById('loadingDots');
+  if (dots) dots.remove();
+}
+
+async function sendWechatMsg() {
+  if (!currentChat) return;
+  const input = document.getElementById('wechatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const contact = state.contacts[currentChat.contactIdx];
+  const container = document.getElementById('wechatMessages');
+  const userIdx = currentChat.messages.length;
+
+  addChatMessage(text, container, true, '', '😊', userIdx, true);
+  currentChat.messages.push({ role: 'user', content: text });
+  saveCurrentSession();
+  input.value = '';
+  autoResize(input);
+
+  await continueAssistantReply();
+}
+
+async function continueAssistantReply() {
+  if (!currentChat) return;
+  const contact = state.contacts[currentChat.contactIdx];
+  const container = document.getElementById('wechatMessages');
+
+  if (!state.settings.key) {
+    const idx = currentChat.messages.length;
+    addChatMessage('（请先在设置中配置AI平台和Key才能与我对话哦~）', container, false, contact.name, contact.emoji, idx, true);
+    currentChat.messages.push({ role: 'assistant', content: '（请先在设置中配置AI平台和Key才能与我对话哦~）' });
+    saveCurrentSession();
+    return;
+  }
+
+  addLoadingDots(container);
+  const systemPrompt = buildSystemPrompt(contact);
+  const reply = await callAI(currentChat.messages, systemPrompt);
+  removeLoadingDots(container);
+
+  const idx = currentChat.messages.length;
+  if (reply) {
+    addChatMessage(reply, container, false, contact.name, contact.emoji, idx, true);
+    currentChat.messages.push({ role: 'assistant', content: reply });
+  } else {
+    addChatMessage('（回复失败，请检查设置）', container, false, contact.name, contact.emoji, idx, true);
+    currentChat.messages.push({ role: 'assistant', content: '（回复失败，请检查设置）' });
+  }
+  saveCurrentSession();
+}
+
+function copyMsgByIndex(idx) {
+  const m = currentChat && currentChat.messages[idx];
+  if (!m) return;
+  const text = m.content;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => showToast('已复制到剪贴板'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast('已复制到剪贴板'); } catch(e) {}
+    document.body.removeChild(ta);
+  }
+}
+
+function editUserMsg(idx) {
+  if (!currentChat || idx < 0 || idx >= currentChat.messages.length) return;
+  const m = currentChat.messages[idx];
+  if (m.role !== 'user') return;
+  const input = document.getElementById('wechatInput');
+  input.value = m.content;
+  autoResize(input);
+  currentChat.messages = currentChat.messages.slice(0, idx);
+  saveCurrentSession();
+  loadSessionMessages(getSession(currentChat.contactIdx, currentChat.sessionId));
+}
+
+async function regenerateAssistantMsg(idx) {
+  if (!currentChat || idx < 0 || idx >= currentChat.messages.length) return;
+  const m = currentChat.messages[idx];
+  if (m.role !== 'assistant') return;
+  currentChat.messages = currentChat.messages.slice(0, idx);
+  saveCurrentSession();
+  loadSessionMessages(getSession(currentChat.contactIdx, currentChat.sessionId));
+  await continueAssistantReply();
+}
+
+function buildSystemPrompt(contact) {
+  let prompt = `你是一个名为"${contact.name}"的AI角色。`;
+  if (contact.role) prompt += `\n\n角色设定：${contact.role}`;
+  if (state.worldBook.desc) prompt += `\n\n世界设定：${state.worldBook.desc}`;
+  if (currentChat && currentChat.memories && currentChat.memories.length > 0) {
+    prompt += `\n\n请记住以下关于当前会话的记忆：\n${currentChat.memories.map((m, i) => `${i + 1}. ${m}`).join('\n')}`;
+  }
+  prompt += `\n\n请始终保持角色身份回复，语气自然，像真人一样聊天。回复简洁一些，不要过于正式。`;
+  return prompt;
+}
+
+function openMemoryPanel() {
+  renderMemoryList();
+  document.getElementById('memoryPanel').classList.add('show');
+}
+
+function closeMemoryPanel() {
+  document.getElementById('memoryPanel').classList.remove('show');
+}
+
+function renderMemoryList() {
+  const list = document.getElementById('memoryList');
+  if (!currentChat || !currentChat.memories) {
+    list.innerHTML = '';
+    return;
+  }
+  if (currentChat.memories.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">🧠</div><p>暂无记忆</p><p class="tip">点击底部按钮添加会话记忆</p></div>`;
+    return;
+  }
+  list.innerHTML = currentChat.memories.map((m, idx) => `
+    <div class="memory-item" id="memoryItem_${idx}">
+      <div class="content">${escHtml(m)}</div>
+      <div class="actions">
+        <button onclick="editMemory(${idx})">编辑</button>
+        <button onclick="deleteMemory(${idx})">删除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addMemory() {
+  const content = prompt('请输入要保存的记忆');
+  if (content && content.trim()) {
+    currentChat.memories.push(content.trim());
+    saveCurrentSession();
+    renderMemoryList();
+  }
+}
+
+function editMemory(idx) {
+  const old = currentChat.memories[idx] || '';
+  const content = prompt('编辑记忆', old);
+  if (content === null) return;
+  const trimmed = content.trim();
+  if (trimmed) {
+    currentChat.memories[idx] = trimmed;
+  } else {
+    currentChat.memories.splice(idx, 1);
+  }
+  saveCurrentSession();
+  renderMemoryList();
+}
+
+function deleteMemory(idx) {
+  if (confirm('确定要删除这条记忆吗？')) {
+    currentChat.memories.splice(idx, 1);
+    saveCurrentSession();
+    renderMemoryList();
+  }
+}
+
+function clearCurrentChat() {
+  if (!currentChat) return;
+  currentChat.messages = [];
+  currentChat.memories = [];
+  saveCurrentSession();
+  document.getElementById('wechatMessages').innerHTML = '';
+  showToast('已清空当前会话');
+}
+
+function fixInputBox() {
+  const input = document.getElementById('wechatInput');
+  if (!input) return;
+  // 1. 重置/清空
+  input.value = '';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  autoResize(input);
+  // 2. 输入 1
+  input.value = '1';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  autoResize(input);
+  // 3. 撤销（删除最后一位）
+  input.value = input.value.slice(0, -1);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  autoResize(input);
+  // 视觉反馈：聚焦 + 闪烁 + Toast
+  try { input.focus({ preventScroll: true }); } catch(e) { input.focus(); }
+  input.style.transition = 'background .2s';
+  input.style.background = 'rgba(0,122,255,0.12)';
+  setTimeout(() => { input.style.background = ''; }, 220);
+  showToast('输入框已修复');
+}
+
+// ========== World Book ==========
+function loadWorldBook() {
+  document.getElementById('worldName').value = state.worldBook.name || '';
+  document.getElementById('worldDesc').value = state.worldBook.desc || '';
+}
+
+function saveWorldBook() {
+  state.worldBook.name = document.getElementById('worldName').value.trim();
+  state.worldBook.desc = document.getElementById('worldDesc').value.trim();
+  saveState();
+  showToast('世界设定已保存');
+}
+
+// ========== Group Chat ==========
+const GC_COLORS = ['#5856d6','#ff2d55','#ff9500','#34c759','#007aff','#af52de','#ff3b30','#5ac8fa'];
+
+function groupAvatarHtml(emoji, name, color, size) {
+  return `<div class="gc-avatar" style="background:${color};width:${size}px;height:${size}px;font-size:${Math.round(size*0.45)}px;">${escHtml(emoji || (name ? name[0] : '群'))}</div>`;
+}
+
+function renderGroupList() {
+  const container = document.getElementById('groupListContainer');
+  if (state.groupChats.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>暂无群聊</p><p class="tip">点击右上角 + 创建</p></div>`;
+    return;
+  }
+  const editIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const delIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+  let html = '<div class="list-group">';
+  state.groupChats.forEach((g, i) => {
+    const color = GC_COLORS[i % GC_COLORS.length];
+    const memberCount = (g.members || []).length;
+    const lastMsg = (g.messages && g.messages.length > 0) ? g.messages[g.messages.length - 1] : null;
+    const preview = lastMsg ? `${lastMsg.name}: ${lastMsg.content}` : `${memberCount} 名成员`;
+    html += `<div class="gc-list-item" onclick="enterGroupChat(${i})">
+      <div class="gc-avatar" style="background:${color}">${escHtml(g.name[0])}</div>
+      <div class="gc-info">
+        <div class="gc-name">${escHtml(g.name)}</div>
+        <div class="gc-sub">${escHtml(preview)}</div>
+      </div>
+      <div class="gc-actions" onclick="event.stopPropagation()">
+        <button class="gc-act-btn" onclick="editGroupChat(${i})" title="编辑">${editIcon}</button>
+        <button class="gc-act-btn danger" onclick="deleteGroupChat(${i})" title="删除">${delIcon}</button>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function openNewGroupSetup() {
+  editingGroupId = null;
+  renderGroupSetup();
+  document.getElementById('groupSetupTitle').textContent = '新建群聊';
+  showPage('groupSetupPage');
+}
+
+function backToGroupList() {
+  // 重置栈到首页+群聊列表，避免栈污染
+  pageStack = ['homePage', 'groupListPage'];
+  navigateTo('groupListPage', true);
+  renderGroupList();
+}
+
+function editGroupChat(idx) {
+  const g = state.groupChats[idx];
+  if (!g) return;
+  editingGroupId = idx;
+  renderGroupSetup(g);
+  document.getElementById('groupSetupTitle').textContent = '编辑群聊';
+  showPage('groupSetupPage');
+}
+
+function deleteGroupChat(idx) {
+  if (!confirm(`确定删除群聊「${state.groupChats[idx].name}」？`)) return;
+  state.groupChats.splice(idx, 1);
+  saveState();
+  renderGroupList();
+  showToast('已删除');
+}
+
+function enterGroupChat(idx) {
+  const g = state.groupChats[idx];
+  if (!g) return;
+  // deep copy to current working session
+  currentGroupChat = JSON.parse(JSON.stringify(g));
+  document.getElementById('groupchatTitle').textContent = g.name;
+  document.getElementById('groupMessages').innerHTML = '';
+  renderGroupMembersBar();
+  // re-render existing messages
+  const container = document.getElementById('groupMessages');
+  (currentGroupChat.messages || []).forEach(m => {
+    const isUser = m.role === 'user';
+    addChatMessage(m.content, container, isUser, m.name, isUser ? '😊' : (currentGroupChat.members.find(mm => mm.name === m.name)?.emoji || '🤖'));
+  });
+  resetGroupSendBtn();
+  showPage('groupchatPage');
+}
+
+function renderGroupSetup(existing) {
+  groupSelectedMembers = new Set();
+  const g = existing || {};
+  document.getElementById('groupNameInput').value = g.name || '';
+  document.getElementById('groupTopicInput').value = g.topic || '';
+  document.getElementById('groupUserIdentityInput').value = g.userIdentity || '';
+  document.getElementById('groupUserDescInput').value = g.userDesc || '';
+  if (g.members) g.members.forEach(m => { if (typeof m.contactIdx === 'number') groupSelectedMembers.add(m.contactIdx); });
+  const container = document.getElementById('groupMemberSelect');
+  if (state.contacts.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>暂无联系人</p><p class="tip">请先在通讯录中添加</p></div>`;
+    return;
+  }
+  let html = '<div class="list-group">';
+  state.contacts.forEach((c, i) => {
+    const selected = groupSelectedMembers.has(i);
+    html += `<div class="list-item" id="gmItem_${i}" onclick="toggleGroupMember(${i})" style="cursor:pointer;">
+      <div class="avatar" style="background:var(--primary);overflow:hidden;">${c.avatar ? `<img class="avatar-img" src="${c.avatar}" alt="">` : escHtml(c.emoji || c.name[0])}</div>
+      <div class="info"><div class="name">${escHtml(c.name)}</div>${c.role ? `<div class="sub">${escHtml(c.role)}</div>` : ''}</div>
+      <span class="arrow" id="gmCheck_${i}" style="color:${selected ? 'var(--primary)' : 'var(--gray4)'};">${selected ? '●' : '○'}</span>
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function toggleGroupMember(idx) {
+  const check = document.getElementById(`gmCheck_${idx}`);
+  if (groupSelectedMembers.has(idx)) {
+    groupSelectedMembers.delete(idx);
+    check.textContent = '○';
+    check.style.color = 'var(--gray4)';
+  } else {
+    groupSelectedMembers.add(idx);
+    check.textContent = '●';
+    check.style.color = 'var(--primary)';
+  }
+}
+
+function saveGroupSetup() {
+  const name = document.getElementById('groupNameInput').value.trim() || '群聊';
+  const topic = document.getElementById('groupTopicInput').value.trim();
+  const userIdentity = document.getElementById('groupUserIdentityInput').value.trim() || '我';
+  const userDesc = document.getElementById('groupUserDescInput').value.trim();
+  if (groupSelectedMembers.size < 2) {
+    showToast('请选择至少2个群成员');
+    return;
+  }
+
+  const members = [...groupSelectedMembers].map(i => ({
+    contactIdx: i,
+    name: state.contacts[i].name,
+    emoji: state.contacts[i].emoji,
+    avatar: state.contacts[i].avatar || '',
+    role: state.contacts[i].role,
+    muted: false
+  }));
+
+  if (editingGroupId !== null) {
+    const old = state.groupChats[editingGroupId];
+    // preserve muted state + messages
+    const oldMuteMap = {};
+    (old.members || []).forEach(m => { oldMuteMap[m.contactIdx] = m.muted; });
+    members.forEach(m => { if (oldMuteMap[m.contactIdx] !== undefined) m.muted = oldMuteMap[m.contactIdx]; });
+    state.groupChats[editingGroupId] = { ...old, name, topic, userIdentity, userDesc, members };
+    saveState();
+    showToast('已更新');
+    backToGroupList();
+  } else {
+    const newGroup = { id: Date.now(), name, topic, userIdentity, userDesc, members, messages: [] };
+    state.groupChats.push(newGroup);
+    saveState();
+    showToast('已创建');
+    backToGroupList();
+  }
+}
+
+function renderGroupMembersBar() {
+  if (!currentGroupChat) return;
+  const bar = document.getElementById('groupMembersBar');
+  let html = currentGroupChat.members.map((m, i) => {
+    const mutedBadge = m.muted ? '<span class="mute-badge">🔇</span>' : '';
+    const inner = m.avatar ? `<img class="avatar-img" src="${m.avatar}" alt="">` : escHtml(m.emoji || m.name[0]);
+    return `<div class="group-member${m.muted ? ' muted' : ''}" style="background:${GC_COLORS[i % GC_COLORS.length]};color:#fff;overflow:hidden;" onclick="insertGroupMention(${i})" title="@${escHtml(m.name)}">${inner}${mutedBadge}</div>`;
+  }).join('');
+  html += `<button class="group-manage-btn" onclick="openGroupManage()" title="成员管理"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>`;
+  bar.innerHTML = html;
+}
+
+function closeGroupChat() {
+  saveCurrentGroupToList();
+  // stop any generating
+  if (groupAbortController) { try { groupAbortController.abort(); } catch(e){} groupAbortController = null; }
+  groupIsGenerating = false;
+  // 返回群聊列表，重置栈
+  pageStack = ['homePage', 'groupListPage'];
+  navigateTo('groupListPage', true);
+  renderGroupList();
+}
+
+function saveCurrentGroupToList() {
+  if (!currentGroupChat) return;
+  const idx = state.groupChats.findIndex(g => g.id === currentGroupChat.id);
+  if (idx !== -1) {
+    state.groupChats[idx] = JSON.parse(JSON.stringify(currentGroupChat));
+    saveState();
+  }
+}
+
+// @ mention: tap avatar to insert @name
+function insertGroupMention(idx) {
+  if (!currentGroupChat) return;
+  const m = currentGroupChat.members[idx];
+  if (!m) return;
+  const input = document.getElementById('groupInput');
+  const atText = `@${m.name} `;
+  const cur = input.value;
+  if (cur.endsWith(`@${m.name} `)) { input.focus(); return; }
+  input.value = cur ? cur.replace(/\s+$/, '') + ' ' + atText : atText;
+  input.focus();
+  autoResize(input);
+  closeGroupAtPicker();
+}
+
+function openGroupAtPicker() {
+  if (!currentGroupChat) return;
+  const list = document.getElementById('groupAtList');
+  list.innerHTML = currentGroupChat.members.map((m, i) => {
+    const inner = m.avatar ? `<img class="avatar-img" src="${m.avatar}" alt="">` : escHtml(m.emoji || m.name[0]);
+    return `<div class="at-item" onclick="insertGroupMention(${i})">
+      <div class="avatar" style="background:${GC_COLORS[i % GC_COLORS.length]};overflow:hidden;">${inner}</div>
+      <div class="name">${escHtml(m.name)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('groupAtPicker').classList.add('show');
+}
+function closeGroupAtPicker() {
+  document.getElementById('groupAtPicker').classList.remove('show');
+}
+
+// ===== Member management: mute / reorder / kick =====
+function openGroupManage() {
+  if (!currentGroupChat) return;
+  renderGroupManageList();
+  document.getElementById('gmOverlay').classList.add('show');
+  document.getElementById('gmSheet').classList.add('show');
+}
+function closeGroupManage() {
+  document.getElementById('gmOverlay').classList.remove('show');
+  document.getElementById('gmSheet').classList.remove('show');
+}
+function renderGroupManageList() {
+  const list = document.getElementById('gmList');
+  const upIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>`;
+  const downIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>`;
+  const muteIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`;
+  const unmuteIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
+  const kickIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="23" y2="14"/><line x1="23" y1="8" x2="17" y2="14"/></svg>`;
+  list.innerHTML = currentGroupChat.members.map((m, i) => {
+    const c = GC_COLORS[i % GC_COLORS.length];
+    const inner = m.avatar ? `<img class="avatar-img" src="${m.avatar}" alt="">` : escHtml(m.emoji || m.name[0]);
+    return `<div class="gm-row${m.muted ? ' muted' : ''}">
+      <div class="avatar" style="background:${c};overflow:hidden;">${inner}</div>
+      <div class="info">
+        <div class="name">${escHtml(m.name)}${m.muted ? '（禁言）' : ''}</div>
+        <div class="sub">${escHtml(m.role || 'AI成员')} · 顺序 ${i + 1}</div>
+      </div>
+      <div class="ops">
+        <button class="gm-op" onclick="moveGroupMember(${i},-1)" ${i === 0 ? 'disabled style="opacity:.3"' : ''} title="上移">${upIcon}</button>
+        <button class="gm-op" onclick="moveGroupMember(${i},1)" ${i === currentGroupChat.members.length - 1 ? 'disabled style="opacity:.3"' : ''} title="下移">${downIcon}</button>
+        <button class="gm-op" onclick="toggleMuteMember(${i})" title="${m.muted ? '解除禁言' : '禁言'}">${m.muted ? unmuteIcon : muteIcon}</button>
+        <button class="gm-op danger" onclick="kickGroupMember(${i})" title="移出群聊" ${currentGroupChat.members.length <= 2 ? 'disabled style="opacity:.3"' : ''}>${kickIcon}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleMuteMember(idx) {
+  const m = currentGroupChat.members[idx];
+  if (!m) return;
+  m.muted = !m.muted;
+  renderGroupMembersBar();
+  renderGroupManageList();
+  saveCurrentGroupToList();
+  showToast(m.muted ? `已禁言 ${m.name}` : `已解除禁言 ${m.name}`);
+}
+function moveGroupMember(idx, dir) {
+  const arr = currentGroupChat.members;
+  const ni = idx + dir;
+  if (ni < 0 || ni >= arr.length) return;
+  [arr[idx], arr[ni]] = [arr[ni], arr[idx]];
+  renderGroupMembersBar();
+  renderGroupManageList();
+  saveCurrentGroupToList();
+}
+function kickGroupMember(idx) {
+  if (currentGroupChat.members.length <= 2) { showToast('群成员不能少于2人'); return; }
+  const m = currentGroupChat.members[idx];
+  currentGroupChat.members.splice(idx, 1);
+  renderGroupMembersBar();
+  renderGroupManageList();
+  saveCurrentGroupToList();
+  showToast(`已移出 ${m.name}`);
+}
+
+// ===== Send + smart multi-AI reply =====
+const GROUP_SEND_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>`;
+const GROUP_STOP_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`;
+
+function resetGroupSendBtn() {
+  const btn = document.getElementById('groupSendBtn');
+  if (!btn) return;
+  btn.classList.remove('stop');
+  btn.innerHTML = GROUP_SEND_ICON;
+  btn.title = '发送';
+}
+
+function setGroupStopBtn() {
+  const btn = document.getElementById('groupSendBtn');
+  if (!btn) return;
+  btn.classList.add('stop');
+  btn.innerHTML = GROUP_STOP_ICON;
+  btn.title = '停止生成';
+}
+
+function onGroupSendClick() {
+  if (groupIsGenerating) {
+    // stop generation
+    if (groupAbortController) { try { groupAbortController.abort(); } catch(e){} groupAbortController = null; }
+    groupIsGenerating = false;
+    resetGroupSendBtn();
+    removeLoadingDots(document.getElementById('groupMessages'));
+    showToast('已停止');
+    return;
+  }
+  sendGroupMsg();
+}
+
+function fixGroupInputBox() {
+  const input = document.getElementById('groupInput');
+  if (!input) return;
+  input.value = '';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  autoResize(input);
+  input.value = '1';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  autoResize(input);
+  input.value = input.value.slice(0, -1);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  autoResize(input);
+  try { input.focus({ preventScroll: true }); } catch(e) { input.focus(); }
+  input.style.transition = 'background .2s';
+  input.style.background = 'rgba(0,122,255,0.12)';
+  setTimeout(() => { input.style.background = ''; }, 220);
+  showToast('输入框已修复');
+}
+
+async function sendGroupMsg() {
+  if (!currentGroupChat) return;
+  const input = document.getElementById('groupInput');
+  const text = input.value.trim();
+  if (!text) return;
+  closeGroupAtPicker();
+
+  const container = document.getElementById('groupMessages');
+  const userProfile = getCurrentUserProfile();
+  const userName = (userProfile && userProfile.name) ? userProfile.name : (currentGroupChat.userIdentity || '我');
+  const userEmoji = (userProfile && userProfile.avatar) ? '' : '😊';
+  addChatMessage(text, container, true, userName, userEmoji);
+  currentGroupChat.messages.push({ role: 'user', name: userName, content: text });
+  input.value = '';
+  autoResize(input);
+
+  if (!state.settings.key) {
+    addChatMessage('（请先在设置中配置AI平台和Key）', container, false, '系统', '⚙️');
+    saveCurrentGroupToList();
+    return;
+  }
+
+  // start generating
+  groupIsGenerating = true;
+  groupAbortController = new AbortController();
+  setGroupStopBtn();
+
+  try {
+    // Parse @mentions (support multiple)
+    const mentionedIdx = [];
+    const activeMembers = currentGroupChat.members;
+    activeMembers.forEach((m, i) => {
+      if (new RegExp(`@${m.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(text)) mentionedIdx.push(i);
+    });
+
+    if (mentionedIdx.length > 0) {
+      for (const idx of mentionedIdx) {
+        if (groupAbortController?.signal.aborted) break;
+        if (!activeMembers[idx].muted) await groupAIReply(activeMembers[idx], container, text);
+      }
+    } else {
+      const responders = await groupDecideResponders(text, null);
+      for (const idx of responders) {
+        if (groupAbortController?.signal.aborted) break;
+        if (!activeMembers[idx].muted) await groupAIReply(activeMembers[idx], container, text);
+      }
+    }
+  } finally {
+    groupIsGenerating = false;
+    groupAbortController = null;
+    resetGroupSendBtn();
+    saveCurrentGroupToList();
+  }
+}
+
+async function forceNextMsg() {
+  if (!currentGroupChat || currentGroupChat.messages.length === 0) {
+    showToast('暂无对话，请先发消息');
+    return;
+  }
+  if (groupIsGenerating) { showToast('正在生成中'); return; }
+  const container = document.getElementById('groupMessages');
+  const lastMsg = currentGroupChat.messages[currentGroupChat.messages.length - 1];
+  const excludeName = lastMsg.role === 'assistant' ? lastMsg.name : null;
+
+  groupIsGenerating = true;
+  groupAbortController = new AbortController();
+  setGroupStopBtn();
+
+  try {
+    const responders = await groupDecideResponders(lastMsg.content, excludeName);
+    if (responders.length === 0) {
+      const pool = currentGroupChat.members
+        .map((m, i) => ({ m, i }))
+        .filter(o => !o.m.muted && o.m.name !== excludeName);
+      if (pool.length === 0) { showToast('无可发言成员'); return; }
+      const pick = pool[Math.floor(Math.random() * pool.length)].i;
+      if (!groupAbortController?.signal.aborted) await groupAIReply(currentGroupChat.members[pick], container, lastMsg.content);
+    } else {
+      for (const idx of responders) {
+        if (groupAbortController?.signal.aborted) break;
+        if (!currentGroupChat.members[idx].muted) await groupAIReply(currentGroupChat.members[idx], container, lastMsg.content);
+      }
+    }
+  } finally {
+    groupIsGenerating = false;
+    groupAbortController = null;
+    resetGroupSendBtn();
+    saveCurrentGroupToList();
+  }
+}
+
+// 智能选择 0~N 个回复者，返回成员下标数组
+async function groupDecideResponders(context, excludeName) {
+  const activeMembers = currentGroupChat.members;
+  const candidates = activeMembers.map((m, i) => ({ i, name: m.name, muted: m.muted }));
+  const available = candidates.filter(c => !c.muted && c.name !== excludeName);
+  if (available.length === 0) return [];
+
+  const memberList = available.map(c => c.name).join('、');
+  const lastFew = currentGroupChat.messages.slice(-8).map(m => `${m.name}: ${m.content}`).join('\n');
+  const decisionPrompt = `这是一个微信群聊，群名："${currentGroupChat.name}"。
+${currentGroupChat.topic ? `群聊主题：${currentGroupChat.topic}\n` : ''}当前可发言的成员：${memberList}。
+最近对话：
+${lastFew || '（刚开始）'}
+
+最新一条内容："${context}"
+
+请根据对话内容、各成员性格与话题相关性，智能决定哪些成员应该回复。可以0个（无人需要回复，比如只是闲聊收尾）、1个或多个（多人有话要说）。只输出一个JSON数组，元素为成员名字，不要任何额外文字。例如：["小智"] 或 ["老王","小美"] 或 []`;
+
+  const result = await callAI([{ role: 'user', content: decisionPrompt }], '你是群聊导演，负责判断谁该发言。只输出JSON数组。', { signal: groupAbortController?.signal });
+  if (!result) return [];
+
+  const names = parseNameArray(result, available.map(c => c.name));
+  const idxs = [];
+  names.forEach(n => {
+    const c = available.find(c => c.name === n);
+    if (c && !idxs.includes(c.i)) idxs.push(c.i);
+  });
+  return idxs;
+}
+
+// 容错解析 AI 返回的名字数组
+function parseNameArray(text, validNames) {
+  // 1. 尝试直接 JSON 解析
+  try {
+    const m = text.match(/\[[\s\S]*\]/);
+    if (m) {
+      const arr = JSON.parse(m[0]);
+      if (Array.isArray(arr)) return arr.map(x => String(x).trim()).filter(x => x);
+    }
+  } catch (e) {}
+  // 2. 退而求其次：从文本中提取有效名字
+  const found = [];
+  validNames.forEach(n => { if (text.includes(n)) found.push(n); });
+  return found;
+}
+
+// 构建 AI 成员的系统提示
+function buildGroupSystemPrompt(member) {
+  const contact = state.contacts[member.contactIdx];
+  const userProfile = getCurrentUserProfile();
+  const userName = (userProfile && userProfile.name) ? userProfile.name : (currentGroupChat.userIdentity || '我');
+  let prompt = `你是一个名为"${member.name}"的AI角色，正在微信群聊"${currentGroupChat.name}"中参与对话。`;
+  if (currentGroupChat.topic) prompt += `\n群聊主题/定义：${currentGroupChat.topic}`;
+  if (contact.role) prompt += `\n你的角色设定：${contact.role}`;
+  if (state.worldBook.desc) prompt += `\n世界设定：${state.worldBook.desc}`;
+  // 用户身份：始终告知
+  prompt += `\n群里的用户叫"${userName}"。`;
+  if (userProfile && userProfile.identity) prompt += `用户身份：${userProfile.identity}。`;
+  if (userProfile && userProfile.desc) prompt += `用户身份说明：${userProfile.desc}。`;
+  if (!userProfile && currentGroupChat.userDesc) prompt += `用户身份说明：${currentGroupChat.userDesc}`;
+  prompt += `\n你必须始终知道用户就是"${userName}"，把他当作对应身份对待。`;
+  // 其他成员
+  const others = currentGroupChat.members.filter(m => m.name !== member.name).map(m => `${m.name}（${state.contacts[m.contactIdx]?.role || 'AI'}）`).join('、');
+  prompt += `\n群聊中其他成员有：${others}。`;
+  prompt += `\n请严格以"${member.name}"的口吻回复，保持角色性格，简短自然，像真实微信群聊，不要替别人说话，不要加动作描写括号。`;
+  return prompt;
+}
+
+async function groupAIReply(member, container, userText) {
+  if (member.muted) return;
+  addLoadingDots(container);
+  const sysPrompt = buildGroupSystemPrompt(member);
+  // 群聊多方对话：把最近记录作为对话文本传给模型，避免 user/assistant 角色错位
+  const recent = currentGroupChat.messages.slice(-12);
+  let transcript = '';
+  if (recent.length > 0) {
+    transcript = '最近的群聊记录：\n' + recent.map(m => `${m.name}: ${m.content}`).join('\n');
+  }
+  const userPrompt = transcript ? `${transcript}\n\n现在轮到你"${member.name}"发言，请直接给出你的回复内容（不要重复别人说过的话，不要带名字前缀）：` : `请以你的身份说一句话开场。`;
+  const result = await callAI([{ role: 'user', content: userPrompt }], sysPrompt, { signal: groupAbortController?.signal });
+  removeLoadingDots(container);
+  if (groupAbortController?.signal.aborted) return;
+  if (result && result.trim()) {
+    const clean = stripMarkdown(result.trim());
+    addChatMessage(clean, container, false, member.name, member.emoji);
+    currentGroupChat.messages.push({ role: 'assistant', name: member.name, content: clean });
+  } else {
+    addChatMessage('（...）', container, false, member.name, member.emoji);
+  }
+}
+
+// ========== Moments ==========
+async function generateMoment(contact) {
+  const categories = ['生活日常', '搞笑段子', '吃瓜八卦', '娱乐分享', '励志语录', '知识科普', '心情随笔', '美食分享', '旅行见闻', '工作吐槽'];
+  const category = categories[Math.floor(Math.random() * categories.length)];
+
+  let prompt = `你是一个名为"${contact.name}"的AI角色。`;
+  if (contact.role) prompt += `\n角色设定：${contact.role}`;
+  if (state.worldBook.desc) prompt += `\n世界设定：${state.worldBook.desc}`;
+  prompt += `\n\n请以"${contact.name}"的身份发一条朋友圈。主题类别：${category}。\n要求：语气自然，像真人发朋友圈一样，可以带表情符号，长度1-3句话。不要过于正式。`;
+
+  const result = await callAI([{ role: 'user', content: '发一条朋友圈。' }], prompt);
+  return {
+    name: contact.name,
+    emoji: contact.emoji,
+    avatar: contact.avatar || '',
+    content: stripMarkdown(result || `${contact.name}发了一条朋友圈~`),
+    time: getRelativeTime(),
+    likes: Math.floor(Math.random() * 20),
+    category,
+    comments: [],
+    isUser: false
+  };
+}
+
+async function refreshMoments() {
+  if (state.contacts.length === 0) {
+    showToast('请先在通讯录中添加角色');
+    return;
+  }
+  if (!state.settings.key) {
+    showToast('请先在设置中配置AI平台和Key');
+    return;
+  }
+
+  showToast('正在刷新...');
+  const newMoments = [];
+  for (let i = 0; i < 5; i++) {
+    const contact = state.contacts[Math.floor(Math.random() * state.contacts.length)];
+    const moment = await generateMoment(contact);
+    newMoments.push(moment);
+  }
+
+  state.moments = [...newMoments, ...state.moments].slice(0, 100);
+  saveState();
+  renderMoments();
+  showToast('已刷新5条新动态');
+}
+
+// Publish user moment
+function openMomentPublish() {
+  const overlay = document.getElementById('momentPublishOverlay');
+  document.getElementById('momentPubInput').value = '';
+  document.getElementById('momentPubBtn').disabled = true;
+  overlay.classList.add('show');
+  setTimeout(() => document.getElementById('momentPubInput').focus(), 300);
+}
+function closeMomentPublish() {
+  document.getElementById('momentPublishOverlay').classList.remove('show');
+}
+async function publishMoment() {
+  const text = document.getElementById('momentPubInput').value.trim();
+  if (!text) return;
+  const userProfile = getCurrentUserProfile();
+  const userName = (userProfile && userProfile.name) ? userProfile.name : '我';
+  const userAvatar = (userProfile && userProfile.avatar) ? userProfile.avatar : '';
+  const moment = {
+    name: userName,
+    emoji: '😊',
+    avatar: userAvatar,
+    content: text,
+    time: '刚刚',
+    likes: 0,
+    category: '我的动态',
+    comments: [],
+    isUser: true
+  };
+  state.moments = [moment, ...state.moments].slice(0, 100);
+  saveState();
+  renderMoments();
+  closeMomentPublish();
+  showToast('已发表');
+
+  // AI 角色自动评论
+  if (state.settings.key && state.contacts.length > 0) {
+    autoCommentMoment(0);
+  }
+}
+
+// AI 角色自动评论
+async function autoCommentMoment(idx) {
+  const m = state.moments[idx];
+  if (!m) return;
+  // 随机选 1~2 个角色评论
+  const pool = [...state.contacts];
+  const count = Math.min(pool.length, 1 + Math.floor(Math.random() * 2));
+  const chosen = [];
+  for (let i = 0; i < count; i++) {
+    const pick = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+    chosen.push(pick);
+  }
+  for (const contact of chosen) {
+    let prompt = `你是一个名为"${contact.name}"的AI角色，正在看朋友圈。`;
+    if (contact.role) prompt += `\n角色设定：${contact.role}`;
+    prompt += `\n${m.name}发了一条朋友圈："${m.content}"`;
+    prompt += `\n请以"${contact.name}"的身份写一条评论，简短自然（1-2句），像真人在朋友圈评论一样，可以带表情。只输出评论内容本身。`;
+    const result = await callAI([{ role: 'user', content: '写评论' }], prompt);
+    if (result && result.trim()) {
+      m.comments.push({ name: contact.name, emoji: contact.emoji, avatar: contact.avatar || '', content: stripMarkdown(result.trim()), isUser: false });
+      renderMoments();
+    }
+  }
+  saveState();
+}
+
+function renderMoments() {
+  const list = document.getElementById('momentsList');
+  if (state.moments.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">📷</div><p>暂无朋友圈</p><p class="tip">点击右上角 + 发表或刷新获取动态</p></div>`;
+    return;
+  }
+
+  let html = '';
+  state.moments.forEach((m, i) => {
+    const avInner = m.avatar ? `<img class="avatar-img" src="${m.avatar}" alt="">` : escHtml(m.emoji || m.name[0]);
+    const avStyle = m.isUser ? 'background:linear-gradient(135deg,#ff2d55,#ff9500);color:#fff;overflow:hidden;' : 'background:var(--primary);color:#fff;overflow:hidden;';
+    const nameClass = m.isUser ? 'moment-name me' : 'moment-name';
+    let cmtHtml = '';
+    if (m.comments && m.comments.length > 0) {
+      cmtHtml = '<div class="moment-comments">' + m.comments.map(c => {
+        const cInner = c.avatar ? `<img class="avatar-img" src="${c.avatar}" alt="" style="width:18px;height:18px;border-radius:50%;vertical-align:middle;margin-right:2px;">` : (c.emoji ? c.emoji + ' ' : '');
+        return `<div class="cmt"><span class="cn">${cInner}${escHtml(c.name)}：</span><span class="ct">${escHtml(c.content)}</span></div>`;
+      }).join('') + '</div>';
+    }
+    html += `<div class="moment-item">
+      <div class="moment-header">
+        <div class="moment-avatar${m.isUser ? ' me' : ''}" style="${avStyle}">${avInner}</div>
+        <div style="flex:1;">
+          <div class="${nameClass}">${escHtml(m.name)}</div>
+          <div class="moment-time">${escHtml(m.time)}</div>
+        </div>
+      </div>
+      <div class="moment-content">${escHtml(m.content).replace(/\n/g, '<br>')}</div>
+      ${cmtHtml}
+      <div class="moment-actions">
+        <button onclick="likeMoment(${i})">❤️ ${m.likes}</button>
+        <button onclick="toggleMomentCommentInput(${i})">💬 ${m.comments ? m.comments.length : 0}</button>
+      </div>
+      <div class="moment-cmt-input" id="cmtInput_${i}" style="display:none;">
+        <input id="cmtText_${i}" placeholder="写评论..." onkeydown="if(event.key==='Enter'){event.preventDefault();submitMomentComment(${i})}">
+        <button onclick="submitMomentComment(${i})">发送</button>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function toggleMomentCommentInput(idx) {
+  const el = document.getElementById(`cmtInput_${idx}`);
+  if (!el) return;
+  const isShown = el.style.display !== 'none';
+  // close all
+  document.querySelectorAll('.moment-cmt-input').forEach(e => e.style.display = 'none');
+  if (!isShown) {
+    el.style.display = 'flex';
+    setTimeout(() => document.getElementById(`cmtText_${idx}`)?.focus(), 100);
+  }
+}
+
+async function submitMomentComment(idx) {
+  const input = document.getElementById(`cmtText_${idx}`);
+  const text = input.value.trim();
+  if (!text) return;
+  const userProfile = getCurrentUserProfile();
+  const userName = (userProfile && userProfile.name) ? userProfile.name : '我';
+  const userAvatar = (userProfile && userProfile.avatar) ? userProfile.avatar : '';
+  const m = state.moments[idx];
+  m.comments = m.comments || [];
+  m.comments.push({ name: userName, emoji: '😊', avatar: userAvatar, content: text, isUser: true });
+  saveState();
+  renderMoments();
+  // reopen input
+  toggleMomentCommentInput(idx);
+  // AI 角色回复评论
+  if (state.settings.key && state.contacts.length > 0) {
+    aiReplyComment(idx, text, userName);
+  }
+}
+
+async function aiReplyComment(momentIdx, userComment, userName) {
+  const m = state.moments[momentIdx];
+  if (!m) return;
+  // 选 1 个角色回复
+  const contact = state.contacts[Math.floor(Math.random() * state.contacts.length)];
+  let prompt = `你是一个名为"${contact.name}"的AI角色，正在看朋友圈。`;
+  if (contact.role) prompt += `\n角色设定：${contact.role}`;
+  prompt += `\n${m.name}发了一条朋友圈："${m.content}"`;
+  prompt += `\n${userName}评论了："${userComment}"`;
+  prompt += `\n请以"${contact.name}"的身份回复这条评论，简短自然（1-2句），像真人评论互动。只输出评论内容本身。`;
+  const result = await callAI([{ role: 'user', content: '回复评论' }], prompt);
+  if (result && result.trim()) {
+    m.comments.push({ name: contact.name, emoji: contact.emoji, avatar: contact.avatar || '', content: stripMarkdown(result.trim()), isUser: false });
+    saveState();
+    renderMoments();
+  }
+}
+
+function likeMoment(idx) {
+  state.moments[idx].likes++;
+  saveState();
+  renderMoments();
+}
+
+function getRelativeTime() {
+  const offsets = ['刚刚', '1分钟前', '3分钟前', '5分钟前', '10分钟前', '半小时前', '1小时前', '2小时前', '3小时前', '昨天'];
+  return offsets[Math.floor(Math.random() * offsets.length)];
+}
+
+// ========== Settings ==========
+function loadSettingsUI() {
+  const s = state.settings;
+  document.getElementById('aiPlatform').value = s.platform || '';
+  document.getElementById('aiKey').value = s.key || '';
+  document.getElementById('aiUrl').value = s.url || '';
+  document.getElementById('aiModelManual').value = s.modelManual || '';
+
+  onPlatformChange();
+
+  if (s.modelMode === 'manual') {
+    switchModelMode('manual');
+  } else {
+    switchModelMode('fetch');
+  }
+
+  const toggle = document.getElementById('timeAwareToggle');
+  toggle.classList.toggle('on', !!s.timeAware);
+
+  const statusBarToggle = document.getElementById('statusBarToggle');
+  statusBarToggle.classList.toggle('on', !!s.statusBarVisible);
+
+  document.getElementById('aiContextLimit').value = s.contextLimit === '' ? '' : s.contextLimit;
+  document.getElementById('aiOutputTokenLimit').value = s.outputTokenLimit === '' ? '' : s.outputTokenLimit;
+  document.getElementById('aiFontSize').value = s.fontSize || 17;
+  document.getElementById('fontSizeValue').textContent = (s.fontSize || 17) + 'px';
+  renderUserProfiles();
+}
+
+function onPlatformChange() {
+  const platform = document.getElementById('aiPlatform').value;
+  const urlRow = document.getElementById('customUrlRow');
+  urlRow.style.display = platform === 'custom' ? 'flex' : 'none';
+}
+
+function switchModelMode(mode) {
+  const segments = document.querySelectorAll('#modelSelectMode .segment-item');
+  segments[0].classList.toggle('active', mode === 'fetch');
+  segments[1].classList.toggle('active', mode === 'manual');
+  document.getElementById('modelFetchRow').style.display = mode === 'fetch' ? 'flex' : 'none';
+  document.getElementById('modelManualRow').style.display = mode === 'manual' ? 'flex' : 'none';
+  state.settings.modelMode = mode;
+}
+
+async function fetchModels() {
+  const config = getAIConfig();
+  if (!config.key) {
+    showToast('请先输入API Key');
+    return;
+  }
+  if (!config.baseUrl) {
+    showToast('请先选择平台或输入自定义URL');
+    return;
+  }
+
+  const btn = document.getElementById('fetchModelsBtn');
+  btn.textContent = '获取中...';
+  btn.disabled = true;
+
+  try {
+    const resp = await fetch(`${config.baseUrl}/v1/models`, {
+      headers: { 'Authorization': `Bearer ${config.key}` }
+    });
+    if (!resp.ok) {
+      showToast(`获取失败: ${resp.status}`);
+      return;
+    }
+    const data = await resp.json();
+    const models = data.data || data.models || [];
+    const select = document.getElementById('aiModel');
+    select.innerHTML = models.map(m => `<option value="${m.id}">${m.id}</option>`).join('');
+    if (models.length > 0) showToast(`获取到${models.length}个模型`);
+    else showToast('未找到可用模型');
+  } catch (e) {
+    showToast('网络请求失败');
+  } finally {
+    btn.textContent = '获取模型';
+    btn.disabled = false;
+  }
+}
+
+function saveSettings() {
+  state.settings.platform = document.getElementById('aiPlatform').value;
+  state.settings.key = document.getElementById('aiKey').value.trim();
+  state.settings.url = document.getElementById('aiUrl').value.trim();
+  state.settings.modelManual = document.getElementById('aiModelManual').value.trim();
+
+  if (state.settings.modelMode === 'fetch') {
+    state.settings.model = document.getElementById('aiModel').value;
+  }
+
+  const ctx = document.getElementById('aiContextLimit').value.trim();
+  state.settings.contextLimit = ctx === '' ? '' : Math.max(1, parseInt(ctx, 10) || 1);
+  const out = document.getElementById('aiOutputTokenLimit').value.trim();
+  state.settings.outputTokenLimit = out === '' ? '' : Math.max(1, parseInt(out, 10) || 1);
+  state.settings.fontSize = Math.max(14, Math.min(24, parseInt(document.getElementById('aiFontSize').value, 10) || 17));
+
+  saveState();
+  applyChatFontSize();
+  showToast('设置已保存');
+}
+
+function toggleTimeAware(el) {
+  el.classList.toggle('on');
+  state.settings.timeAware = el.classList.contains('on');
+  saveState();
+}
+
+function toggleStatusBar(el) {
+  el.classList.toggle('on');
+  state.settings.statusBarVisible = el.classList.contains('on');
+  applyStatusBar();
+  saveState();
+}
+
+function applyStatusBar() {
+  const bar = document.getElementById('statusBar');
+  if (bar) {
+    bar.classList.toggle('hidden', !state.settings.statusBarVisible);
+  }
+}
+
+// ========== Memo ==========
+let editingMemoId = null;
+
+function renderMemoList() {
+  const list = document.getElementById('memoList');
+  if (!state.memos || state.memos.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">📝</div><p>暂无备忘录</p><p class="tip">点击右上角 + 新建</p></div>`;
+    return;
+  }
+  const sorted = [...state.memos].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const editIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const delIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+  let html = '';
+  sorted.forEach(m => {
+    const idx = state.memos.findIndex(x => x.id === m.id);
+    const title = m.title || (m.content ? m.content.slice(0, 20).replace(/\n/g, ' ') : '无标题');
+    const preview = m.content ? m.content.slice(0, 40).replace(/\n/g, ' ') : '无内容';
+    const date = m.updatedAt ? new Date(m.updatedAt).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : '';
+    html += `<div class="memo-list-item" onclick="openMemoEditor(${idx})">
+      <div class="mi-icon">📝</div>
+      <div class="mi-info">
+        <div class="mi-title">${escHtml(title)}</div>
+        <div class="mi-sub">${escHtml(preview)}${date ? ' · ' + date : ''}</div>
+      </div>
+      <div class="mi-ops" onclick="event.stopPropagation()">
+        <button onclick="openMemoEditor(${idx})" title="编辑">${editIcon}</button>
+        <button class="danger" onclick="deleteMemo(${idx})" title="删除">${delIcon}</button>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function openMemoEditor(idx) {
+  if (idx !== null && idx !== undefined) {
+    const m = state.memos[idx];
+    if (!m) return;
+    editingMemoId = m.id;
+    document.getElementById('memoEditorTitle').textContent = '编辑备忘录';
+    document.getElementById('memoContent').value = m.content || '';
+  } else {
+    editingMemoId = null;
+    document.getElementById('memoEditorTitle').textContent = '新建备忘录';
+    document.getElementById('memoContent').value = '';
+  }
+  pageStack.push('memoEditorPage');
+  navigateTo('memoEditorPage', false);
+  setTimeout(() => {
+    const ta = document.getElementById('memoContent');
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+  }, 300);
+}
+
+function backToMemoList() {
+  pageStack = ['homePage', 'memoPage'];
+  navigateTo('memoPage', true);
+  renderMemoList();
+}
+
+function saveCurrentMemo() {
+  const content = document.getElementById('memoContent').value.trim();
+  if (!content) {
+    showToast('内容为空，未保存');
+    backToMemoList();
+    return;
+  }
+  const title = content.slice(0, 20).replace(/\n/g, ' ');
+  if (editingMemoId !== null) {
+    const m = state.memos.find(x => x.id === editingMemoId);
+    if (m) { m.content = content; m.title = title; m.updatedAt = Date.now(); }
+  } else {
+    state.memos.push({ id: Date.now(), title, content, updatedAt: Date.now() });
+  }
+  saveState();
+  showToast('已保存');
+  backToMemoList();
+}
+
+function deleteMemo(idx) {
+  if (!confirm('确定删除这条备忘录？')) return;
+  state.memos.splice(idx, 1);
+  saveState();
+  renderMemoList();
+  showToast('已删除');
+}
+
+async function aiMemoAction(action) {
+  if (!state.settings.key) {
+    showToast('请先在设置中配置AI平台和Key');
+    return;
+  }
+
+  const textarea = document.getElementById('memoContent');
+  const text = textarea.value.trim();
+  if (!text) {
+    showToast('请先输入内容');
+    return;
+  }
+
+  const selectedText = textarea.selectionStart !== textarea.selectionEnd
+    ? text.substring(textarea.selectionStart, textarea.selectionEnd) : text;
+
+  const actionLabels = { polish: '润色', expand: '扩写', shorten: '缩写' };
+  showToast(`正在${actionLabels[action]}...`);
+
+  let prompt = '';
+  if (action === 'polish') {
+    prompt = `请对以下文字进行润色优化，保持原意，使表达更加流畅优美：\n\n${selectedText}`;
+  } else if (action === 'expand') {
+    prompt = `请根据以下内容进行扩写，增加细节和丰富表达：\n\n${selectedText}`;
+  } else if (action === 'shorten') {
+    prompt = `请将以下文字精简缩写，保留核心要点：\n\n${selectedText}`;
+  }
+
+  const result = await callAI([{ role: 'user', content: prompt }], '你是一个文字编辑助手，请直接输出处理后的文字，不要添加解释。');
+  if (result) {
+    if (textarea.selectionStart !== textarea.selectionEnd) {
+      const before = text.substring(0, textarea.selectionStart);
+      const after = text.substring(textarea.selectionEnd);
+      textarea.value = before + result + after;
+    } else {
+      textarea.value = result;
+    }
+    showToast(`${actionLabels[action]}完成`);
+  }
+}
+
+// ========== Todo ==========
+function renderTodos() {
+  const list = document.getElementById('todoList');
+  if (state.todos.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">✅</div><p>暂无待办</p><p class="tip">点击右上角 + 添加</p></div>`;
+    return;
+  }
+
+  let html = '<div class="todo-list">';
+  state.todos.forEach((t, i) => {
+    html += `<div class="todo-item">
+      <div class="todo-check${t.done ? ' done' : ''}" onclick="toggleTodo(${i})"></div>
+      <span class="todo-text${t.done ? ' done' : ''}">${escHtml(t.text)}</span>
+      <button style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:4px;" onclick="deleteTodo(${i})">×</button>
+    </div>`;
+  });
+  html += '</div>';
+  list.innerHTML = html;
+}
+
+function showAddTodo() {
+  showModal(`
+    <div class="modal-title">新建待办</div>
+    <div class="input-group">
+      <label>输入待办内容</label>
+      <textarea id="todoInput" rows="4" placeholder="输入待办事项...&#10;提示：如果配置了AI，输入一串文字可以自动拆分成多条待办"></textarea>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:8px;">
+      <button class="btn btn-gray" style="flex:1;" onclick="closeModal()">取消</button>
+      ${state.settings.key ? `<button class="btn btn-primary" style="flex:1;" onclick="aiSplitTodo()">AI拆分</button>` : ''}
+      <button class="btn btn-green" style="flex:1;" onclick="addTodo()">添加</button>
+    </div>
+  `);
+}
+
+function addTodo() {
+  const text = document.getElementById('todoInput').value.trim();
+  if (!text) { showToast('请输入内容'); return; }
+  state.todos.push({ text, done: false, createdAt: Date.now() });
+  saveState();
+  renderTodos();
+  closeModal();
+  showToast('已添加');
+}
+
+async function aiSplitTodo() {
+  const text = document.getElementById('todoInput').value.trim();
+  if (!text) { showToast('请输入内容'); return; }
+  if (!state.settings.key) { showToast('请先配置AI'); return; }
+
+  showToast('AI拆分中...');
+  const result = await callAI(
+    [{ role: 'user', content: text }],
+    `你是一个待办事项助手。请将用户输入的文字拆分成多个独立的待办事项。每行一个待办，格式为：- 待办内容。不要添加其他解释。`
+  );
+
+  if (result) {
+    const items = result.split('\n').map(l => l.replace(/^[-*]\s*/, '').trim()).filter(l => l);
+    items.forEach(item => {
+      state.todos.push({ text: item, done: false, createdAt: Date.now() });
+    });
+    saveState();
+    renderTodos();
+    closeModal();
+    showToast(`已拆分为${items.length}条待办`);
+  }
+}
+
+function toggleTodo(idx) {
+  state.todos[idx].done = !state.todos[idx].done;
+  saveState();
+  renderTodos();
+}
+
+function deleteTodo(idx) {
+  state.todos.splice(idx, 1);
+  saveState();
+  renderTodos();
+}
+
+// ========== Utilities ==========
+function escHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 21;
+  const maxHeight = lineHeight * 5;
+  const targetHeight = Math.min(el.scrollHeight, maxHeight);
+  el.style.height = targetHeight + 'px';
+  el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
+}
+
+function applyChatFontSize() {
+  const size = state.settings.fontSize || 17;
+  document.documentElement.style.setProperty('--chat-font-size', size + 'px');
+}
+
+// Resize image to max 256x256 base64 (jpeg) to keep localStorage small
+function resizeImageToBase64(file, maxSize, cb) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      let { width, height } = img;
+      if (width > height) { if (width > maxSize) { height = Math.round(height * maxSize / width); width = maxSize; } }
+      else { if (height > maxSize) { width = Math.round(width * maxSize / height); height = maxSize; } }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      cb(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => cb(null);
+    img.src = e.target.result;
+  };
+  reader.onerror = () => cb(null);
+  reader.readAsDataURL(file);
+}
+
+// ========== User Identity (Masks) ==========
+function renderUserProfiles() {
+  const list = document.getElementById('userProfileList');
+  if (!list) return;
+  if (state.userProfiles.length === 0) {
+    list.innerHTML = `<div style="text-align:center;color:var(--text2);font-size:13px;padding:12px;">暂无面具，点击下方新增</div>`;
+    return;
+  }
+  const editIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const delIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
+  let html = '';
+  state.userProfiles.forEach((p, i) => {
+    const active = state.currentUserProfileId === p.id;
+    const av = p.avatar ? `<img class="avatar-img" src="${p.avatar}" alt="">` : '🙂';
+    html += `<div class="uprofile-card${active ? ' active' : ''}" onclick="selectUserProfile(${p.id})">
+      <div class="pa">${av}</div>
+      <div class="pi">
+        <div class="pn">${escHtml(p.name || '未命名')}</div>
+        <div class="pd">${escHtml(p.identity || (p.desc || '无身份'))}</div>
+      </div>
+      <div class="pops" onclick="event.stopPropagation()">
+        <button onclick="editUserProfile(${p.id})" title="编辑">${editIcon}</button>
+        <button class="danger" onclick="deleteUserProfile(${p.id})" title="删除">${delIcon}</button>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function selectUserProfile(id) {
+  state.currentUserProfileId = id;
+  saveState();
+  renderUserProfiles();
+  const p = state.userProfiles.find(x => x.id === id);
+  if (p) showToast(`已切换为「${p.name}」`);
+}
+
+function getCurrentUserProfile() {
+  if (state.currentUserProfileId === null) return null;
+  return state.userProfiles.find(p => p.id === state.currentUserProfileId) || null;
+}
+
+let editingProfileId = null;
+
+function addUserProfile() {
+  editingProfileId = null;
+  showProfileModal(null);
+}
+
+function editUserProfile(id) {
+  const p = state.userProfiles.find(x => x.id === id);
+  if (!p) return;
+  editingProfileId = id;
+  showProfileModal(p);
+}
+
+function deleteUserProfile(id) {
+  const idx = state.userProfiles.findIndex(x => x.id === id);
+  if (idx === -1) return;
+  if (!confirm(`确定删除面具「${state.userProfiles[idx].name}」？`)) return;
+  state.userProfiles.splice(idx, 1);
+  if (state.currentUserProfileId === id) state.currentUserProfileId = state.userProfiles[0]?.id || null;
+  saveState();
+  renderUserProfiles();
+  showToast('已删除');
+}
+
+function showProfileModal(existing) {
+  const p = existing || { name: '', identity: '', desc: '', avatar: '' };
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.id = 'profileModal';
+  overlay.innerHTML = `<div class="modal">
+    <div class="modal-header"><span>${existing ? '编辑面具' : '新增面具'}</span><button class="close-btn" onclick="closeProfileModal()">×</button></div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:14px;">
+        <div class="avatar-upload" id="profileAvatarUpload" onclick="document.getElementById('profileAvatarInput').click()">
+          ${p.avatar ? `<img src="${p.avatar}" alt="">` : '📷'}
+        </div>
+        <div style="font-size:12px;color:var(--text2);">点击上传头像</div>
+        <input type="file" accept="image/*" id="profileAvatarInput" style="display:none;" onchange="onProfileAvatarPick(this)">
+      </div>
+      <div class="input-group"><label>名字</label><input id="profileNameInput" value="${escHtml(p.name)}" placeholder="例如：小明"></div>
+      <div class="input-group"><label>身份</label><input id="profileIdentityInput" value="${escHtml(p.identity)}" placeholder="例如：大学生 / 程序员"></div>
+      <div class="input-group"><label>身份说明（可选）</label><textarea id="profileDescInput" rows="2" placeholder="性格、背景等...">${escHtml(p.desc)}</textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-gray" onclick="closeProfileModal()">取消</button><button class="btn" onclick="saveProfileModal()">保存</button></div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+let _profileAvatarData = '';
+
+function onProfileAvatarPick(input) {
+  const file = input.files[0];
+  if (!file) return;
+  _profileAvatarData = '';
+  resizeImageToBase64(file, 256, (data) => {
+    if (data) {
+      _profileAvatarData = data;
+      const el = document.getElementById('profileAvatarUpload');
+      el.innerHTML = `<img src="${data}" alt="">`;
+    } else {
+      showToast('图片加载失败');
+    }
+  });
+}
+
+function saveProfileModal() {
+  const name = document.getElementById('profileNameInput').value.trim() || '未命名';
+  const identity = document.getElementById('profileIdentityInput').value.trim();
+  const desc = document.getElementById('profileDescInput').value.trim();
+  const existingEl = document.getElementById('profileAvatarUpload');
+  const avatar = _profileAvatarData || (existingEl?.querySelector('img')?.src || '');
+
+  if (editingProfileId !== null) {
+    const p = state.userProfiles.find(x => x.id === editingProfileId);
+    if (p) { p.name = name; p.identity = identity; p.desc = desc; p.avatar = avatar; }
+  } else {
+    const newP = { id: Date.now(), name, identity, desc, avatar };
+    state.userProfiles.push(newP);
+    if (state.currentUserProfileId === null) state.currentUserProfileId = newP.id;
+  }
+  _profileAvatarData = '';
+  saveState();
+  renderUserProfiles();
+  closeProfileModal();
+  showToast('已保存');
+}
+
+function closeProfileModal() {
+  const m = document.getElementById('profileModal');
+  if (m) m.remove();
+  _profileAvatarData = '';
+}
+
+// ========== Init ==========
+function init() {
+  loadState();
+  applyChatFontSize();
+  applyStatusBar();
+  updateStatusTime();
+  setInterval(updateStatusTime, 10000);
+
+  if (state.contacts.length === 0) {
+    state.contacts = [
+      { name: '小智', role: '一个聪明活泼的AI助手，说话幽默风趣，喜欢用网络用语，偶尔卖萌。对各种话题都有见解。', note: '默认AI角色', emoji: '🤖' },
+      { name: '老王', role: '一个阅历丰富的大叔，喜欢聊人生哲理，说话稳重但偶尔冷幽默。是个退休的程序员。', note: '邻居大叔', emoji: '🧔' },
+      { name: '小美', role: '一个热爱生活的年轻女生，喜欢分享美食和旅行，说话可爱，经常用颜文字和emoji。', note: '闺蜜', emoji: '👩' }
+    ];
+    saveState();
+  }
+}
+
+init();
+</script>
+</body>
+</html>
