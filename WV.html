@@ -1466,21 +1466,6 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* 闪烁光标 */
-  .stream-cursor {
-    display: inline-block;
-    width: 2px;
-    height: 1.1em;
-    background: var(--accent);
-    margin-left: 2px;
-    vertical-align: text-bottom;
-    animation: blink-cursor 0.5s step-end infinite;
-  }
-  @keyframes blink-cursor {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-  }
-
   /* 刷新提示 */
   .refresh-hint {
     text-align: center;
@@ -2298,6 +2283,10 @@
         <div class="toggle" id="toggle-stream"></div>
       </div>
     </div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-top:20px;">
+      选择AI回复的显示方式。流式输出会让AI像真人打字一样逐字出现，效果更自然，但回复速度略慢。
+    </div>
+  </div>
 </div>
 
 <!-- 面具列表 -->
@@ -4921,22 +4910,18 @@ async function sendAIReply(userMsg) {
       ? `<img src="${contactAvatar}" class="chat-avatar">`
       : `<div class="chat-avatar-placeholder" style="background:var(--surface-solid);">${contactName.charAt(0)}</div>`;
 
-    // 创建消息行（包含头像+气泡+闪烁光标）
+    // 创建消息行（包含头像+气泡）
     const rowDiv = document.createElement('div');
     rowDiv.className = 'chat-message-row';
-    const streamId = 'stream-bubble-' + Date.now();
-    rowDiv.innerHTML = `${avatarHtml}<div class="chat-bubble received" id="${streamId}"><span class="stream-cursor"></span></div>`;
+    rowDiv.innerHTML = `${avatarHtml}<div class="chat-bubble received" id="stream-bubble-${Date.now()}"></div>`;
     container.appendChild(rowDiv);
-    container.scrollTop = container.scrollHeight;
 
     const bubbleDiv = rowDiv.querySelector('.chat-bubble');
-    const cursorSpan = bubbleDiv.querySelector('.stream-cursor');
 
     const aiOpts = { aliveFeel: currentChatContact.aliveFeel, characterName: currentChatContact.name, useStream: true };
     const response = await callAI(currentChatContact.role, userMsg, history, maskInfo, aiOpts);
 
     if (!response || !response.body) {
-      cursorSpan?.remove();
       bubbleDiv.textContent = 'AI响应异常，请检查配置。';
       return;
     }
@@ -4945,7 +4930,6 @@ async function sendAIReply(userMsg) {
     const decoder = new TextDecoder();
     let fullText = '';
     let buffer = '';
-    let hasFirstChunk = false;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -4966,16 +4950,11 @@ async function sendAIReply(userMsg) {
           if (delta && delta.content) {
             const chunk = delta.content;
             fullText += chunk;
-            // 收到第一个文本块时移除闪烁光标
-            if (!hasFirstChunk) {
-              hasFirstChunk = true;
-              cursorSpan?.remove();
-            }
             // 增量更新：追加新内容，避免全量重绘导致闪烁
-            const chunkLines = chunk.split('\n');
-            chunkLines.forEach((line, idx) => {
+            const lines = chunk.split('\n');
+            lines.forEach((line, idx) => {
               bubbleDiv.appendChild(document.createTextNode(line));
-              if (idx < chunkLines.length - 1) {
+              if (idx < lines.length - 1) {
                 bubbleDiv.appendChild(document.createElement('br'));
               }
             });
@@ -4985,12 +4964,7 @@ async function sendAIReply(userMsg) {
       }
     }
 
-    // 如果还没收到任何内容（光标仍在），移除光标
-    if (!hasFirstChunk) {
-      cursorSpan?.remove();
-    }
-
-    // 流式完成后过滤Markdown并智能分段
+    // 流式完成后过滤Markdown并智能分段（同气泡内换行展示）
     if (!fullText) {
       fullText = 'AI响应异常，请检查配置。';
     }
@@ -4998,13 +4972,7 @@ async function sendAIReply(userMsg) {
 
     const segments = smartSplitReply(fullText);
     const displayText = segments.join('\n\n');
-
-    // 使用replaceChildren增量重绘，避免innerHTML全量刷新闪烁
-    bubbleDiv.replaceChildren();
-    displayText.split('\n').forEach((line, idx) => {
-      if (idx > 0) bubbleDiv.appendChild(document.createElement('br'));
-      bubbleDiv.appendChild(document.createTextNode(line));
-    });
+    bubbleDiv.innerHTML = escapeHtml(displayText).replace(/\n/g, '<br>');
 
     chats[currentChatContact.id].push({
       sender: 'ai',
