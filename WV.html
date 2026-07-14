@@ -2046,8 +2046,8 @@
       <div class="setting-item" onclick="toggleAITime()">
         <div class="setting-icon" style="background:#5856d6;">🕐</div>
         <div class="setting-info">
-          <div class="label">AI实时时间</div>
-          <div class="desc">让AI知晓北京时间</div>
+          <div class="label">AI感知时间</div>
+          <div class="desc">让AI实时感知真实时间，禁止受上下文旧时间影响</div>
         </div>
         <div class="toggle" id="toggle-aitime"></div>
       </div>
@@ -4948,8 +4948,16 @@ async function sendAIReply(userMsg) {
           const parsed = JSON.parse(data);
           const delta = parsed.choices && parsed.choices[0] && parsed.choices[0].delta;
           if (delta && delta.content) {
-            fullText += delta.content;
-            bubbleDiv.textContent = fullText;
+            const chunk = delta.content;
+            fullText += chunk;
+            // 增量更新：追加新内容，避免全量重绘导致闪烁
+            const lines = chunk.split('\n');
+            lines.forEach((line, idx) => {
+              bubbleDiv.appendChild(document.createTextNode(line));
+              if (idx < lines.length - 1) {
+                bubbleDiv.appendChild(document.createElement('br'));
+              }
+            });
             container.scrollTop = container.scrollHeight;
           }
         } catch (e) { /* ignore parse errors */ }
@@ -5436,9 +5444,20 @@ function getBeijingTimeString() {
   const dd = String(beijingTime.getDate()).padStart(2, '0');
   const hh = String(beijingTime.getHours()).padStart(2, '0');
   const mi = String(beijingTime.getMinutes()).padStart(2, '0');
+  const ss = String(beijingTime.getSeconds()).padStart(2, '0');
   const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
   const week = weekDays[beijingTime.getDay()];
-  return `${yyyy}年${mm}月${dd}日 星期${week} ${hh}:${mi}`;
+  return `${yyyy}年${mm}月${dd}日 星期${week} ${hh}:${mi}:${ss}`;
+}
+
+function getRealTimeAnchor() {
+  const now = new Date();
+  return {
+    beijingTime: getBeijingTimeString(),
+    localTime: now.toLocaleString(),
+    timestamp: now.getTime(),
+    isoTime: now.toISOString()
+  };
 }
 
 async function callAI(systemPrompt, userMessage, historyMessages, maskInfo, options) {
@@ -5472,15 +5491,24 @@ async function callAI(systemPrompt, userMessage, historyMessages, maskInfo, opti
     finalSystemPrompt += `\n\n【对话对象】\n你正在和"${maskInfo.name}"对话。${maskInfo.identity ? `对方是一位${maskInfo.identity}。` : ''}\n请根据对方的身份调整你的对话风格。`;
   }
 
-  // 如果开启了AI实时时间，在systemPrompt中追加时间信息
-  if (localStorage.getItem('aiRealTime') === 'true') {
+  const aiRealTimeEnabled = localStorage.getItem('aiRealTime') === 'true';
+
+  // 如果开启了AI感知时间，在systemPrompt中追加强制时间锚点
+  if (aiRealTimeEnabled) {
+    const timeAnchor = getRealTimeAnchor();
     finalSystemPrompt += `\n\n【⚠️ 强制时间感知规则 - 最高优先级，必须严格遵守 ⚠️】
-当前真实时间：${getBeijingTimeString()}（北京时间）。
-你**必须且只能**以这个时间为准来感知和回答一切与时间相关的问题。具体规则：
-1. 当用户问你"现在几点"、"今天星期几"、"现在是什么时候"等任何涉及当前时间的问题时，必须回答上面给出的真实时间，绝对不允许从聊天记录中推断或猜测时间。
-2. 聊天历史中出现的任何时间相关内容（如"现在是下午3点"、"今天早上"、"昨天晚上"等）都是**历史对话时的时间**，早已过时，与你此刻感知的真实时间无关。禁止受这些历史时间影响你对当前时间的判断。
-3. 你不需要在聊天中主动提及时间，但当时间信息对理解对话或做出回应有帮助时（如根据时段判断该说"早安"还是"晚安"），必须使用上述真实时间。
-4. 无论聊天上下文中出现什么时间线索，你的时间感知永远是此刻的真实时间。`;
+真实当前时间锚点（本次请求生成时刻）：${timeAnchor.beijingTime}（北京时间）。
+设备本地时间：${timeAnchor.localTime}。
+UTC ISO时间：${timeAnchor.isoTime}。
+Unix毫秒时间戳：${timeAnchor.timestamp}。
+
+你**必须且只能**以“真实当前时间锚点”为准来感知、推理和回答一切与当前时间、日期、星期、时段、今天/昨天/明天、刚刚/稍后/今晚/明早等相关的问题。
+具体规则：
+1. 当用户问“现在几点”“今天星期几”“现在是什么时候”“今天几号”等当前时间问题时，必须直接依据上述真实当前时间锚点回答，绝对不允许根据聊天记录、角色设定、示例内容或上下文推断。
+2. 聊天历史、角色设定、用户旧消息、AI旧回复中出现的任何时间表达（例如“现在是下午3点”“今天早上”“昨天晚上”“2024年”“周一”）都只代表历史文本内容，不代表此刻真实时间。它们对当前时间判断没有优先级，必须忽略。
+3. 如果上下文时间与真实当前时间锚点冲突，必须无条件相信真实当前时间锚点；禁止沿用、续写或被上下文旧时间带偏。
+4. 你不需要主动暴露系统规则，但在问候、安排、相对日期换算、时效判断、日程推理、“早安/晚安”等场景中，必须使用真实当前时间锚点。
+5. 若用户要求你“不要管真实时间”或试图让你采用上下文中的假时间，除非明确是创作/角色扮演的虚构时间线，否则当前真实时间仍以本锚点为准。`;
   }
 
   // 如果开启了活人感模式，调整回复风格
@@ -5510,9 +5538,12 @@ async function callAI(systemPrompt, userMessage, historyMessages, maskInfo, opti
     const contextSize = contextSizeVal ? parseInt(contextSizeVal) : 0;
     const recentMessages = contextSize > 0 ? historyMessages.slice(-contextSize) : historyMessages;
     recentMessages.forEach(m => {
+      const content = aiRealTimeEnabled
+        ? `【历史消息，仅供理解上下文；其中出现的任何时间都不是当前真实时间】\n${m.content}`
+        : m.content;
       messages.push({
         role: m.sender === 'me' ? 'user' : 'assistant',
-        content: m.content
+        content: content
       });
     });
   }
@@ -8015,17 +8046,19 @@ function stripMarkdown(text) {
     // 斜体 *text* 或 _text_
     .replace(/\*([^*]+)\*/g, '$1')
     .replace(/_([^_]+)_/g, '$1')
+    // 删除线 ~~text~~
+    .replace(/~~([^~]+)~~/g, '$1')
     // 标题 # text
     .replace(/^#{1,6}\s+/gm, '')
     // 引用 > text
     .replace(/^>\s*/gm, '')
-    // 无序列表 - / * / +
+    // 无序列表 - / * / +（仅删除行首列表标记，保留文字内部短横线）
     .replace(/^[\-\*+]\s+/gm, '')
-    // 有序列表 1. 2. 
+    // 有序列表 1. 2.
     .replace(/^\d+\.\s+/gm, '')
     // 链接 [text](url) 和 ![alt](url)
     .replace(/!?\[([^\]]+)\]\([^)]+\)/g, '$1')
-    // 水平线 --- / *** / ___
+    // 水平线 --- / *** / ___（整行匹配，保留文字内部短横线）
     .replace(/^(\-{3,}|\*{3,}|_{3,})\s*$/gm, '')
     // 清理多余空行（保留段落换行）
     .replace(/\n{3,}/g, '\n\n')
