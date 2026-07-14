@@ -4980,6 +4980,7 @@ async function sendAIReply(userMsg) {
     const decoder = new TextDecoder();
     let fullText = '';
     let buffer = '';
+    let hasVisibleStreamContent = false;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -5001,6 +5002,15 @@ async function sendAIReply(userMsg) {
             const chunk = delta.content;
             fullText += chunk;
 
+            // 流式响应开头可能先返回换行或空格，直接渲染会让气泡顶部出现临时空白。
+            // 保留原始 fullText 供最终保存，但展示时等到第一个可见字符后再创建气泡。
+            let displayChunk = chunk;
+            if (!hasVisibleStreamContent) {
+              displayChunk = displayChunk.replace(/^\s+/, '');
+              if (!displayChunk) continue;
+              hasVisibleStreamContent = true;
+            }
+
             // 首次收到内容时，移除"正在输入…"动画，创建气泡
             if (!bubbleDiv) {
               document.getElementById(typingId)?.remove();
@@ -5015,7 +5025,7 @@ async function sendAIReply(userMsg) {
             }
 
             // 增量更新：追加新内容，避免全量重绘导致闪烁
-            const chunkLines = chunk.split('\n');
+            const chunkLines = displayChunk.split('\n');
             chunkLines.forEach((line, idx) => {
               bubbleDiv.appendChild(document.createTextNode(line));
               if (idx < chunkLines.length - 1) {
