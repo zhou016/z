@@ -120,6 +120,14 @@ html,body {
 }
 .msg-action-btn:active { background:rgba(0,0,0,.06); color:var(--text); }
 .msg-action-btn .ico { font-size:14px; line-height:1; display:block; }
+.msg-bubble.hidden { display:none; }
+.msg-edit-textarea {
+  width:100%; min-height:60px; padding:10px 14px; border-radius:18px;
+  border:1px solid var(--mint-dark); background:var(--white);
+  font-size:var(--chat-font-size); line-height:var(--msg-line);
+  font-family:inherit; resize:vertical; outline:none;
+}
+.chat-messages.full-mode .msg-edit-textarea { border-radius:14px; }
 .chat-messages.full-mode .msg-row { width:100%; }
 .chat-messages.full-mode .msg-avatar { display:none; }
 .chat-messages.full-mode .msg-content { width:100%; max-width:none; align-items:stretch; }
@@ -1083,6 +1091,13 @@ function buildMsgEl(m){
     regenBtn.innerHTML = '<span class="ico">🔄</span>';
     regenBtn.onclick = ()=>regenerateFromMsg(m.id);
     actions.appendChild(regenBtn);
+    const editAiBtn = document.createElement('button');
+    editAiBtn.className = 'msg-action-btn';
+    editAiBtn.title = '编辑';
+    editAiBtn.setAttribute('aria-label','编辑');
+    editAiBtn.innerHTML = '<span class="ico">✏️</span>';
+    editAiBtn.onclick = ()=>editAssistantMsg(m.id);
+    actions.appendChild(editAiBtn);
   } else {
     const editBtn = document.createElement('button');
     editBtn.className = 'msg-action-btn';
@@ -1349,6 +1364,59 @@ function editUserMsg(msgId){
       }}
     ]
   });
+}
+function editAssistantMsg(msgId){
+  const conv = getCurConv();
+  if(!conv) return;
+  const idx = conv.messages.findIndex(m=>m.id===msgId);
+  if(idx<0) return;
+  const msg = conv.messages[idx];
+  const row = document.querySelector('.msg-row[data-mid="'+msgId+'"]');
+  if(!row) return;
+  const content = row.querySelector('.msg-content');
+  const bubble = row.querySelector('.msg-bubble');
+  const actions = row.querySelector('.msg-actions');
+  if(!bubble || !actions || actions.dataset.editing==='1') return;
+  const original = msg.content;
+  const textarea = document.createElement('textarea');
+  textarea.className = 'msg-edit-textarea';
+  textarea.value = original;
+  textarea.rows = Math.max(2, original.split('\n').length);
+  bubble.classList.add('hidden');
+  content.insertBefore(textarea, bubble);
+  actions.dataset.editing = '1';
+  const oldButtons = Array.from(actions.children);
+  oldButtons.forEach(b=>b.style.display='none');
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'msg-action-btn';
+  confirmBtn.title = '确认';
+  confirmBtn.setAttribute('aria-label','确认');
+  confirmBtn.innerHTML = '<span class="ico">✓</span>';
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'msg-action-btn';
+  cancelBtn.title = '取消';
+  cancelBtn.setAttribute('aria-label','取消');
+  cancelBtn.innerHTML = '<span class="ico">✕</span>';
+  actions.appendChild(confirmBtn);
+  actions.appendChild(cancelBtn);
+  function finish(save){
+    if(save){
+      msg.content = textarea.value;
+      bubble.textContent = msg.content;
+      saveCurrentConv();
+    } else {
+      bubble.textContent = original;
+    }
+    textarea.remove();
+    bubble.classList.remove('hidden');
+    oldButtons.forEach(b=>b.style.display='');
+    confirmBtn.remove();
+    cancelBtn.remove();
+    delete actions.dataset.editing;
+  }
+  confirmBtn.onclick = ()=>finish(true);
+  cancelBtn.onclick = ()=>finish(false);
+  textarea.focus();
 }
 function updateSendBtn(){
   const btn = $('sendBtn');
